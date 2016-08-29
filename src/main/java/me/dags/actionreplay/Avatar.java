@@ -3,12 +3,14 @@ package me.dags.actionreplay;
 import com.flowpowered.math.vector.Vector3d;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.EntityTypes;
+import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.Human;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
+import java.lang.ref.WeakReference;
 import java.util.UUID;
 
 /**
@@ -16,26 +18,61 @@ import java.util.UUID;
  */
 public class Avatar {
 
-    private final Player player;
+    private final WeakReference<Player> reference;
+    private final UUID uuid;
     private Human avatar;
 
     public Avatar(Player player) {
-        this.player = player;
+        this.reference = new WeakReference<>(player);
+        this.uuid = player.getUniqueId();
     }
 
-    public PositionRecord getPosition() {
-        return new PositionRecord(player);
+    public Transform<World> getTransform() {
+        Player player = getPlayer();
+        return player != null ? player.getTransform() : null;
     }
 
-    public void suspend() {
+    public Player getPlayer() {
+        Player player = this.reference.get();
+        if (player == null) {
+            remove();
+        }
+        return player;
+    }
+
+    public void updateAvatar(Transform<World> transform) {
+        initAvatar(transform);
+
+        if (avatar != null) {
+            avatar.setTransform(transform);
+            avatar.offer(Keys.INVULNERABILITY_TICKS, Integer.MAX_VALUE);
+            avatar.offer(Keys.FALL_DISTANCE, 0F);
+            avatar.offer(Keys.FALL_TIME, 0);
+        }
+    }
+
+    public void pause() {
         if (avatar != null) {
             avatar.setVelocity(Vector3d.ZERO);
         }
     }
 
-    public void updateAvatar(PositionRecord positionRecord) {
+    public void remove() {
+        if (avatar != null) {
+            avatar.remove();
+            avatar = null;
+        }
+    }
+
+    private void initAvatar(Transform<World> transform) {
         if (avatar == null) {
-            Location<World> location = positionRecord.getLocation();
+            Player player = getPlayer();
+
+            if (player == null) {
+                return;
+            }
+
+            Location<World> location = transform.getLocation();
             avatar = location.getExtent().createEntity(EntityTypes.HUMAN, location.getPosition())
                     .filter(Human.class::isInstance)
                     .map(Human.class::cast)
@@ -50,28 +87,15 @@ public class Avatar {
                 avatar = null;
             }
         }
-        if (avatar != null) {
-            positionRecord.apply(avatar);
-            avatar.offer(Keys.INVULNERABILITY_TICKS, Integer.MAX_VALUE);
-            avatar.offer(Keys.FALL_DISTANCE, 0F);
-            avatar.offer(Keys.FALL_TIME, 0);
-        }
-    }
-
-    public void reset() {
-        if (avatar != null) {
-            avatar.remove();
-            avatar = null;
-        }
     }
 
     @Override
     public int hashCode() {
-        return player.getUniqueId().hashCode();
+        return uuid.hashCode();
     }
 
     @Override
     public boolean equals(Object other) {
-        return other != null && (other instanceof UUID && other.equals(player.getUniqueId())) || (other instanceof Avatar && other.hashCode() == hashCode());
+        return other != null && (other instanceof Avatar && other.hashCode() == hashCode());
     }
 }

@@ -29,7 +29,7 @@ public class ActionReplay {
 
     @Listener
     public void init(GameInitializationEvent event) {
-        instance = this;
+        ActionReplay.instance = this;
         format = CommandBus.newFormatBuilder().build();
         CommandBus.newInstance().register(this).submit(this);
     }
@@ -37,7 +37,7 @@ public class ActionReplay {
     @Listener
     public void stop(GameStoppingEvent event) {
         if (recorder != null) {
-            recorder.stop();
+            recorder.stopPlayback();
         }
     }
 
@@ -48,14 +48,12 @@ public class ActionReplay {
     public void startRecorder(@Caller Player player, @One("radius") int radius) {
         if (recorder != null) {
             format.error("Recorder is in use").tell(player);
-            return;
+        } else {
+            Vector3i position = player.getLocation().getBlockPosition();
+            recorder = new Recorder(player.getWorld().getUniqueId(), position, radius);
+            Sponge.getEventManager().registerListeners(this, recorder);
+            format.info("Recording block around ").stress(position).tell(player);
         }
-
-        Vector3i position = player.getLocation().getBlockPosition();
-        recorder = new Recorder(player.getWorld().getUniqueId(), position, radius);
-        Sponge.getEventManager().registerListeners(this, recorder);
-
-        format.info("Recording block around ").stress(position).tell(player);
     }
 
     @Command(aliases = "stop", parent = "actionreplay", perm = "actionreplay.record")
@@ -72,7 +70,7 @@ public class ActionReplay {
     public void resetRecorder(@Caller Player player) {
         if (recorder != null) {
             Sponge.getEventManager().unregisterListeners(recorder);
-            recorder.stop();
+            recorder.stopPlayback();
             recorder = null;
             format.info("Reset recorder").tell(player);
         } else {
@@ -84,17 +82,16 @@ public class ActionReplay {
     public void playback(@Caller Player player, @One("interval ticks") int ticks) {
         if (recorder == null) {
             format.error("Recorder has not been set up yet").tell(player);
-            return;
-        }
-        if (recorder.isRecording()) {
+        } else if (recorder.isRecording()) {
             format.error("Recorder is currently recording. Use ").stress("/actionreplay stop").tell(player);
-            return;
+        } else {
+            format.info("Playing back at ").stress(ticks).info(" ticks per block change").tell(player);
+            recorder.playBack(this, ticks);
+            recorder.setRecording(true);
         }
-        format.info("Playing back at ").stress(ticks).info(" ticks per block change").tell(player);
-        recorder.playBack(this, ticks);
     }
 
     public static Cause spawnCause() {
-        return Cause.source(SPAWN_CAUSE).owner(instance).build();
+        return Cause.source(ActionReplay.SPAWN_CAUSE).owner(ActionReplay.instance).build();
     }
 }

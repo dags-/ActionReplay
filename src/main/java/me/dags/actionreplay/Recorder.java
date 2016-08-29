@@ -21,48 +21,28 @@ public class Recorder {
     private final UUID worldId;
     private final Vector2i min;
     private final Vector2i max;
-
     private boolean recording = false;
     private Task task = null;
-    private ChangeRecord first = null;
-    private ChangeRecord current = null;
+    private Snapshot first = null;
+    private Snapshot current = null;
 
     public Recorder(UUID worldId, Vector3i center, int size) {
         this.worldId = worldId;
-        min = new Vector2i(center.getX() - size, center.getZ() - size);
-        max = new Vector2i(center.getX() + size, center.getZ() + size);
-    }
-
-    private Avatar getOrCreateAvatar(Player player) {
-        Avatar avatar = avatars.get(player.getUniqueId());
-        if (avatar == null) {
-            avatars.put(player.getUniqueId(), avatar = new Avatar(player));
-        }
-        return avatar;
-    }
-
-    private void reset() {
-        ChangeRecord record = current;
-        while (record != null) {
-            record.reset();
-            record = record.previous();
-        }
-    }
-
-    private boolean contains(Vector3i pos) {
-        return min.getX() < pos.getX() && min.getY() < pos.getZ() && max.getX() > pos.getX() && max.getY() > pos.getZ();
+        this.min = new Vector2i(center.getX() - size, center.getZ() - size);
+        this.max = new Vector2i(center.getX() + size, center.getZ() + size);
     }
 
     @Listener
     public void onBlockChange(ChangeBlockEvent event, @Root Player player) {
         if (player.getWorld().getUniqueId() == worldId && contains(player.getLocation().getBlockPosition())) {
-            Avatar avatar = getOrCreateAvatar(player);
-            BlockRecord blockRecord = new BlockRecord(event.getTransactions());
+            Avatar avatar = getOrCreate(player);
             if (first == null) {
-                first = new ChangeRecord(avatar, blockRecord);
+                first = new Snapshot(avatar, event.getTransactions());
                 current = first;
             } else {
-                current = current.addRecord(avatar, blockRecord);
+                Snapshot next = new Snapshot(avatar, event.getTransactions());
+                current.setNext(next);
+                current = next;
             }
         }
     }
@@ -76,22 +56,42 @@ public class Recorder {
     }
 
     public void playBack(Object plugin, int ticks) {
-        stop();
+        stopPlayback();
         reset();
         Playback playback = new Playback(first, ticks);
-        this.task = Task.builder().delayTicks(ticks).intervalTicks(1).execute(playback).submit(plugin);
+        task = Task.builder().delayTicks(ticks).intervalTicks(1).execute(playback).submit(plugin);
     }
 
-    public void stop() {
+    public void reset() {
+        Snapshot record = current;
+        while (record != null) {
+            record.resetBlocks();
+            record = record.previous();
+        }
+    }
+
+    public void stopPlayback() {
         if (task != null) {
             task.cancel();
             task = null;
             reset();
-            ChangeRecord record = first;
+            Snapshot record = first;
             while (record != null) {
-                record.restore();
+                record.restoreBlocks();
                 record = record.next();
             }
         }
+    }
+
+    private Avatar getOrCreate(Player player) {
+        Avatar avatar = avatars.get(player.getUniqueId());
+        if (avatar == null) {
+            avatars.put(player.getUniqueId(), avatar = new Avatar(player));
+        }
+        return avatar;
+    }
+
+    private boolean contains(Vector3i pos) {
+        return min.getX() < pos.getX() && min.getY() < pos.getZ() && max.getX() > pos.getX() && max.getY() > pos.getZ();
     }
 }

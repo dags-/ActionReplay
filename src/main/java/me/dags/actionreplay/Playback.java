@@ -10,11 +10,11 @@ import java.util.function.Consumer;
 public class Playback implements Consumer<Task> {
 
     private final int delay;
-    private ChangeRecord changeRecord;
+    private Snapshot snapshot;
     private int counter;
 
-    public Playback(ChangeRecord first, int delay) {
-        this.changeRecord = first;
+    public Playback(Snapshot first, int delay) {
+        this.snapshot = first;
         this.delay = delay;
         this.counter = delay;
     }
@@ -22,20 +22,20 @@ public class Playback implements Consumer<Task> {
     @Override
     public void accept(Task task) {
         if (counter-- > 0) {
-            if (changeRecord != null) {
-                changeRecord.suspendAvatars();
+            if (snapshot != null) {
+                snapshot.pauseAvatars();
             }
         } else {
             counter = delay;
-            ChangeRecord current = changeRecord;
+            Snapshot current = snapshot;
             if (current != null) {
-                current.forward();
-                changeRecord = changeRecord.next();
+                current.restore();
+                snapshot = snapshot.next();
             }
 
-            if (changeRecord == null) {
+            if (snapshot == null) {
                 if (current != null) {
-                    current.remove();
+                    current.removeAvatars();
                 }
                 task.cancel();
             }
