@@ -90,7 +90,7 @@ public class ActionReplay {
             format.error("Recorder is currently recording. Use ").stress("/actionreplay stop").tell(player);
             return;
         }
-        format.info("Playing back at ").stress(ticks).info(" ticks per interval").tell(player);
+        format.info("Playing back at ").stress(ticks).info(" ticks per block change").tell(player);
         recorder.playBack(this, ticks);
     }
 
