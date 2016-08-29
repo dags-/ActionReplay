@@ -63,6 +63,8 @@ public class ActionReplay {
         if (recorder != null) {
             Sponge.getEventManager().registerListeners(this, recorder);
             format.info("Recording stopped").tell(player);
+        } else {
+            format.error("Recorder has not been set up yet").tell(player);
         }
     }
 
