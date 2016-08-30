@@ -6,8 +6,11 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
+import org.spongepowered.api.event.block.tileentity.ChangeSignEvent;
+import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.event.filter.cause.Root;
-import org.spongepowered.api.scheduler.Task;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,10 +25,10 @@ public class Recorder {
     private final UUID worldId;
     private final Vector2i min;
     private final Vector2i max;
+    private PlaybackTask playback = PlaybackTask.EMPTY;
     private boolean recording = false;
-    private Task task = null;
-    private Snapshot first = null;
-    private Snapshot current = null;
+    private KeyFrame first = null;
+    private KeyFrame last = null;
 
     public Recorder(UUID worldId, Vector3i center, int size) {
         this.worldId = worldId;
@@ -35,16 +38,28 @@ public class Recorder {
 
     @Listener(order = Order.POST)
     public void onBlockChange(ChangeBlockEvent event, @Root Player player) {
-        if (player.getWorld().getUniqueId() == worldId && contains(player.getLocation().getBlockPosition())) {
+        if (activeLocation(player.getLocation())) {
             Avatar avatar = getOrCreate(player);
-            if (first == null) {
-                first = new Snapshot(avatar, event.getTransactions());
-                current = first;
-            } else {
-                Snapshot next = new Snapshot(avatar, event.getTransactions());
-                current.setNext(next);
-                current = next;
-            }
+            KeyFrame blockChange = new BlockFrame(avatar, event);
+            addNextFrame(blockChange);
+        }
+    }
+
+    @Listener(order = Order.POST)
+    public void onSignChange(ChangeSignEvent event, @Root Player player) {
+        if (activeLocation(event.getTargetTile().getLocation())) {
+            Avatar avatar = getOrCreate(player);
+            KeyFrame signChange = new SignFrame(avatar, event);
+            addNextFrame(signChange);
+        }
+    }
+
+    @Listener(order = Order.POST)
+    public void onEntitySpawn(SpawnEntityEvent event, @Root Player player) {
+        if (activeLocation(player.getLocation())) {
+            Avatar avatar = getOrCreate(player);
+            KeyFrame entityChange = new EntityFrame(avatar, event);
+            addNextFrame(entityChange);
         }
     }
 
@@ -59,28 +74,25 @@ public class Recorder {
     public void playBack(Object plugin, int ticks) {
         stopPlayback();
         resetPlayback();
-        Playback playback = new Playback(first, ticks);
-        task = Task.builder().delayTicks(ticks).intervalTicks(1).execute(playback).submit(plugin);
+        playback = PlaybackTask.startPlayback(plugin, first, ticks);
     }
 
     public void resetPlayback() {
-        Snapshot record = current;
-        while (record != null) {
-            record.resetBlocks();
-            record = record.previous();
+        KeyFrame frame = last;
+        while (frame != null) {
+            frame.reset();
+            frame = frame.previous();
         }
     }
 
     public void stopPlayback() {
-        if (task != null) {
-            task.cancel();
-            task = null;
-            resetPlayback();
-            Snapshot record = first;
-            while (record != null) {
-                record.restoreBlocks();
-                record = record.next();
-            }
+        playback.cancel();
+        playback = PlaybackTask.EMPTY;
+        resetPlayback();
+        KeyFrame frame = first;
+        while (frame != null) {
+            frame.restore();
+            frame = frame.next();
         }
     }
 
@@ -90,6 +102,20 @@ public class Recorder {
             avatars.put(player.getUniqueId(), avatar = new Avatar(player));
         }
         return avatar;
+    }
+
+    private void addNextFrame(KeyFrame next) {
+        if (first == null) {
+            first = next;
+            last = first;
+        } else {
+            last.setNext(next);
+            last = next;
+        }
+    }
+
+    private boolean activeLocation(Location<World> location) {
+        return isRecording() && location.getExtent().getUniqueId() == worldId && contains(location.getBlockPosition());
     }
 
     private boolean contains(Vector3i pos) {
