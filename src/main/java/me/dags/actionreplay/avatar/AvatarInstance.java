@@ -78,6 +78,15 @@ public class AvatarInstance {
         return human;
     }
 
+    private World getWorld(AvatarSnapshot snapshot) {
+        World world = this.world.get();
+        if (world == null) {
+            world = Sponge.getServer().getWorld(snapshot.worldId).orElse(null);
+            this.world = new WeakReference<>(world);
+        }
+        return world;
+    }
+
     @Override
     public int hashCode() {
         return uuid.hashCode();
@@ -86,14 +95,5 @@ public class AvatarInstance {
     @Override
     public boolean equals(Object o) {
         return o != null && o instanceof AvatarInstance && o.hashCode() == hashCode();
-    }
-
-    private World getWorld(AvatarSnapshot snapshot) {
-        World world = this.world.get();
-        if (world == null) {
-            world = Sponge.getServer().getWorld(snapshot.worldId).orElse(null);
-            this.world = new WeakReference<>(world);
-        }
-        return world;
     }
 }
