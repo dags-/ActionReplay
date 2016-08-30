@@ -72,9 +72,6 @@ public class AvatarInstance {
             human.offer(Keys.DISPLAY_NAME, Text.of(snapshot.playerName));
 
             world.spawnEntity(human, ActionReplay.spawnCause());
-
-            System.out.println("SPAWN!");
-
             this.human = new WeakReference<>(human);
         }
         return human;
