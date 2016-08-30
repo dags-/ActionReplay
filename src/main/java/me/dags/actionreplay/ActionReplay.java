@@ -60,7 +60,7 @@ public class ActionReplay {
     @Command(aliases = "stop", parent = "actionreplay", perm = "actionreplay.record")
     public void stopRecorder(@Caller Player player) {
         if (recorder != null) {
-            Sponge.getEventManager().registerListeners(this, recorder);
+            Sponge.getEventManager().unregisterListeners(recorder);
             recorder.setRecording(false);
             format.info("Recording stopped").tell(player);
         } else {

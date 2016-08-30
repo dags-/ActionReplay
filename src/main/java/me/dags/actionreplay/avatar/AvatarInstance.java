@@ -38,6 +38,7 @@ public class AvatarInstance {
                 ItemStack itemStack = snapshot.inHand.createStack();
 
                 human.setTransform(transform);
+                human.setHeadRotation(snapshot.rotation);
                 human.setItemInHand(itemStack);
             }
         }
@@ -69,9 +70,10 @@ public class AvatarInstance {
 
             human.offer(Keys.SKIN_UNIQUE_ID, snapshot.playerId);
             human.offer(Keys.DISPLAY_NAME, Text.of(snapshot.playerName));
-            human.offer(Keys.PERSISTS, false);
 
             world.spawnEntity(human, ActionReplay.spawnCause());
+
+            System.out.println("SPAWN!");
 
             this.human = new WeakReference<>(human);
         }

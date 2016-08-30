@@ -7,17 +7,18 @@ import org.spongepowered.api.scheduler.Task;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 /**
  * @author dags <dags@dags.me>
  */
-public class Playback implements Runnable {
+public class Playback implements Consumer<Task> {
 
     private final Map<UUID, AvatarInstance> avatars = new HashMap<>();
     private final int intervalTicks;
     private int count = 0;
     private Frame frame;
-    private Task task;
+    private boolean interrupt = false;
 
     public Playback(Frame first, int intervalTicks) {
         this.intervalTicks = intervalTicks;
@@ -25,27 +26,30 @@ public class Playback implements Runnable {
     }
 
     @Override
-    public void run() {
+    public void accept(Task task) {
+        if (interrupt) {
+            task.cancel();
+            removeAvatars();
+            return;
+        }
         if (count-- > 0) {
             pauseAvatars();
         } else if (frame == null) {
-            finishedPlayback();
+            stop();
         } else {
-            count = intervalTicks;
             syncAvatars(frame);
             restoreChanges(frame);
+            count = intervalTicks;
             frame = frame.next();
         }
     }
 
-    public void attachTask(Task task) {
-        this.task = task;
+    public void start(Object plugin) {
+        Task.builder().delayTicks(1).intervalTicks(1).execute(this).submit(plugin);
     }
 
     public void stop() {
-        if (this.task != null) {
-            this.task.cancel();
-        }
+        this.interrupt = true;
     }
 
     private void pauseAvatars() {
@@ -77,13 +81,5 @@ public class Playback implements Runnable {
 
     private void restoreChanges(Frame frame) {
         frame.getChange().restore();
-    }
-
-    private void finishedPlayback() {
-        frame = null;
-        removeAvatars();
-        if (task != null) {
-            task.cancel();
-        }
     }
 }

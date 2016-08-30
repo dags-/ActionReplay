@@ -14,7 +14,6 @@ import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.tileentity.ChangeSignEvent;
 import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.event.filter.cause.Root;
-import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -58,7 +57,7 @@ public class Recorder {
         }
     }
 
-    @Listener(order = Order.POST)
+    // @Listener(order = Order.POST)
     public void onEntitySpawn(SpawnEntityEvent event, @Root Player player) {
         if (activeLocation(player.getLocation())) {
             AvatarSnapshot snapshot = new AvatarSnapshot(player);
@@ -76,11 +75,14 @@ public class Recorder {
     }
 
     public void play(Object plugin, int intervalTicks) {
-        if (!isRecording() && playback == null) {
+        if (!isRecording()) {
+            if (playback != null) {
+                playback.stop();
+                playback = null;
+            }
             Frame.undoAll(last);
             playback = new Playback(first, intervalTicks);
-            Task task = Task.builder().intervalTicks(intervalTicks).execute(playback).submit(plugin);
-            playback.attachTask(task);
+            playback.start(plugin);
         }
     }
 
