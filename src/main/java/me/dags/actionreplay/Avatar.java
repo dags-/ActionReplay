@@ -6,6 +6,9 @@ import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.Human;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.item.ItemTypes;
+import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -32,6 +35,11 @@ public class Avatar {
         return player != null ? player.getTransform() : null;
     }
 
+    public ItemStackSnapshot getItemInHand() {
+        Player player = getPlayer();
+        return player != null ? player.getItemInHand().map(ItemStack::createSnapshot).orElse(ItemStackSnapshot.NONE) : ItemStackSnapshot.NONE;
+    }
+
     public Player getPlayer() {
         Player player = this.reference.get();
         if (player == null) {
@@ -40,7 +48,7 @@ public class Avatar {
         return player;
     }
 
-    public void updateAvatar(Transform<World> transform) {
+    public void updatePosition(Transform<World> transform) {
         initAvatar(transform);
 
         if (avatar != null) {
@@ -48,6 +56,14 @@ public class Avatar {
             avatar.offer(Keys.INVULNERABILITY_TICKS, Integer.MAX_VALUE);
             avatar.offer(Keys.FALL_DISTANCE, 0F);
             avatar.offer(Keys.FALL_TIME, 0);
+        }
+    }
+
+    public void updateItemInHand(ItemStackSnapshot itemStack) {
+        if (itemStack != ItemStackSnapshot.NONE) {
+            avatar.setItemInHand(itemStack.createStack());
+        } else {
+            avatar.setItemInHand(ItemStack.of(ItemTypes.NONE, 1));
         }
     }
 

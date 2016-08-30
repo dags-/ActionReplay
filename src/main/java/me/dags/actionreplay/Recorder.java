@@ -4,6 +4,7 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.scheduler.Task;
@@ -32,7 +33,7 @@ public class Recorder {
         this.max = new Vector2i(center.getX() + size, center.getZ() + size);
     }
 
-    @Listener
+    @Listener(order = Order.POST)
     public void onBlockChange(ChangeBlockEvent event, @Root Player player) {
         if (player.getWorld().getUniqueId() == worldId && contains(player.getLocation().getBlockPosition())) {
             Avatar avatar = getOrCreate(player);
@@ -57,12 +58,12 @@ public class Recorder {
 
     public void playBack(Object plugin, int ticks) {
         stopPlayback();
-        reset();
+        resetPlayback();
         Playback playback = new Playback(first, ticks);
         task = Task.builder().delayTicks(ticks).intervalTicks(1).execute(playback).submit(plugin);
     }
 
-    public void reset() {
+    public void resetPlayback() {
         Snapshot record = current;
         while (record != null) {
             record.resetBlocks();
@@ -74,7 +75,7 @@ public class Recorder {
         if (task != null) {
             task.cancel();
             task = null;
-            reset();
+            resetPlayback();
             Snapshot record = first;
             while (record != null) {
                 record.restoreBlocks();
