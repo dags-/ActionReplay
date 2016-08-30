@@ -1,4 +1,4 @@
-package me.dags.actionreplay;
+package me.dags.actionreplay.event;
 
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.Entity;
@@ -13,12 +13,11 @@ import java.util.stream.Collectors;
 /**
  * @author dags <dags@dags.me>
  */
-public class EntityFrame extends KeyFrame.TargetAvatar {
+public class EntityChange implements Change {
 
     private final List<WeakReference<Entity>> entities;
 
-    public EntityFrame(Avatar avatar, SpawnEntityEvent event) {
-        super(avatar);
+    public EntityChange(SpawnEntityEvent event) {
         List<Entity> entityList = event.getEntities();
         this.entities = new ArrayList<>(entityList.size());
         this.entities.addAll(entityList.stream().map(WeakReference::new).collect(Collectors.toList()));
@@ -33,7 +32,7 @@ public class EntityFrame extends KeyFrame.TargetAvatar {
     }
 
     @Override
-    public void reset() {
+    public void undo() {
         Iterator<WeakReference<Entity>> iterator = entities.iterator();
         while (iterator.hasNext()) {
             hide(iterator, true);

@@ -1,4 +1,4 @@
-package me.dags.actionreplay;
+package me.dags.actionreplay.event;
 
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.data.Transaction;
@@ -9,33 +9,24 @@ import java.util.List;
 /**
  * @author dags <dags@dags.me>
  */
-public class BlockFrame extends KeyFrame.TargetAvatar {
+public class BlockChange implements Change {
 
     private final List<Transaction<BlockSnapshot>> transactions;
 
-    public BlockFrame(Avatar avatar, ChangeBlockEvent event) {
-        super(avatar);
+    public BlockChange(ChangeBlockEvent event) {
         this.transactions = event.getTransactions();
     }
 
     @Override
     public void restore() {
-        restoreBlocks();
-    }
-
-    @Override
-    public void reset() {
-        resetBlocks();
-    }
-
-    private void restoreBlocks() {
         for (Transaction<BlockSnapshot> transaction : transactions) {
             transaction.getOriginal().getLocation()
                     .ifPresent(loc -> loc.setBlock(transaction.getFinal().getExtendedState()));
         }
     }
 
-    private void resetBlocks() {
+    @Override
+    public void undo() {
         for (Transaction<BlockSnapshot> transaction : transactions) {
             transaction.getOriginal().getLocation()
                     .ifPresent(loc -> loc.setBlock(transaction.getOriginal().getExtendedState()));

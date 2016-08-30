@@ -37,7 +37,7 @@ public class ActionReplay {
     @Listener
     public void stop(GameStoppingEvent event) {
         if (recorder != null) {
-            recorder.stopPlayback();
+            recorder.interrupt();
         }
     }
 
@@ -72,7 +72,7 @@ public class ActionReplay {
     public void resetRecorder(@Caller Player player) {
         if (recorder != null) {
             Sponge.getEventManager().unregisterListeners(recorder);
-            recorder.stopPlayback();
+            recorder.interrupt();
             recorder = null;
             format.info("Reset recorder").tell(player);
         } else {
@@ -87,8 +87,8 @@ public class ActionReplay {
         } else if (recorder.isRecording()) {
             format.error("Recorder is currently recording. Use ").stress("/actionreplay stop").tell(player);
         } else {
-            format.info("Playing back at ").stress(ticks).info(" ticks per block change").tell(player);
-            recorder.playBack(this, ticks);
+            format.info("Playing back at ").stress(ticks).info(" ticks per block event").tell(player);
+            recorder.play(this, ticks);
         }
     }
 
