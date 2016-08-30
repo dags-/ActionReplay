@@ -51,6 +51,7 @@ public class ActionReplay {
         } else {
             Vector3i position = player.getLocation().getBlockPosition();
             recorder = new Recorder(player.getWorld().getUniqueId(), position, radius);
+            recorder.setRecording(true);
             Sponge.getEventManager().registerListeners(this, recorder);
             format.info("Recording block around ").stress(position).tell(player);
         }
@@ -60,6 +61,7 @@ public class ActionReplay {
     public void stopRecorder(@Caller Player player) {
         if (recorder != null) {
             Sponge.getEventManager().registerListeners(this, recorder);
+            recorder.setRecording(false);
             format.info("Recording stopped").tell(player);
         } else {
             format.error("Recorder has not been set up yet").tell(player);
@@ -87,7 +89,6 @@ public class ActionReplay {
         } else {
             format.info("Playing back at ").stress(ticks).info(" ticks per block change").tell(player);
             recorder.playBack(this, ticks);
-            recorder.setRecording(true);
         }
     }
 
