@@ -31,11 +31,21 @@ public class AvatarSnapshot {
         terminal = true;
     }
 
-    public AvatarSnapshot(Player player) {
+    private AvatarSnapshot(Mutable mutable) {
+        this.worldId = mutable.worldId;
+        this.playerId = mutable.playerId;
+        this.playerName = mutable.playerName;
+        this.position = mutable.position;
+        this.rotation = mutable.rotation;
+        this.inHand = mutable.inHand;
+        this.terminal = false;
+    }
+
+    public AvatarSnapshot(Player player, Vector3d relative) {
         worldId = player.getWorld().getUniqueId();
         playerId = player.getUniqueId();
         playerName = player.getName();
-        position = player.getTransform().getPosition();
+        position = player.getTransform().getPosition().sub(relative);
         rotation = player.getTransform().getRotation();
         inHand = player.getItemInHand().map(ItemStack::createSnapshot).orElse(ItemStackSnapshot.NONE);
         terminal = false;
@@ -45,8 +55,10 @@ public class AvatarSnapshot {
         return playerId;
     }
 
-    public AvatarSnapshot getUpdatedCopy() {
-        return Sponge.getServer().getPlayer(playerId).map(AvatarSnapshot::new).orElse(new AvatarSnapshot(playerId));
+    public AvatarSnapshot getUpdatedCopy(Vector3d relative) {
+        return Sponge.getServer().getPlayer(playerId)
+                .map(player -> new AvatarSnapshot(player, relative))
+                .orElse(new AvatarSnapshot(playerId));
     }
 
     public boolean isTerminal() {
@@ -61,5 +73,23 @@ public class AvatarSnapshot {
     @Override
     public boolean equals(Object o) {
         return o != null && o instanceof AvatarSnapshot && o.hashCode() == hashCode();
+    }
+
+    public static Mutable mutable() {
+        return new Mutable();
+    }
+
+    public static class Mutable {
+
+        public UUID worldId = UUID.randomUUID();
+        public UUID playerId = UUID.randomUUID();
+        public String playerName = "";
+        public Vector3d position = Vector3d.ZERO;
+        public Vector3d rotation = Vector3d.ZERO;
+        public ItemStackSnapshot inHand = ItemStackSnapshot.NONE;
+
+        public AvatarSnapshot build() {
+            return new AvatarSnapshot(this);
+        }
     }
 }

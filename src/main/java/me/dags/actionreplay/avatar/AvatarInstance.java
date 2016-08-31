@@ -27,14 +27,14 @@ public class AvatarInstance {
         this.uuid = uuid;
     }
 
-    public void sync(AvatarSnapshot snapshot) {
+    public void sync(AvatarSnapshot snapshot, Vector3d relative) {
         Human human = getEntity(snapshot);
         World world = getWorld(snapshot);
         if (human != null && !human.isRemoved() && world != null) {
             if (snapshot.isTerminal()) {
                 human.remove();
             } else {
-                Transform<World> transform = new Transform<>(world, snapshot.position, snapshot.rotation);
+                Transform<World> transform = new Transform<>(world, snapshot.position.add(relative), snapshot.rotation);
                 ItemStack itemStack = snapshot.inHand.createStack();
 
                 human.setTransform(transform);
