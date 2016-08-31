@@ -104,7 +104,7 @@ public class Recorder {
     }
 
     public void setRecording(boolean recording) {
-        this.recording = recording;
+        this.recording = isPresent() && recording;
     }
 
     private void addNextFrame(AvatarSnapshot snapshot, Change change) {

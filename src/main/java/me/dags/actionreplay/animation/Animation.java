@@ -2,6 +2,7 @@ package me.dags.actionreplay.animation;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
+import org.spongepowered.api.scheduler.Task;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,7 +45,7 @@ public class Animation {
     }
 
     public boolean play(Object plugin, int intervalTicks, boolean showAvatars) {
-        if (isPresent()) {
+        if (!isPresent()) {
             throw new UnsupportedOperationException("Cannot play an EMPTY animation");
         }
         if (playback.isPresent()) {
@@ -52,7 +53,7 @@ public class Animation {
         }
         Frame.undoAll(last, center);
         playback = new AnimationTask(center, first, intervalTicks, showAvatars);
-        playback.start(plugin);
+        Task.builder().delayTicks(intervalTicks).intervalTicks(1).execute(playback).submit(plugin);
         return true;
     }
 

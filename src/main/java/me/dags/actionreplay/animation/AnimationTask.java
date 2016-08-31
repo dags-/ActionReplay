@@ -68,7 +68,7 @@ public class AnimationTask implements Consumer<Task> {
     }
 
     public void start(Object plugin) {
-        Task.builder().delayTicks(1).intervalTicks(1).execute(this).submit(plugin);
+        Task.builder().delayTicks(intervalTicks).intervalTicks(1).execute(this).submit(plugin);
     }
 
     public void stop() {

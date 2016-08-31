@@ -45,88 +45,89 @@ public class ActionReplay {
         }
     }
 
-    @Command(aliases = "start", parent = "recorder", perm = "actionreplay.recorder.start")
-    public void startRecorder(@Caller Player player) {
+    @Command(aliases = "create", parent = "recorder", perm = "actionreplay.recorder")
+    public void createRecorder(@Caller Player player, @One("radius") int radius, @One("height") int height) {
         if (recorder.isPresent()) {
-            format.error("Recorder has not been set up yet").tell(player);
-        } else if (recorder.isRecording()) {
-            format.error("Recorder is already recording").tell(player);
+            format.error("A recorder is already in use").tell(player);
         } else {
-            recorder.setRecording(true);
-            Sponge.getEventManager().registerListeners(this, recorder);
-            format.info("Now recording...").tell(player);
-        }
-    }
-
-    @Command(aliases = "start", parent = "recorder", perm = "actionreplay.recorder.start")
-    public void startRecorder(@Caller Player player, @One("radius") int radius, @One("height") int height) {
-        if (recorder.isPresent()) {
             Vector3i position = player.getLocation().getBlockPosition();
             recorder = new Recorder(player.getWorld().getUniqueId(), position, radius, height);
-            recorder.setRecording(true);
             animation = Animation.EMPTY;
-            Sponge.getEventManager().registerListeners(this, recorder);
-            format.info("Recording changes around ").stress(position).tell(player);
-        } else {
+            format.info("Created recorder at ").stress(position).tell(player);
             startRecorder(player);
         }
     }
 
-    @Command(aliases = "stop", parent = "recorder", perm = "actionreplay.recorder.stop")
-    public void stopRecorder(@Caller Player player) {
+    @Command(aliases = "start", parent = "recorder", perm = "actionreplay.recorder")
+    public void startRecorder(@Caller Player player) {
         if (recorder.isPresent()) {
-            format.error("Recorder has not been set up yet").tell(player);
+            if (recorder.isRecording()) {
+                format.error("Recorder is already recording").tell(player);
+            } else {
+                recorder.setRecording(true);
+                Sponge.getEventManager().registerListeners(this, recorder);
+                format.info("Now recording...").tell(player);
+            }
         } else {
-            Sponge.getEventManager().unregisterListeners(recorder);
-            recorder.setRecording(false);
-            format.info("Recording stopped").tell(player);
+            format.error("Recorder has not been set up yet").tell(player);
         }
     }
 
-    @Command(aliases = "reset", parent = "recorder", perm = "actionreplay.recorder.reset")
+    @Command(aliases = "stop", parent = "recorder", perm = "actionreplay.recorder")
+    public void stopRecorder(@Caller Player player) {
+        if (recorder.isPresent() && recorder.isRecording()) {
+            Sponge.getEventManager().unregisterListeners(recorder);
+            recorder.setRecording(false);
+            format.info("Recording stopped").tell(player);
+        } else {
+            format.error("Recorder has not been set up yet").tell(player);
+        }
+    }
+
+    @Command(aliases = "reset", parent = "recorder", perm = "actionreplay.recorder")
     public void resetRecorder(@Caller Player player) {
         if (recorder.isPresent()) {
-            format.error("Recorder has not been set up yet").tell(player);
-        } else {
             Sponge.getEventManager().unregisterListeners(recorder);
             animation.stop();
             recorder = Recorder.EMPTY;
             format.info("Cleared recorder").tell(player);
+        } else {
+            format.error("Recorder has not been set up yet").tell(player);
         }
     }
 
-    @Command(aliases = "create", parent = "replay", perm = "actionreplay.replay.create")
+    @Command(aliases = "create", parent = "replay", perm = "actionreplay.replay")
     public void replayCreate(@Caller Player player) {
         if (recorder.isPresent()) {
-            format.error("Recorder has not been set up yet").tell(player);
-        } else {
             if (animation.isPlaying() && animation.stop()) {
                 format.subdued("Stopped current animation").tell(player);
             }
             animation = recorder.getAnimation();
             format.info("Created new replay").tell(player);
+        } else {
+            format.error("Recorder has not been set up yet").tell(player);
         }
     }
 
-    @Command(aliases = "here", parent = "replay create", perm = "actionreplay.replay.create")
+    @Command(aliases = "here", parent = "replay create", perm = "actionreplay.replay")
     public void replayCreateHere(@Caller Player player) {
         if (recorder.isPresent()) {
-            format.error("Recorder has not been set up yet").tell(player);
-        } else {
             replayCreate(player);
             animation.setCenter(player.getLocation().getBlockPosition());
             format.info("Set animation position to ").tell(player);
+        } else {
+            format.error("Recorder has not been set up yet").tell(player);
         }
     }
 
-    @Command(aliases = "start", parent = "replay", perm = "actionreplay.replay.start")
+    @Command(aliases = "start", parent = "replay", perm = "actionreplay.replay")
     public void animationPlay(@Caller Player player, @One("ticks") int ticks) {
         animationPlay(player, ticks, true);
     }
 
-    @Command(aliases = "start", parent = "replay", perm = "actionreplay.replay.start")
+    @Command(aliases = "start", parent = "replay", perm = "actionreplay.replay")
     public void animationPlay(@Caller Player player, @One("ticks") int ticks, @One("avatars") boolean show) {
-        if (recorder.isPresent()) {
+        if (!recorder.isPresent()) {
             format.error("Nothing has been recorded yet").tell(player);
         } else if (recorder.isRecording()) {
             format.error("Recorder is currently recording").tell(player);
@@ -140,7 +141,7 @@ public class ActionReplay {
         }
     }
 
-    @Command(aliases = "stop", parent = "replay", perm = "actionreplay.replay.stop")
+    @Command(aliases = "stop", parent = "replay", perm = "actionreplay.replay")
     public void animationStop(@Caller Player player) {
         if (animation.isPlaying()) {
             animation.stop();
