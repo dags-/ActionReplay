@@ -66,7 +66,7 @@ public class ActionReplay {
             recorder.setRecording(true);
             animation = Animation.EMPTY;
             Sponge.getEventManager().registerListeners(this, recorder);
-            format.info("Recording block around ").stress(position).tell(player);
+            format.info("Recording changes around ").stress(position).tell(player);
         } else {
             startRecorder(player);
         }
