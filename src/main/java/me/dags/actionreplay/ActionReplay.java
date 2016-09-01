@@ -2,19 +2,26 @@ package me.dags.actionreplay;
 
 import com.flowpowered.math.vector.Vector3i;
 import me.dags.actionreplay.animation.Animation;
+import me.dags.actionreplay.animation.Frame;
 import me.dags.actionreplay.animation.Recorder;
+import me.dags.actionreplay.avatar.AvatarSnapshot;
+import me.dags.actionreplay.event.BlockTransaction;
+import me.dags.actionreplay.event.Change;
+import me.dags.actionreplay.event.ChangeBuilder;
 import me.dags.commandbus.CommandBus;
 import me.dags.commandbus.Format;
 import me.dags.commandbus.annotation.Caller;
 import me.dags.commandbus.annotation.Command;
 import me.dags.commandbus.annotation.One;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.data.DataManager;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.entity.spawn.SpawnCause;
 import org.spongepowered.api.event.cause.entity.spawn.SpawnTypes;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
+import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStoppingEvent;
 import org.spongepowered.api.plugin.Plugin;
 
@@ -30,6 +37,16 @@ public class ActionReplay {
     private Recorder recorder = Recorder.EMPTY;
     private Animation animation = Animation.EMPTY;
     private Format format;
+
+    @Listener
+    public void pre(GamePreInitializationEvent event) {
+        DataManager manager = Sponge.getDataManager();
+        manager.registerBuilder(Frame.class, new Frame.Builder());
+        manager.registerBuilder(Change.class, new ChangeBuilder());
+        manager.registerBuilder(Animation.class, new Animation.Builder());
+        manager.registerBuilder(AvatarSnapshot.class, new AvatarSnapshot.Builder());
+        manager.registerBuilder(BlockTransaction.class, new BlockTransaction.Builder());
+    }
 
     @Listener
     public void init(GameInitializationEvent event) {
@@ -121,28 +138,32 @@ public class ActionReplay {
     }
 
     @Command(aliases = "start", parent = "replay", perm = "actionreplay.replay")
-    public void animationPlay(@Caller Player player, @One("ticks") int ticks) {
-        animationPlay(player, ticks, true);
+    public void replayStart(@Caller Player player, @One("ticks") int ticks) {
+        replayStart(player, ticks, true);
     }
 
     @Command(aliases = "start", parent = "replay", perm = "actionreplay.replay")
-    public void animationPlay(@Caller Player player, @One("ticks") int ticks, @One("avatars") boolean show) {
+    public void replayStart(@Caller Player player, @One("ticks") int ticks, @One("avatars") boolean show) {
         if (!recorder.isPresent()) {
             format.error("Nothing has been recorded yet").tell(player);
         } else if (recorder.isRecording()) {
             format.error("Recorder is currently recording").tell(player);
         } else if (!animation.isPresent()) {
-            format.error("An animation has not been created for this recording").tell(player);
+            replayCreate(player);
+            replayStart(player, ticks, show);
         } else if (animation.isPlaying()) {
             format.error("An animation is currently running").tell(player);
         } else {
-            animation.play(this, ticks, show);
-            format.info("Playing back at ").stress(ticks).info(" ticks per block").tell(player);
+            if (animation.play(this, ticks, show)) {
+                format.info("Starting replay...").tell(player);
+            } else {
+                format.error("Something went wrong").tell(player);
+            }
         }
     }
 
     @Command(aliases = "stop", parent = "replay", perm = "actionreplay.replay")
-    public void animationStop(@Caller Player player) {
+    public void replayStop(@Caller Player player) {
         if (animation.isPlaying()) {
             animation.stop();
             animation = Animation.EMPTY;

@@ -52,9 +52,10 @@ public class AnimationTask implements Consumer<Task> {
         } else if (frame == null) {
             stop();
         } else {
+            count = intervalTicks;
+
             syncAvatars(frame);
             restoreChanges(frame);
-            count = intervalTicks;
             frame = frame.next();
         }
     }
@@ -68,7 +69,7 @@ public class AnimationTask implements Consumer<Task> {
     }
 
     public void start(Object plugin) {
-        Task.builder().delayTicks(intervalTicks).intervalTicks(1).execute(this).submit(plugin);
+        Task.builder().delayTicks(1).intervalTicks(1).execute(this).submit(plugin);
     }
 
     public void stop() {

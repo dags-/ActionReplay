@@ -4,15 +4,19 @@ import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import me.dags.actionreplay.avatar.AvatarSnapshot;
 import me.dags.actionreplay.event.Change;
+import org.spongepowered.api.data.*;
+import org.spongepowered.api.data.persistence.AbstractDataBuilder;
+import org.spongepowered.api.data.persistence.InvalidDataException;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author dags <dags@dags.me>
  */
-public class Frame {
+public class Frame implements DataSerializable {
+
+    private static final DataQuery AVATARS = DataQuery.of("AVATARS");
+    private static final DataQuery CHANGE = DataQuery.of("CHANGE");
 
     private final Set<AvatarSnapshot> avatars = new HashSet<>();
     private final Change change;
@@ -24,9 +28,9 @@ public class Frame {
         this.avatars.add(avatar);
     }
 
-    private Frame(Mutable mutable) {
-        this.avatars.addAll(mutable.avatars);
-        this.change = mutable.change;
+    private Frame(Collection<AvatarSnapshot> avatars, Change change) {
+        this.avatars.addAll(avatars);
+        this.change = change;
     }
 
     public Frame next() {
@@ -42,8 +46,9 @@ public class Frame {
         this.next = frame;
     }
 
-    public void passAvatarsToNext(Vector3d relative) {
-        this.avatars.stream().map(avatar -> avatar.getUpdatedCopy(relative)).forEach(next().avatars::add);
+    public void setNextAndUpdate(Frame next, Vector3d relative) {
+        setNext(next);
+        avatars.stream().map(avatar -> avatar.getUpdatedCopy(relative)).forEach(next.avatars::add);
     }
 
     public Collection<AvatarSnapshot> getAvatars() {
@@ -90,20 +95,32 @@ public class Frame {
         }
     }
 
-    public static Mutable mutable() {
-        return new Mutable();
+    @Override
+    public int getContentVersion() {
+        return 0;
     }
 
-    public static class Mutable {
+    @Override
+    public DataContainer toContainer() {
+        return new MemoryDataContainer()
+                .set(AVATARS, avatars)
+                .set(CHANGE, change);
+    }
 
-        public Set<AvatarSnapshot> avatars = new HashSet<>();
-        public Change change = null;
+    public static class Builder extends AbstractDataBuilder<Frame> {
 
-        public Frame build() {
-            if (change == null) {
-                throw new UnsupportedOperationException("Change is null!");
+        public Builder() {
+            super(Frame.class, 0);
+        }
+
+        @Override
+        public Optional<Frame> buildContent(DataView container) throws InvalidDataException {
+            Optional<List<AvatarSnapshot>> avatars = container.getSerializableList(AVATARS, AvatarSnapshot.class);
+            Optional<Change> change = container.getSerializable(CHANGE, Change.class);
+            if (avatars.isPresent() && change.isPresent()) {
+                return Optional.of(new Frame(avatars.get(), change.get()));
             }
-            return new Frame(this);
+            return Optional.empty();
         }
     }
 }

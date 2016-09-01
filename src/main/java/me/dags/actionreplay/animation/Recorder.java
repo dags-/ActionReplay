@@ -2,10 +2,7 @@ package me.dags.actionreplay.animation;
 
 import com.flowpowered.math.vector.Vector3i;
 import me.dags.actionreplay.avatar.AvatarSnapshot;
-import me.dags.actionreplay.event.BlockChange;
-import me.dags.actionreplay.event.Change;
-import me.dags.actionreplay.event.EntityChange;
-import me.dags.actionreplay.event.SignChange;
+import me.dags.actionreplay.event.*;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.entity.living.player.Player;
@@ -57,14 +54,13 @@ public class Recorder {
     public void onBlockChange(ChangeBlockEvent event, @Root Player player) {
         if (activeLocation(player.getLocation())) {
             AvatarSnapshot snapshot = new AvatarSnapshot(player, center.toDouble());
-            List<Transaction<BlockSnapshot>> changed = new ArrayList<>();
+            List<BlockTransaction> changed = new ArrayList<>();
             for (Transaction<BlockSnapshot> transaction : event.getTransactions()) {
                 BlockSnapshot from = transaction.getDefault();
                 BlockSnapshot to = transaction.getFinal();
-
                 from = BlockSnapshot.builder().from(from).position(from.getPosition().sub(center)).build();
                 to = BlockSnapshot.builder().from(to).position(to.getPosition().sub(center)).build();
-                changed.add(new Transaction<>(from, to));
+                changed.add(new BlockTransaction(from, to));
             }
             Change change = new BlockChange(changed);
             addNextFrame(snapshot, change);
@@ -108,14 +104,13 @@ public class Recorder {
     }
 
     private void addNextFrame(AvatarSnapshot snapshot, Change change) {
-        Frame nextFrame = new Frame(snapshot, change);
+        Frame next = new Frame(snapshot, change);
         if (first == null) {
-            first = nextFrame;
+            first = next;
             last = first;
         } else {
-            last.setNext(nextFrame);
-            last.passAvatarsToNext(center.toDouble());
-            last = nextFrame;
+            last.setNextAndUpdate(next, center.toDouble());
+            last = next;
         }
     }
 

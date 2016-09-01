@@ -1,19 +1,18 @@
 package me.dags.actionreplay.animation;
 
-import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-import org.spongepowered.api.scheduler.Task;
+import org.spongepowered.api.data.*;
+import org.spongepowered.api.data.persistence.AbstractDataBuilder;
+import org.spongepowered.api.data.persistence.InvalidDataException;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author dags <dags@dags.me>
  */
-public class Animation {
+public class Animation implements DataSerializable {
 
+    private static final DataQuery FRAMES = DataQuery.of("FRAMES");
     public static final Animation EMPTY = new Animation();
 
     private final Frame first;
@@ -48,12 +47,12 @@ public class Animation {
         if (!isPresent()) {
             throw new UnsupportedOperationException("Cannot play an EMPTY animation");
         }
-        if (playback.isPresent()) {
-            return false;
+        if (isPlaying()) {
+            throw new UnsupportedOperationException("An animation is already playing");
         }
         Frame.undoAll(last, center);
         playback = new AnimationTask(center, first, intervalTicks, showAvatars);
-        Task.builder().delayTicks(intervalTicks).intervalTicks(1).execute(playback).submit(plugin);
+        playback.start(plugin);
         return true;
     }
 
@@ -98,10 +97,33 @@ public class Animation {
         while (iterator.hasNext()) {
             Frame next = iterator.next();
             last.setNext(next);
-            last.passAvatarsToNext(Vector3d.ZERO);
             last = next;
         }
 
         return new Animation(first, last);
+    }
+
+    @Override
+    public int getContentVersion() {
+        return 0;
+    }
+
+    @Override
+    public DataContainer toContainer() {
+        List<Frame> frames = Animation.toList(this);
+        return new MemoryDataContainer()
+                .set(FRAMES, frames);
+    }
+
+    public static class Builder extends AbstractDataBuilder<Animation> {
+
+        public Builder() {
+            super(Animation.class, 0);
+        }
+
+        @Override
+        public Optional<Animation> buildContent(DataView container) throws InvalidDataException {
+            return container.getSerializableList(FRAMES, Frame.class).map(Animation::fromList);
+        }
     }
 }

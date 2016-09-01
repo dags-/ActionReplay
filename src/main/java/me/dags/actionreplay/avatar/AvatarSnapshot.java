@@ -2,23 +2,34 @@ package me.dags.actionreplay.avatar;
 
 import com.flowpowered.math.vector.Vector3d;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.data.*;
+import org.spongepowered.api.data.persistence.DataBuilder;
+import org.spongepowered.api.data.persistence.InvalidDataException;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
  * @author dags <dags@dags.me>
  */
-public class AvatarSnapshot {
+public class AvatarSnapshot implements DataSerializable {
 
-    public final UUID worldId;
-    public final UUID playerId;
-    public final String playerName;
-    public final Vector3d position;
-    public final Vector3d rotation;
-    public final ItemStackSnapshot inHand;
+    private static final DataQuery WORLD_ID = DataQuery.of("WORLD_ID");
+    private static final DataQuery PLAYER_ID = DataQuery.of("PLAYER_ID");
+    private static final DataQuery PLAYER_NAME = DataQuery.of("PLAYER_NAME");
+    private static final DataQuery POSITION = DataQuery.of("POSITION");
+    private static final DataQuery ROTATION = DataQuery.of("ROTATION");
+    private static final DataQuery ITEM = DataQuery.of("ITEM");
+
+    final UUID worldId;
+    final UUID playerId;
+    final String playerName;
+    final Vector3d position;
+    final Vector3d rotation;
+    final ItemStackSnapshot inHand;
     private final boolean terminal;
 
     private AvatarSnapshot(UUID id) {
@@ -79,17 +90,57 @@ public class AvatarSnapshot {
         return new Mutable();
     }
 
-    public static class Mutable {
+    @Override
+    public int getContentVersion() {
+        return 0;
+    }
 
-        public UUID worldId = UUID.randomUUID();
-        public UUID playerId = UUID.randomUUID();
-        public String playerName = "";
-        public Vector3d position = Vector3d.ZERO;
-        public Vector3d rotation = Vector3d.ZERO;
-        public ItemStackSnapshot inHand = ItemStackSnapshot.NONE;
+    @Override
+    public DataContainer toContainer() {
+        return new MemoryDataContainer()
+                .set(WORLD_ID, worldId.toString())
+                .set(PLAYER_ID, playerId.toString())
+                .set(PLAYER_NAME, playerName)
+                .set(POSITION, position)
+                .set(ROTATION, rotation)
+                .set(ITEM, inHand);
+    }
 
-        public AvatarSnapshot build() {
+    private static class Mutable {
+
+        UUID worldId = UUID.randomUUID();
+        UUID playerId = UUID.randomUUID();
+        String playerName = "";
+        Vector3d position = Vector3d.ZERO;
+        Vector3d rotation = Vector3d.ZERO;
+        ItemStackSnapshot inHand = ItemStackSnapshot.NONE;
+
+        AvatarSnapshot build() {
             return new AvatarSnapshot(this);
+        }
+    }
+
+    public static class Builder implements DataBuilder<AvatarSnapshot> {
+
+        @Override
+        public Optional<AvatarSnapshot> build(DataView container) throws InvalidDataException {
+            Optional<UUID> worldId = container.getString(WORLD_ID).map(UUID::fromString);
+            Optional<UUID> playerId = container.getString(PLAYER_ID).map(UUID::fromString);
+            Optional<String> playerName = container.getString(PLAYER_NAME);
+            Optional<Vector3d> position = container.getObject(POSITION, Vector3d.class);
+            Optional<Vector3d> rotation = container.getObject(ROTATION, Vector3d.class);
+            Optional<ItemStackSnapshot> item = container.getSerializable(ITEM, ItemStackSnapshot.class);
+            if (worldId.isPresent() && playerId.isPresent() && playerName.isPresent() && position.isPresent() && rotation.isPresent() && item.isPresent()) {
+                Mutable mutable = new Mutable();
+                mutable.worldId = worldId.get();
+                mutable.playerId = playerId.get();
+                mutable.playerName = playerName.get();
+                mutable.position = position.get();
+                mutable.rotation = rotation.get();
+                mutable.inHand = item.get();
+                return Optional.of(mutable.build());
+            }
+            return Optional.empty();
         }
     }
 }

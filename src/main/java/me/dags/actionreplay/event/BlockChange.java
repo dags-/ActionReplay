@@ -2,6 +2,9 @@ package me.dags.actionreplay.event;
 
 import com.flowpowered.math.vector.Vector3i;
 import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.data.DataContainer;
+import org.spongepowered.api.data.DataQuery;
+import org.spongepowered.api.data.Queries;
 import org.spongepowered.api.data.Transaction;
 
 import java.util.List;
@@ -11,14 +14,12 @@ import java.util.List;
  */
 public class BlockChange implements Change {
 
-    private final List<Transaction<BlockSnapshot>> transactions;
+    static final DataQuery TRANSACTIONS = DataQuery.of("TRANSACTIONS");
 
-    public BlockChange(List<Transaction<BlockSnapshot>> transactions) {
+    private final List<BlockTransaction> transactions;
+
+    public BlockChange(List<BlockTransaction> transactions) {
         this.transactions = transactions;
-    }
-
-    public Iterable<Transaction<BlockSnapshot>> getTransactions() {
-        return transactions;
     }
 
     @Override
@@ -35,5 +36,17 @@ public class BlockChange implements Change {
             transaction.getOriginal().getLocation()
                     .ifPresent(loc -> loc.add(relative).setBlock(transaction.getOriginal().getExtendedState()));
         }
+    }
+
+    @Override
+    public int getContentVersion() {
+        return 0;
+    }
+
+    @Override
+    public DataContainer toContainer() {
+        return versionedContainer()
+                .set(Queries.CONTENT_VERSION, getContentVersion())
+                .set(BlockChange.TRANSACTIONS, transactions);
     }
 }
