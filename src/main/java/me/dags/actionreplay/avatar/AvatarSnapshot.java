@@ -3,7 +3,7 @@ package me.dags.actionreplay.avatar;
 import com.flowpowered.math.vector.Vector3d;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.*;
-import org.spongepowered.api.data.persistence.DataBuilder;
+import org.spongepowered.api.data.persistence.AbstractDataBuilder;
 import org.spongepowered.api.data.persistence.InvalidDataException;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.item.inventory.ItemStack;
@@ -120,10 +120,14 @@ public class AvatarSnapshot implements DataSerializable {
         }
     }
 
-    public static class Builder implements DataBuilder<AvatarSnapshot> {
+    public static class Builder extends AbstractDataBuilder<AvatarSnapshot> {
+
+        public Builder() {
+            super(AvatarSnapshot.class, 0);
+        }
 
         @Override
-        public Optional<AvatarSnapshot> build(DataView container) throws InvalidDataException {
+        public Optional<AvatarSnapshot> buildContent(DataView container) throws InvalidDataException {
             Optional<UUID> worldId = container.getString(WORLD_ID).map(UUID::fromString);
             Optional<UUID> playerId = container.getString(PLAYER_ID).map(UUID::fromString);
             Optional<String> playerName = container.getString(PLAYER_NAME);

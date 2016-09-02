@@ -1,11 +1,9 @@
 package me.dags.actionreplay.event;
 
 import com.flowpowered.math.vector.Vector3i;
-import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.data.DataContainer;
 import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.data.Queries;
-import org.spongepowered.api.data.Transaction;
 
 import java.util.List;
 
@@ -24,17 +22,17 @@ public class BlockChange implements Change {
 
     @Override
     public void restore(Vector3i relative) {
-        for (Transaction<BlockSnapshot> transaction : transactions) {
+        for (BlockTransaction transaction : transactions) {
             transaction.getOriginal().getLocation()
-                    .ifPresent(loc -> loc.add(relative).setBlock(transaction.getFinal().getExtendedState()));
+                    .ifPresent(loc -> loc.add(relative).setBlock(transaction.getTo().getExtendedState()));
         }
     }
 
     @Override
     public void undo(Vector3i relative) {
-        for (Transaction<BlockSnapshot> transaction : transactions) {
+        for (BlockTransaction transaction : transactions) {
             transaction.getOriginal().getLocation()
-                    .ifPresent(loc -> loc.add(relative).setBlock(transaction.getOriginal().getExtendedState()));
+                    .ifPresent(loc -> loc.add(relative).setBlock(transaction.getFrom().getExtendedState()));
         }
     }
 

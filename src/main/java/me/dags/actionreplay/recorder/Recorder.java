@@ -1,6 +1,8 @@
-package me.dags.actionreplay.animation;
+package me.dags.actionreplay.recorder;
 
 import com.flowpowered.math.vector.Vector3i;
+import me.dags.actionreplay.animation.Animation;
+import me.dags.actionreplay.animation.Frame;
 import me.dags.actionreplay.avatar.AvatarSnapshot;
 import me.dags.actionreplay.event.*;
 import org.spongepowered.api.block.BlockSnapshot;
@@ -43,7 +45,7 @@ public class Recorder {
         this.max = Vector3i.ZERO;
     }
 
-    public Recorder(UUID worldId, Vector3i center, int radius, int height) {
+    protected Recorder(UUID worldId, Vector3i center, int radius, int height) {
         this.worldId = worldId;
         this.center = center;
         this.min = new Vector3i(center.getX() - radius, center.getY(), center.getZ() - radius);
@@ -56,7 +58,7 @@ public class Recorder {
             AvatarSnapshot snapshot = new AvatarSnapshot(player, center.toDouble());
             List<BlockTransaction> changed = new ArrayList<>();
             for (Transaction<BlockSnapshot> transaction : event.getTransactions()) {
-                BlockSnapshot from = transaction.getDefault();
+                BlockSnapshot from = transaction.getOriginal();
                 BlockSnapshot to = transaction.getFinal();
                 from = BlockSnapshot.builder().from(from).position(from.getPosition().sub(center)).build();
                 to = BlockSnapshot.builder().from(to).position(to.getPosition().sub(center)).build();
@@ -67,7 +69,7 @@ public class Recorder {
         }
     }
 
-    @Listener(order = Order.POST)
+    // @Listener(order = Order.POST)
     public void onSignChange(ChangeSignEvent event, @Root Player player) {
         if (activeLocation(event.getTargetTile().getLocation())) {
             AvatarSnapshot snapshot = new AvatarSnapshot(player, center.toDouble());
@@ -87,6 +89,12 @@ public class Recorder {
         }
     }
 
+    public void addNextFrame(AvatarSnapshot snapshot, Change change) {}
+
+    public Vector3i getCenter() {
+        return center;
+    }
+
     public boolean isPresent() {
         return this != EMPTY;
     }
@@ -101,17 +109,6 @@ public class Recorder {
 
     public void setRecording(boolean recording) {
         this.recording = isPresent() && recording;
-    }
-
-    private void addNextFrame(AvatarSnapshot snapshot, Change change) {
-        Frame next = new Frame(snapshot, change);
-        if (first == null) {
-            first = next;
-            last = first;
-        } else {
-            last.setNextAndUpdate(next, center.toDouble());
-            last = next;
-        }
     }
 
     private boolean activeLocation(Location<World> location) {

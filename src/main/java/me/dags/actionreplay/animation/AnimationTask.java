@@ -53,7 +53,6 @@ public class AnimationTask implements Consumer<Task> {
             stop();
         } else {
             count = intervalTicks;
-
             syncAvatars(frame);
             restoreChanges(frame);
             frame = frame.next();

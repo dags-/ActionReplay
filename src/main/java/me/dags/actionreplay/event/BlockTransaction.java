@@ -24,6 +24,14 @@ public class BlockTransaction extends Transaction<BlockSnapshot> implements Data
         return 0;
     }
 
+    public BlockSnapshot getFrom() {
+        return super.getOriginal();
+    }
+
+    public BlockSnapshot getTo() {
+        return super.getDefault();
+    }
+
     @Override
     public DataContainer toContainer() {
         final DataContainer container = new MemoryDataContainer()

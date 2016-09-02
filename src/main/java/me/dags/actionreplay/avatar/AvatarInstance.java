@@ -28,7 +28,7 @@ public class AvatarInstance {
     }
 
     public void sync(AvatarSnapshot snapshot, Vector3d relative) {
-        Human human = getEntity(snapshot);
+        Human human = getEntity(snapshot, relative);
         World world = getWorld(snapshot);
         if (human != null && !human.isRemoved() && world != null) {
             if (snapshot.isTerminal()) {
@@ -59,11 +59,11 @@ public class AvatarInstance {
         }
     }
 
-    private Human getEntity(AvatarSnapshot snapshot) {
+    private Human getEntity(AvatarSnapshot snapshot, Vector3d relative) {
         Human human = this.human.get();
         World world = getWorld(snapshot);
         if (human == null && world != null) {
-            human = world.createEntity(EntityTypes.HUMAN, snapshot.position)
+            human = world.createEntity(EntityTypes.HUMAN, snapshot.position.add(relative))
                     .filter(Human.class::isInstance)
                     .map(Human.class::cast)
                     .orElse(null);
@@ -71,8 +71,9 @@ public class AvatarInstance {
             human.offer(Keys.SKIN_UNIQUE_ID, snapshot.playerId);
             human.offer(Keys.DISPLAY_NAME, Text.of(snapshot.playerName));
 
-            world.spawnEntity(human, ActionReplay.spawnCause());
-            this.human = new WeakReference<>(human);
+            if (world.spawnEntity(human, ActionReplay.spawnCause())) {
+                this.human = new WeakReference<>(human);
+            }
         }
         return human;
     }

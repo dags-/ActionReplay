@@ -3,11 +3,12 @@ package me.dags.actionreplay;
 import com.flowpowered.math.vector.Vector3i;
 import me.dags.actionreplay.animation.Animation;
 import me.dags.actionreplay.animation.Frame;
-import me.dags.actionreplay.animation.Recorder;
 import me.dags.actionreplay.avatar.AvatarSnapshot;
 import me.dags.actionreplay.event.BlockTransaction;
 import me.dags.actionreplay.event.Change;
 import me.dags.actionreplay.event.ChangeBuilder;
+import me.dags.actionreplay.recorder.MemoryRecorder;
+import me.dags.actionreplay.recorder.Recorder;
 import me.dags.commandbus.CommandBus;
 import me.dags.commandbus.Format;
 import me.dags.commandbus.annotation.Caller;
@@ -68,7 +69,7 @@ public class ActionReplay {
             format.error("A recorder is already in use").tell(player);
         } else {
             Vector3i position = player.getLocation().getBlockPosition();
-            recorder = new Recorder(player.getWorld().getUniqueId(), position, radius, height);
+            recorder = new MemoryRecorder(player.getWorld().getUniqueId(), position, radius, height);
             animation = Animation.EMPTY;
             format.info("Created recorder at ").stress(position).tell(player);
             startRecorder(player);
