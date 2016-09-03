@@ -4,14 +4,18 @@ import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import me.dags.actionreplay.ActionReplay;
 import me.dags.actionreplay.Config;
+import me.dags.actionreplay.Queries;
 import me.dags.actionreplay.animation.Frame;
 import me.dags.actionreplay.animation.Recorder;
-import me.dags.actionreplay.animation.avatar.AvatarSnapshot;
-import me.dags.actionreplay.database.Queries;
+import me.dags.actionreplay.avatar.AvatarSnapshot;
 import me.dags.actionreplay.event.BlockChange;
 import me.dags.actionreplay.event.Change;
+import me.dags.commandbus.utils.Format;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.scheduler.Task;
+import org.spongepowered.api.world.World;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
@@ -33,6 +37,7 @@ public class SQLRecorder extends Recorder implements Consumer<Task> {
 
     private boolean interrupted = false;
     private Frame last = null;
+    private String world = "unknown";
 
     public SQLRecorder(String name, UUID worldId, Vector3i center, int radius, int height) {
         super(worldId, center, radius, height);
@@ -46,8 +51,11 @@ public class SQLRecorder extends Recorder implements Consumer<Task> {
         recorder.radius = radius;
         recorder.height = height;
         ActionReplay.getInstance().saveConfig();
+    }
 
-        ActionReplay.getDatabase().createTable(Queries.table(name));
+    @Listener
+    public void onJoin(ClientConnectionEvent.Join event) {
+        format().info("Recording: {} in world: {}", name, world).tell(event.getTargetEntity());
     }
 
     @Override
@@ -60,6 +68,10 @@ public class SQLRecorder extends Recorder implements Consumer<Task> {
     @Override
     public void start(Object plugin) {
         super.start(plugin);
+        this.interrupted = false;
+        this.world = Sponge.getServer().getWorld(worldId).map(World::getName).orElse("unknown");
+
+        ActionReplay.getDatabase().createTable(Queries.table(name));
 
         Task.builder()
                 .intervalTicks(10)
@@ -70,8 +82,7 @@ public class SQLRecorder extends Recorder implements Consumer<Task> {
                 .interval(ActionReplay.getInstance().getConfig().announceInterval, TimeUnit.SECONDS)
                 .execute(task -> {
                     if (isPresent() && isRecording()) {
-                        ActionReplay.getInstance().getFormat()
-                                .info("Recording: {}", name).tell(Sponge.getServer().getBroadcastChannel());
+                        format().info("Recording: {}", name).tell(Sponge.getServer().getBroadcastChannel());
                     } else {
                         task.cancel();
                     }
@@ -95,7 +106,7 @@ public class SQLRecorder extends Recorder implements Consumer<Task> {
                 Frame next = new Frame(snapshot, change);
                 next.updateFromPrevious(last, centerD);
                 last = next;
-                buffer.add(last);
+                buffer.add(next);
             }
         }
     }
@@ -104,9 +115,6 @@ public class SQLRecorder extends Recorder implements Consumer<Task> {
     public void accept(Task task) {
         if (interrupted) {
             task.cancel();
-            if (last != null) {
-                ActionReplay.getDatabase().writeFrame(name, last);
-            }
             return;
         }
 
@@ -123,5 +131,9 @@ public class SQLRecorder extends Recorder implements Consumer<Task> {
             }
             ActionReplay.getDatabase().writeFrame(name, frames);
         }
+    }
+
+    private static Format format() {
+        return ActionReplay.getInstance().getFormat();
     }
 }

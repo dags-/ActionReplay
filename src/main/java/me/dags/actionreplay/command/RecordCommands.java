@@ -23,6 +23,28 @@ public class RecordCommands {
         ActionReplay.sendHelp(player);
     }
 
+    @Command(aliases = "load", parent = "recorder", perm = @Permission(id = "actionreplay.recorder", description = ""))
+    public void load(@Caller Player player, @One("name") String name) {
+        if (getRecorder().isPresent()) {
+            format().error("A recorder is already in use").tell(player);
+            return;
+        }
+
+        Config.RecorderSettings settings = ActionReplay.getInstance().getConfig().recorderSettings;
+        if (!settings.name.equalsIgnoreCase(name)) {
+            format().error("Recorder {} was not recognised, the last one was: {}", name, settings.name).tell(player);
+            return;
+        }
+
+        Recorder recorder = new SQLRecorder(settings.name, settings.worldId, settings.center, settings.radius, settings.height);
+        setRecorder(recorder);
+        setAnimation(Animation.EMPTY);
+
+        format().info("Loaded recorder ").stress(settings.name).tell(player);
+        start(player);
+    }
+
+
     @Command(aliases = "create", parent = "recorder", perm = @Permission(id = "actionreplay.recorder", description = ""))
     public void create(@Caller Player player, @One("name") String name, @One("radius") int radius, @One("height") int height) {
         if (getRecorder().isPresent()) {
@@ -35,7 +57,7 @@ public class RecordCommands {
 
             setRecorder(new SQLRecorder(name, player.getWorld().getUniqueId(), position, radius, height));
             setAnimation(Animation.EMPTY);
-            ActionReplay.getInstance().getConfig().replaySettings.containsKey(name);
+
             format().info("Created new recorder ").stress(name).tell(player);
             start(player);
         }
@@ -68,8 +90,12 @@ public class RecordCommands {
     @Command(aliases = "reset", parent = "recorder", perm = @Permission(id = "actionreplay.recorder", description = ""))
     public void reset(@Caller Player player) {
         if (getRecorder().isPresent()) {
-            getRecorder().stop();
-            getAnimation().stop();
+            if (getRecorder().isRecording()) {
+                getRecorder().stop();
+            }
+            if (getAnimation().isPlaying()) {
+                getAnimation().stop();
+            }
             setRecorder(Recorder.EMPTY);
             format().info("Cleared recorder").tell(player);
         } else {

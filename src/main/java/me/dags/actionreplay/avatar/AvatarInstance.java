@@ -1,7 +1,8 @@
-package me.dags.actionreplay.animation.avatar;
+package me.dags.actionreplay.avatar;
 
 import com.flowpowered.math.vector.Vector3d;
 import me.dags.actionreplay.ActionReplay;
+import me.dags.actionreplay.Config;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.EntityTypes;
@@ -18,8 +19,6 @@ import java.util.UUID;
  * @author dags <dags@dags.me>
  */
 public class AvatarInstance {
-
-    private static final UUID DUMMY = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     private final UUID uuid;
     private WeakReference<World> world = new WeakReference<>(null);
@@ -94,7 +93,7 @@ public class AvatarInstance {
         if (human != null) {
             return human.getUniqueId();
         }
-        return DUMMY;
+        return Config.DUMMY_ID;
     }
 
     @Override

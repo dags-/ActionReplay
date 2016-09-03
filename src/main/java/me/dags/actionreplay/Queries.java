@@ -1,4 +1,4 @@
-package me.dags.actionreplay.database;
+package me.dags.actionreplay;
 
 import me.dags.commandbus.utils.StringUtils;
 import me.dags.sqlutils.statement.Select;

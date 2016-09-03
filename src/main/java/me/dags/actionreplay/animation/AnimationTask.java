@@ -2,8 +2,8 @@ package me.dags.actionreplay.animation;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-import me.dags.actionreplay.animation.avatar.AvatarInstance;
-import me.dags.actionreplay.animation.avatar.AvatarSnapshot;
+import me.dags.actionreplay.avatar.AvatarInstance;
+import me.dags.actionreplay.avatar.AvatarSnapshot;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.entity.DamageEntityEvent;

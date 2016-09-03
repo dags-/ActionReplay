@@ -4,15 +4,16 @@ import com.google.inject.Inject;
 import me.dags.actionreplay.animation.Animation;
 import me.dags.actionreplay.animation.Frame;
 import me.dags.actionreplay.animation.Recorder;
-import me.dags.actionreplay.animation.avatar.AvatarSnapshot;
+import me.dags.actionreplay.avatar.AvatarSnapshot;
 import me.dags.actionreplay.command.RecordCommands;
 import me.dags.actionreplay.command.ReplayCommands;
-import me.dags.actionreplay.database.Database;
 import me.dags.actionreplay.event.BlockTransaction;
 import me.dags.actionreplay.event.Change;
 import me.dags.actionreplay.event.ChangeBuilder;
 import me.dags.commandbus.CommandBus;
 import me.dags.commandbus.utils.Format;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.data.DataManager;
@@ -25,6 +26,7 @@ import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStoppingEvent;
 import org.spongepowered.api.plugin.Plugin;
+import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.format.TextColors;
 
 import java.nio.file.Path;
@@ -36,6 +38,7 @@ import java.nio.file.Path;
 public class ActionReplay {
 
     private static final SpawnCause SPAWN_CAUSE = SpawnCause.builder().type(SpawnTypes.PLUGIN).build();
+    private static final Logger LOGGER = LoggerFactory.getLogger("ActionReplay");
     private static ActionReplay instance;
 
     private final Database database = new Database(this);
@@ -66,18 +69,23 @@ public class ActionReplay {
         manager.registerBuilder(AvatarSnapshot.class, new AvatarSnapshot.Builder());
         manager.registerBuilder(BlockTransaction.class, new BlockTransaction.Builder());
 
+        logger().info("Loading config");
         config = Config.load(configDir.resolve("config.conf"));
-        config.recorderSettings.getRecorder().ifPresent(recorder -> this.recorder = recorder);
     }
 
     @Listener
     public void init(GameInitializationEvent event) {
-        CommandBus.builder().build().register(RecordCommands.class).register(ReplayCommands.class).submit(this);
-        format = Format.builder().info(TextColors.YELLOW).stress(TextColors.GREEN).error(TextColors.GRAY).warn(TextColors.RED).build();
+        CommandBus.builder().logger(logger()).build().register(RecordCommands.class).register(ReplayCommands.class).submit(this);
+
         database.init();
+        format = Format.builder().info(TextColors.YELLOW).stress(TextColors.GREEN).error(TextColors.GRAY).warn(TextColors.RED).build();
+        recorder = config.recorderSettings.getRecorder().orElse(Recorder.EMPTY);
 
         if (this.recorder.isPresent()) {
-            this.recorder.start(this);
+            Task.builder().execute(() -> {
+                logger().info("Starting recorder...");
+                recorder.start(this);
+            }).submit(this);
         }
     }
 
@@ -115,6 +123,10 @@ public class ActionReplay {
 
     public void saveConfig() {
         Config.save(getConfig(), configDir.resolve("config.conf"));
+    }
+
+    public static Logger logger() {
+        return LOGGER;
     }
 
     public static ActionReplay getInstance() {

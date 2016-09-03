@@ -7,7 +7,6 @@ import me.dags.data.NodeAdapter;
 import me.dags.data.node.Node;
 import me.dags.data.node.NodeObject;
 import me.dags.data.node.NodeTypeAdapter;
-import org.spongepowered.api.Sponge;
 
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -20,6 +19,8 @@ import java.util.UUID;
  */
 public class Config {
 
+    public static final UUID DUMMY_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+
     public int announceInterval = 60 * 5;
     public Map<String, Vector3i> replaySettings = new HashMap<>();
     public RecorderSettings recorderSettings = new RecorderSettings();
@@ -27,17 +28,17 @@ public class Config {
     public static class RecorderSettings {
 
         public String name = "";
-        public UUID worldId = UUID.randomUUID();
+        public UUID worldId = DUMMY_ID;
         public Vector3i center = Vector3i.ZERO;
         public int radius = 256;
         public int height = 256;
         public boolean recording = false;
 
         public Optional<Recorder> getRecorder() {
-            if (name.isEmpty() || !Sponge.getServer().getWorld(worldId).isPresent() || center == Vector3i.ZERO) {
-                return Optional.empty();
+            if (!name.isEmpty() && worldId != DUMMY_ID || center != Vector3i.ZERO) {
+                return Optional.of(new SQLRecorder(name, worldId, center, radius, height));
             }
-            return Optional.of(new SQLRecorder(name, worldId, center, radius, height));
+            return Optional.empty();
         }
     }
 

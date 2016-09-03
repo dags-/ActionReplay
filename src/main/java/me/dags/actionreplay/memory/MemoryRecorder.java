@@ -3,7 +3,7 @@ package me.dags.actionreplay.memory;
 import com.flowpowered.math.vector.Vector3i;
 import me.dags.actionreplay.animation.Frame;
 import me.dags.actionreplay.animation.Recorder;
-import me.dags.actionreplay.animation.avatar.AvatarSnapshot;
+import me.dags.actionreplay.avatar.AvatarSnapshot;
 import me.dags.actionreplay.event.Change;
 
 import java.util.UUID;

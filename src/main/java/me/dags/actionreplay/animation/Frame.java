@@ -2,7 +2,7 @@ package me.dags.actionreplay.animation;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-import me.dags.actionreplay.animation.avatar.AvatarSnapshot;
+import me.dags.actionreplay.avatar.AvatarSnapshot;
 import me.dags.actionreplay.event.Change;
 import org.spongepowered.api.data.*;
 import org.spongepowered.api.data.persistence.AbstractDataBuilder;

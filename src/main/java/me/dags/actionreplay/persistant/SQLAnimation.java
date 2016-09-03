@@ -2,10 +2,10 @@ package me.dags.actionreplay.persistant;
 
 import com.flowpowered.math.vector.Vector3i;
 import me.dags.actionreplay.ActionReplay;
+import me.dags.actionreplay.Database;
+import me.dags.actionreplay.Queries;
 import me.dags.actionreplay.animation.Animation;
 import me.dags.actionreplay.animation.FrameProvider;
-import me.dags.actionreplay.database.Database;
-import me.dags.actionreplay.database.Queries;
 
 import java.sql.Connection;
 import java.sql.ResultSet;

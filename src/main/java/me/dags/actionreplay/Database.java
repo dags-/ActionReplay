@@ -1,6 +1,5 @@
-package me.dags.actionreplay.database;
+package me.dags.actionreplay;
 
-import me.dags.actionreplay.ActionReplay;
 import me.dags.actionreplay.animation.Frame;
 import me.dags.sqlutils.AbstractDB;
 import org.slf4j.Logger;

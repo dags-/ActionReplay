@@ -1,7 +1,7 @@
 package me.dags.actionreplay.animation;
 
 import com.flowpowered.math.vector.Vector3i;
-import me.dags.actionreplay.animation.avatar.AvatarSnapshot;
+import me.dags.actionreplay.avatar.AvatarSnapshot;
 import me.dags.actionreplay.event.*;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
@@ -27,15 +27,18 @@ import java.util.UUID;
 public abstract class Recorder {
 
     public static final Recorder EMPTY = new Recorder(){
-        public Animation getAnimation() {
-            return null;
+        public void start(Object plugin) {
+            throw new UnsupportedOperationException("Cannot start EMPTY recorder!");
+        }
+        public boolean isPresent() {
+            return false;
         }
     };
 
     protected final Vector3i center;
     private final Vector3i min;
     private final Vector3i max;
-    private final UUID worldId;
+    protected final UUID worldId;
 
     private boolean recording = false;
 
@@ -119,7 +122,7 @@ public abstract class Recorder {
     }
 
     private boolean activeLocation(Location<World> location) {
-        return isRecording() && location.getExtent().getUniqueId() == worldId && contains(location.getBlockPosition());
+        return isRecording() && location.getExtent().getUniqueId().equals(worldId) && contains(location.getBlockPosition());
     }
 
     private boolean contains(Vector3i pos) {
