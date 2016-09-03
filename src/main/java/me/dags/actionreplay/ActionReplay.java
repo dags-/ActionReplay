@@ -73,7 +73,7 @@ public class ActionReplay {
     @Listener
     public void init(GameInitializationEvent event) {
         CommandBus.builder().build().register(RecordCommands.class).register(ReplayCommands.class).submit(this);
-        format = Format.builder().info(TextColors.GRAY).stress(TextColors.GREEN).error(TextColors.YELLOW).warn(TextColors.RED).build();
+        format = Format.builder().info(TextColors.YELLOW).stress(TextColors.GREEN).error(TextColors.GRAY).warn(TextColors.RED).build();
         database.init();
 
         if (this.recorder.isPresent()) {

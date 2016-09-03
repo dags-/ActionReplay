@@ -3,6 +3,8 @@ package me.dags.actionreplay.event;
 import com.flowpowered.math.vector.Vector3i;
 import org.spongepowered.api.data.DataContainer;
 import org.spongepowered.api.data.DataQuery;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.util.List;
 
@@ -23,7 +25,9 @@ public class BlockChange implements Change {
     public void restore(Vector3i relative) {
         for (BlockTransaction transaction : transactions) {
             transaction.getOriginal().getLocation()
-                    .ifPresent(loc -> loc.add(relative).setBlock(transaction.getTo().getExtendedState()));
+                    .map(loc -> loc.add(relative))
+                    .filter(this::validLocation)
+                    .ifPresent(loc -> loc.setBlock(transaction.getTo().getExtendedState()));
         }
     }
 
@@ -31,7 +35,9 @@ public class BlockChange implements Change {
     public void undo(Vector3i relative) {
         for (BlockTransaction transaction : transactions) {
             transaction.getOriginal().getLocation()
-                    .ifPresent(loc -> loc.add(relative).setBlock(transaction.getFrom().getExtendedState()));
+                    .map(loc -> loc.add(relative))
+                    .filter(this::validLocation)
+                    .ifPresent(loc -> loc.setBlock(transaction.getFrom().getExtendedState()));
         }
     }
 
@@ -45,5 +51,9 @@ public class BlockChange implements Change {
         return versionedContainer()
                 .set(BlockChange.TYPE, Change.BLOCK)
                 .set(BlockChange.TRANSACTIONS, transactions);
+    }
+
+    public boolean validLocation(Location<World> location) {
+        return location.getBlockY() >= 0 && location.getBlockY() < 256;
     }
 }

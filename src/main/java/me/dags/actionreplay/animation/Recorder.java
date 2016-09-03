@@ -49,7 +49,7 @@ public abstract class Recorder {
     protected Recorder(UUID worldId, Vector3i center, int radius, int height) {
         this.worldId = worldId;
         this.center = center;
-        this.min = new Vector3i(center.getX() - radius, center.getY(), center.getZ() - radius);
+        this.min = new Vector3i(center.getX() - radius, center.getY() - height, center.getZ() - radius);
         this.max = new Vector3i(center.getX() + radius, center.getY() + height, center.getZ() + radius);
     }
 
