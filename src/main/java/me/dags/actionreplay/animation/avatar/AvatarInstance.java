@@ -19,7 +19,7 @@ import java.util.UUID;
  */
 public class AvatarInstance {
 
-    public static final UUID DUMMY = UUID.fromString("00000000-0000-0000-0000-000000000000");
+    private static final UUID DUMMY = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     private final UUID uuid;
     private WeakReference<World> world = new WeakReference<>(null);

@@ -10,7 +10,6 @@ import me.dags.actionreplay.animation.avatar.AvatarSnapshot;
 import me.dags.actionreplay.database.Queries;
 import me.dags.actionreplay.event.BlockChange;
 import me.dags.actionreplay.event.Change;
-import me.dags.commandbus.utils.Format;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.scheduler.Task;
 
@@ -68,12 +67,12 @@ public class SQLRecorder extends Recorder implements Consumer<Task> {
                 .submit(plugin);
 
         Task.builder()
-                .interval(1, TimeUnit.MINUTES)
+                .interval(ActionReplay.getInstance().getConfig().announceInterval, TimeUnit.SECONDS)
                 .execute(task -> {
                     if (isPresent() && isRecording()) {
-                        Format.DEFAULT.info("Recording: {}", name).tell(Sponge.getServer().getBroadcastChannel());
+                        ActionReplay.getInstance().getFormat()
+                                .info("Recording: {}", name).tell(Sponge.getServer().getBroadcastChannel());
                     } else {
-                        Format.DEFAULT.info("Stopped recording: {}", name).tell(Sponge.getServer().getBroadcastChannel());
                         task.cancel();
                     }
                 })

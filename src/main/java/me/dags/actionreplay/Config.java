@@ -20,6 +20,7 @@ import java.util.UUID;
  */
 public class Config {
 
+    public int announceInterval = 60 * 5;
     public Map<String, Vector3i> replaySettings = new HashMap<>();
     public RecorderSettings recorderSettings = new RecorderSettings();
 
@@ -65,6 +66,7 @@ public class Config {
         @Override
         public Node toNode(Config config) {
             NodeObject main = new NodeObject();
+            main.put("announce_interval", config.announceInterval);
             main.put("current_recorder", recorderToNode(config.recorderSettings));
             main.put("replays", mapToNode(config.replaySettings));
             return main;
@@ -74,6 +76,7 @@ public class Config {
         public Config fromNode(Node node) {
             NodeObject object = node.asNodeObject();
             Config config = new Config();
+            config.announceInterval = object.map("announce_interval", n -> n.asNumber().intValue(), 5 * 60);
             config.recorderSettings = recorderFromNode(object.get("current_recorder"));
             config.replaySettings = mapFromNode(object.get("replays"));
             return config;

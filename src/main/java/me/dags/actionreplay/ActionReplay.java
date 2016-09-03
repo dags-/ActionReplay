@@ -25,6 +25,7 @@ import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStoppingEvent;
 import org.spongepowered.api.plugin.Plugin;
+import org.spongepowered.api.text.format.TextColors;
 
 import java.nio.file.Path;
 
@@ -72,6 +73,7 @@ public class ActionReplay {
     @Listener
     public void init(GameInitializationEvent event) {
         CommandBus.builder().build().register(RecordCommands.class).register(ReplayCommands.class).submit(this);
+        format = Format.builder().info(TextColors.GRAY).stress(TextColors.GREEN).error(TextColors.YELLOW).warn(TextColors.RED).build();
         database.init();
 
         if (this.recorder.isPresent()) {
