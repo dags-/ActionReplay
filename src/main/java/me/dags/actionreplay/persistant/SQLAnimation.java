@@ -1,11 +1,12 @@
 package me.dags.actionreplay.persistant;
 
-import com.flowpowered.math.vector.Vector3i;
 import me.dags.actionreplay.ActionReplay;
 import me.dags.actionreplay.Database;
 import me.dags.actionreplay.Queries;
 import me.dags.actionreplay.animation.Animation;
 import me.dags.actionreplay.animation.FrameProvider;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -19,7 +20,7 @@ public class SQLAnimation extends Animation {
     private final Database database = ActionReplay.getDatabase();
     private final String name;
 
-    public SQLAnimation(String name, Vector3i center) {
+    public SQLAnimation(String name, Location<World> center) {
         super(center);
         this.name = name;
     }

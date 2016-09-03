@@ -11,6 +11,8 @@ import me.dags.commandbus.annotation.One;
 import me.dags.commandbus.annotation.Permission;
 import me.dags.commandbus.utils.Format;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.util.Optional;
 
@@ -35,7 +37,7 @@ public class ReplayCommands {
             format().error("No replay found by that name").tell(player);
             return Optional.empty();
         }
-        Animation animation = new SQLAnimation(name, pos);
+        Animation animation = new SQLAnimation(name, player.getWorld().getLocation(pos));
         setAnimation(animation);
         format().info("Loaded animation {} at {}", name, pos).tell(player);
         return Optional.of(animation);
@@ -45,9 +47,9 @@ public class ReplayCommands {
     public void loadHere(@Caller Player player, @One("name") String name) {
         Optional<Animation> replay = load(player, name);
         if (replay.isPresent()) {
-            Vector3i pos = player.getLocation().getBlockPosition();
-            replay.get().setCenter(pos);
-            format().info("Set the replay's position to {}", pos).tell(player);
+            Location<World> location = player.getLocation();
+            replay.get().setCenter(location);
+            format().info("Set the replay's position to {}", location).tell(player);
         }
     }
 

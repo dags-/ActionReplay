@@ -1,15 +1,16 @@
 package me.dags.actionreplay.animation;
 
-import com.flowpowered.math.vector.Vector3i;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.scheduler.Task;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 /**
  * @author dags <dags@dags.me>
  */
 public abstract class Animation {
 
-    public static final Animation EMPTY = new Animation(Vector3i.ZERO) {
+    public static final Animation EMPTY = new Animation() {
         public void undoAllFrames(Runnable callback) {}
         public void redoAllFrames(Runnable callback) {}
         public void onFinish() {}
@@ -18,15 +19,17 @@ public abstract class Animation {
         }
     };
 
-    protected Vector3i center;
+    protected Location<World> center;
     protected boolean playing = false;
     protected AnimationTask animationTask;
 
-    public Animation(Vector3i center) {
+    private Animation() {}
+
+    public Animation(Location<World> center) {
         this.center = center;
     }
 
-    public void setCenter(Vector3i center) {
+    public void setCenter(Location<World> center) {
         this.center = center;
     }
 

@@ -1,7 +1,6 @@
 package me.dags.actionreplay.animation;
 
 import com.flowpowered.math.vector.Vector3d;
-import com.flowpowered.math.vector.Vector3i;
 import me.dags.actionreplay.avatar.AvatarSnapshot;
 import me.dags.actionreplay.event.Change;
 import org.spongepowered.api.data.*;
@@ -61,42 +60,6 @@ public class Frame implements DataSerializable {
 
     public Change getChange() {
         return change;
-    }
-
-    public static Frame first(Frame frame) {
-        if (frame == null) {
-            throw new UnsupportedOperationException("Input Frame cannot be null!");
-        }
-        while (frame.previous() != null) {
-            frame = frame.previous();
-        }
-        return frame;
-    }
-
-    public static Frame last(Frame frame) {
-        if (frame == null) {
-            throw new UnsupportedOperationException("Input Frame cannot be null!");
-        }
-        while (frame.next() != null) {
-            frame = frame.next();
-        }
-        return frame;
-    }
-
-    public static void restoreAll(Frame input, Vector3i relative) {
-        Frame frame = first(input);
-        while (frame != null) {
-            frame.getChange().restore(relative);
-            frame = frame.next();
-        }
-    }
-
-    public static void undoAll(Frame input, Vector3i relative) {
-        Frame frame = last(input);
-        while (frame != null) {
-            frame.getChange().undo(relative);
-            frame = frame.previous();
-        }
     }
 
     @Override

@@ -1,6 +1,5 @@
 package me.dags.actionreplay.event;
 
-import com.flowpowered.math.vector.Vector3i;
 import org.spongepowered.api.data.DataContainer;
 import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.world.Location;
@@ -22,22 +21,22 @@ public class BlockChange implements Change {
     }
 
     @Override
-    public void restore(Vector3i relative) {
+    public void restore(Location<World> location) {
         for (BlockTransaction transaction : transactions) {
-            transaction.getOriginal().getLocation()
-                    .map(loc -> loc.add(relative))
-                    .filter(this::validLocation)
-                    .ifPresent(loc -> loc.setBlock(transaction.getTo().getExtendedState()));
+            Location<World> loc = location.add(transaction.getPosition());
+            if (validLocation(loc)) {
+                loc.setBlock(transaction.getTo());
+            }
         }
     }
 
     @Override
-    public void undo(Vector3i relative) {
+    public void undo(Location<World> location) {
         for (BlockTransaction transaction : transactions) {
-            transaction.getOriginal().getLocation()
-                    .map(loc -> loc.add(relative))
-                    .filter(this::validLocation)
-                    .ifPresent(loc -> loc.setBlock(transaction.getFrom().getExtendedState()));
+            Location<World> loc = location.add(transaction.getPosition());
+            if (validLocation(loc)) {
+                loc.setBlock(transaction.getFrom());
+            }
         }
     }
 

@@ -17,14 +17,12 @@ import java.util.UUID;
  */
 public class AvatarSnapshot implements DataSerializable {
 
-    private static final DataQuery WORLD_ID = DataQuery.of("WORLD_ID");
     private static final DataQuery PLAYER_ID = DataQuery.of("PLAYER_ID");
     private static final DataQuery PLAYER_NAME = DataQuery.of("PLAYER_NAME");
     private static final DataQuery POSITION = DataQuery.of("POSITION");
     private static final DataQuery ROTATION = DataQuery.of("ROTATION");
     private static final DataQuery ITEM = DataQuery.of("ITEM");
 
-    final UUID worldId;
     final UUID playerId;
     final String playerName;
     final Vector3d position;
@@ -33,7 +31,6 @@ public class AvatarSnapshot implements DataSerializable {
     private final boolean terminal;
 
     private AvatarSnapshot(UUID id) {
-        worldId = UUID.randomUUID();
         playerId = id;
         playerName = "";
         position = Vector3d.ZERO;
@@ -43,7 +40,6 @@ public class AvatarSnapshot implements DataSerializable {
     }
 
     private AvatarSnapshot(Mutable mutable) {
-        this.worldId = mutable.worldId;
         this.playerId = mutable.playerId;
         this.playerName = mutable.playerName;
         this.position = mutable.position;
@@ -53,7 +49,6 @@ public class AvatarSnapshot implements DataSerializable {
     }
 
     public AvatarSnapshot(Player player, Vector3d relative) {
-        worldId = player.getWorld().getUniqueId();
         playerId = player.getUniqueId();
         playerName = player.getName();
         position = player.getTransform().getPosition().sub(relative);
@@ -98,7 +93,6 @@ public class AvatarSnapshot implements DataSerializable {
     @Override
     public DataContainer toContainer() {
         return new MemoryDataContainer()
-                .set(WORLD_ID, worldId.toString())
                 .set(PLAYER_ID, playerId.toString())
                 .set(PLAYER_NAME, playerName)
                 .set(POSITION, position)
@@ -128,15 +122,13 @@ public class AvatarSnapshot implements DataSerializable {
 
         @Override
         public Optional<AvatarSnapshot> buildContent(DataView container) throws InvalidDataException {
-            Optional<UUID> worldId = container.getString(WORLD_ID).map(UUID::fromString);
             Optional<UUID> playerId = container.getString(PLAYER_ID).map(UUID::fromString);
             Optional<String> playerName = container.getString(PLAYER_NAME);
             Optional<Vector3d> position = container.getObject(POSITION, Vector3d.class);
             Optional<Vector3d> rotation = container.getObject(ROTATION, Vector3d.class);
             Optional<ItemStackSnapshot> item = container.getSerializable(ITEM, ItemStackSnapshot.class);
-            if (worldId.isPresent() && playerId.isPresent() && playerName.isPresent() && position.isPresent() && rotation.isPresent() && item.isPresent()) {
+            if (playerId.isPresent() && playerName.isPresent() && position.isPresent() && rotation.isPresent() && item.isPresent()) {
                 Mutable mutable = new Mutable();
-                mutable.worldId = worldId.get();
                 mutable.playerId = playerId.get();
                 mutable.playerName = playerName.get();
                 mutable.position = position.get();

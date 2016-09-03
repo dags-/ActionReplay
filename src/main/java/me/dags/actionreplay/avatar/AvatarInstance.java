@@ -3,13 +3,13 @@ package me.dags.actionreplay.avatar;
 import com.flowpowered.math.vector.Vector3d;
 import me.dags.actionreplay.ActionReplay;
 import me.dags.actionreplay.Config;
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.Human;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import java.lang.ref.WeakReference;
@@ -21,21 +21,21 @@ import java.util.UUID;
 public class AvatarInstance {
 
     private final UUID uuid;
-    private WeakReference<World> world = new WeakReference<>(null);
     private WeakReference<Human> human = new WeakReference<>(null);
 
     public AvatarInstance(UUID uuid) {
         this.uuid = uuid;
     }
 
-    public void sync(AvatarSnapshot snapshot, Vector3d relative) {
+    public void sync(AvatarSnapshot snapshot, Location<World> relative) {
         Human human = getEntity(snapshot, relative);
-        World world = getWorld(snapshot);
-        if (human != null && !human.isRemoved() && world != null) {
+        if (human != null && !human.isRemoved()) {
             if (snapshot.isTerminal()) {
                 human.remove();
             } else {
-                Transform<World> transform = new Transform<>(world, snapshot.position.add(relative), snapshot.rotation);
+                World world = relative.getExtent();
+                Vector3d pos = relative.getPosition();
+                Transform<World> transform = new Transform<>(world, snapshot.position.add(pos), snapshot.rotation);
                 ItemStack itemStack = snapshot.inHand.createStack();
 
                 human.setTransform(transform);
@@ -60,11 +60,10 @@ public class AvatarInstance {
         }
     }
 
-    private Human getEntity(AvatarSnapshot snapshot, Vector3d relative) {
+    private Human getEntity(AvatarSnapshot snapshot, Location<World> relative) {
         Human human = this.human.get();
-        World world = getWorld(snapshot);
-        if (human == null && world != null) {
-            human = world.createEntity(EntityTypes.HUMAN, snapshot.position.add(relative))
+        if (human == null) {
+            human = relative.getExtent().createEntity(EntityTypes.HUMAN, relative.getPosition().add(snapshot.position))
                     .filter(Human.class::isInstance)
                     .map(Human.class::cast)
                     .orElse(null);
@@ -72,20 +71,11 @@ public class AvatarInstance {
             human.offer(Keys.SKIN_UNIQUE_ID, snapshot.playerId);
             human.offer(Keys.DISPLAY_NAME, Text.of(snapshot.playerName));
 
-            if (world.spawnEntity(human, ActionReplay.spawnCause())) {
+            if (relative.getExtent().spawnEntity(human, ActionReplay.spawnCause())) {
                 this.human = new WeakReference<>(human);
             }
         }
         return human;
-    }
-
-    private World getWorld(AvatarSnapshot snapshot) {
-        World world = this.world.get();
-        if (world == null) {
-            world = Sponge.getServer().getWorld(snapshot.worldId).orElse(null);
-            this.world = new WeakReference<>(world);
-        }
-        return world;
     }
 
     public UUID getEntityId() {

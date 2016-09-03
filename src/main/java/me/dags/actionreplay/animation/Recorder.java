@@ -2,18 +2,18 @@ package me.dags.actionreplay.animation;
 
 import com.flowpowered.math.vector.Vector3i;
 import me.dags.actionreplay.avatar.AvatarSnapshot;
-import me.dags.actionreplay.event.*;
+import me.dags.actionreplay.event.BlockChange;
+import me.dags.actionreplay.event.BlockTransaction;
+import me.dags.actionreplay.event.Change;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
-import org.spongepowered.api.event.block.tileentity.ChangeSignEvent;
-import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.event.filter.cause.Root;
-import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -62,33 +62,12 @@ public abstract class Recorder {
             AvatarSnapshot snapshot = new AvatarSnapshot(player, center.toDouble());
             List<BlockTransaction> changed = new ArrayList<>();
             for (Transaction<BlockSnapshot> transaction : event.getTransactions()) {
-                BlockSnapshot from = transaction.getOriginal();
-                BlockSnapshot to = transaction.getFinal();
-                from = BlockSnapshot.builder().from(from).position(from.getPosition().sub(center)).build();
-                to = BlockSnapshot.builder().from(to).position(to.getPosition().sub(center)).build();
-                changed.add(new BlockTransaction(from, to));
+                Vector3i position = transaction.getOriginal().getPosition().sub(center);
+                BlockState from = transaction.getOriginal().getExtendedState();
+                BlockState to = transaction.getFinal().getExtendedState();
+                changed.add(new BlockTransaction(position, from, to));
             }
             Change change = new BlockChange(changed);
-            addNextFrame(snapshot, change);
-        }
-    }
-
-    // @Listener(order = Order.POST)
-    public void onSignChange(ChangeSignEvent event, @Root Player player) {
-        if (activeLocation(event.getTargetTile().getLocation())) {
-            AvatarSnapshot snapshot = new AvatarSnapshot(player, center.toDouble());
-            BlockSnapshot block = BlockSnapshot.builder().from(event.getTargetTile().getLocation()).build();
-            List<Text> lines = event.getText().asList();
-            Change change = new SignChange(block, lines);
-            addNextFrame(snapshot, change);
-        }
-    }
-
-    // @Listener(order = Order.POST)
-    public void onEntitySpawn(SpawnEntityEvent event, @Root Player player) {
-        if (activeLocation(player.getLocation())) {
-            AvatarSnapshot snapshot = new AvatarSnapshot(player, center.toDouble());
-            Change change = new EntityChange(event.getEntitySnapshots());
             addNextFrame(snapshot, change);
         }
     }

@@ -1,7 +1,8 @@
 package me.dags.actionreplay.event;
 
-import com.flowpowered.math.vector.Vector3i;
 import org.spongepowered.api.data.*;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 /**
  * @author dags <dags@dags.me>
@@ -13,9 +14,9 @@ public interface Change extends DataSerializable {
     String ENTITY = "entity";
     String SIGN = "sign";
 
-    void restore(Vector3i relative);
+    void restore(Location<World> location);
 
-    void undo(Vector3i relative);
+    void undo(Location<World> location);
 
     default DataContainer versionedContainer() {
         return new MemoryDataContainer().set(Queries.CONTENT_VERSION, getContentVersion());

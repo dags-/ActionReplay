@@ -1,6 +1,7 @@
 package me.dags.actionreplay.event;
 
-import org.spongepowered.api.block.BlockSnapshot;
+import com.flowpowered.math.vector.Vector3i;
+import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.data.*;
 import org.spongepowered.api.data.persistence.AbstractDataBuilder;
 import org.spongepowered.api.data.persistence.InvalidDataException;
@@ -10,13 +11,23 @@ import java.util.Optional;
 /**
  * @author dags <dags@dags.me>
  */
-public class BlockTransaction extends Transaction<BlockSnapshot> implements DataSerializable {
+public class BlockTransaction  implements DataSerializable {
 
     private static final DataQuery FROM = DataQuery.of("FROM");
     private static final DataQuery TO = DataQuery.of("TO");
+    private static final DataQuery POS = DataQuery.of("POS");
+    private static final DataQuery X = DataQuery.of("X");
+    private static final DataQuery Y = DataQuery.of("Y");
+    private static final DataQuery Z = DataQuery.of("Z");
 
-    public BlockTransaction(BlockSnapshot original, BlockSnapshot defaultReplacement) {
-        super(original, defaultReplacement);
+    private final Vector3i position;
+    private final BlockState from;
+    private final BlockState to;
+
+    public BlockTransaction(Vector3i position, BlockState from, BlockState to) {
+        this.position = position;
+        this.from = from;
+        this.to = to;
     }
 
     @Override
@@ -24,21 +35,42 @@ public class BlockTransaction extends Transaction<BlockSnapshot> implements Data
         return 0;
     }
 
-    public BlockSnapshot getFrom() {
-        return super.getOriginal();
+    public Vector3i getPosition() {
+        return position;
     }
 
-    public BlockSnapshot getTo() {
-        return super.getDefault();
+    public BlockState getFrom() {
+        return from;
+    }
+
+    public BlockState getTo() {
+        return to;
     }
 
     @Override
     public DataContainer toContainer() {
-        final DataContainer container = new MemoryDataContainer()
-                .set(Queries.CONTENT_VERSION, getContentVersion())
-                .set(FROM, this.getOriginal())
-                .set(TO, this.getFinal());
+        return new MemoryDataContainer()
+                .set(POS, BlockTransaction.vecTo(this.position))
+                .set(FROM, getFrom())
+                .set(TO, getTo());
+    }
+
+    private static DataContainer vecTo(Vector3i vector3i) {
+        DataContainer container = new MemoryDataContainer();
+        container.set(X, vector3i.getX());
+        container.set(Y, vector3i.getY());
+        container.set(Z, vector3i.getZ());
         return container;
+    }
+
+    private static Optional<Vector3i> vecFrom(DataView view) {
+        Optional<Integer> x = view.getInt(X);
+        Optional<Integer> y = view.getInt(Y);
+        Optional<Integer> z = view.getInt(Z);
+        if (x.isPresent() && y.isPresent() && z.isPresent()) {
+            return Optional.of(new Vector3i(x.get(), y.get(), z.get()));
+        }
+        return Optional.empty();
     }
 
     public static class Builder extends AbstractDataBuilder<BlockTransaction> {
@@ -49,9 +81,13 @@ public class BlockTransaction extends Transaction<BlockSnapshot> implements Data
 
         @Override
         protected Optional<BlockTransaction> buildContent(DataView view) throws InvalidDataException {
-            Optional<BlockSnapshot> from = view.getSerializable(FROM, BlockSnapshot.class);
-            Optional<BlockSnapshot> to = view.getSerializable(TO, BlockSnapshot.class);
-            return Optional.ofNullable(from.isPresent() && to.isPresent() ? new BlockTransaction(from.get(), to.get()) : null);
+            Optional<Vector3i> pos = view.getView(POS).flatMap(BlockTransaction::vecFrom);
+            Optional<BlockState> from = view.getSerializable(FROM, BlockState.class);
+            Optional<BlockState> to = view.getSerializable(TO, BlockState.class);
+            if (pos.isPresent() && from.isPresent() && to.isPresent()) {
+                return Optional.of(new BlockTransaction(pos.get(), from.get(), to.get()));
+            }
+            return Optional.empty();
         }
     }
 }

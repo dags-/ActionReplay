@@ -1,13 +1,13 @@
 package me.dags.actionreplay.animation;
 
-import com.flowpowered.math.vector.Vector3d;
-import com.flowpowered.math.vector.Vector3i;
 import me.dags.actionreplay.avatar.AvatarInstance;
 import me.dags.actionreplay.avatar.AvatarSnapshot;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.scheduler.Task;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -21,8 +21,7 @@ public class AnimationTask implements Consumer<Task> {
     private final Set<UUID> entityIds = new HashSet<>();
     private final FrameProvider frameProvider;
     private final int intervalTicks;
-    private final Vector3d centerD;
-    private final Vector3i center;
+    private final Location<World> center;
     private final Runnable finishCallback;
 
     private boolean showAvatars = true;
@@ -30,19 +29,9 @@ public class AnimationTask implements Consumer<Task> {
     private int count = 0;
     private Frame next;
 
-    public AnimationTask(FrameProvider frameProvider, Vector3i center, int intervalTicks) {
+    public AnimationTask(FrameProvider frameProvider, Runnable finishCallback, Location<World> center, int intervalTicks) {
         this.frameProvider = frameProvider;
         this.intervalTicks = intervalTicks;
-        this.centerD = center.toDouble();
-        this.center = center;
-        this.count = intervalTicks;
-        this.finishCallback = () -> {};
-    }
-
-    public AnimationTask(FrameProvider frameProvider, Runnable finishCallback, Vector3i center, int intervalTicks) {
-        this.frameProvider = frameProvider;
-        this.intervalTicks = intervalTicks;
-        this.centerD = center.toDouble();
         this.center = center;
         this.count = intervalTicks;
         this.finishCallback = finishCallback;
@@ -144,11 +133,11 @@ public class AnimationTask implements Consumer<Task> {
                     entityIds.remove(instance.getEntityId());
                     instance.remove();
                 } else {
-                    instance.sync(snapshot, centerD);
+                    instance.sync(snapshot, center);
                 }
             } else if (!snapshot.isTerminal()) {
                 instance = new AvatarInstance(snapshot.getUUID());
-                instance.sync(snapshot, centerD);
+                instance.sync(snapshot, center);
 
                 avatars.put(snapshot.getUUID(), instance);
                 entityIds.add(instance.getEntityId());
