@@ -1,6 +1,7 @@
 package me.dags.actionreplay.animation;
 
 import com.flowpowered.math.vector.Vector3i;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.scheduler.Task;
 
 /**
@@ -53,15 +54,16 @@ public abstract class Animation {
         animationTask.interrupt();
 
         undoAllFrames(() -> redoAllFrames(() -> {
-            this.playing = false;
-            this.animationTask = null;
+            playing = false;
+            animationTask = null;
         }));
     }
 
     public void start(Object plugin, int intervalTicks) {
         try {
-            this.animationTask = new AnimationTask(getFrameProvider(), this::onFinish, center, intervalTicks);
-            Task.builder().intervalTicks(1).delayTicks(1).execute(this.animationTask).submit(plugin);
+            animationTask = new AnimationTask(getFrameProvider(), this::onFinish, center, intervalTicks);
+            Sponge.getEventManager().registerListeners(plugin, animationTask);
+            Task.builder().intervalTicks(1).delayTicks(1).execute(animationTask).submit(plugin);
         } catch (Exception e) {
             e.printStackTrace();
         }

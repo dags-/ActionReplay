@@ -110,8 +110,6 @@ public abstract class Recorder {
         return this != EMPTY;
     }
 
-    public abstract Animation getAnimation();
-
     public boolean isRecording() {
         return recording;
     }

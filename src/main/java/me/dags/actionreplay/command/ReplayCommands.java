@@ -19,6 +19,11 @@ import java.util.Optional;
  */
 public class ReplayCommands {
 
+    @Command(aliases = "replay", perm = @Permission(id = "actionreplay.replay", description = ""))
+    public void help(@Caller Player player) {
+        ActionReplay.sendHelp(player);
+    }
+
     @Command(aliases = "load", parent = "replay", perm = @Permission(id = "actionreplay.recorder", description = ""))
     public Optional<Animation> load(@Caller Player player, @One("name") String name) {
         if (getAnimation().isPresent() && getAnimation().isPlaying()) {

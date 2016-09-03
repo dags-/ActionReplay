@@ -4,11 +4,12 @@ import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import me.dags.actionreplay.animation.avatar.AvatarInstance;
 import me.dags.actionreplay.animation.avatar.AvatarSnapshot;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.scheduler.Task;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 
 /**
@@ -17,6 +18,7 @@ import java.util.function.Consumer;
 public class AnimationTask implements Consumer<Task> {
 
     private final Map<UUID, AvatarInstance> avatars = new HashMap<>();
+    private final Set<UUID> entityIds = new HashSet<>();
     private final FrameProvider frameProvider;
     private final int intervalTicks;
     private final Vector3d centerD;
@@ -73,6 +75,13 @@ public class AnimationTask implements Consumer<Task> {
         }
     }
 
+    @Listener
+    public void damageListener(DamageEntityEvent event) {
+        if (entityIds.contains(event.getTargetEntity().getUniqueId())) {
+            event.setCancelled(true);
+        }
+    }
+
     public void interrupt() {
         this.interrupted = true;
     }
@@ -102,6 +111,7 @@ public class AnimationTask implements Consumer<Task> {
     }
     private void clear() {
         removeAvatars();
+        Sponge.getEventManager().unregisterListeners(this);
     }
 
     private void restoreChanges() {
@@ -118,6 +128,7 @@ public class AnimationTask implements Consumer<Task> {
     private void removeAvatars() {
         avatars.values().forEach(AvatarInstance::remove);
         avatars.clear();
+        entityIds.clear();
     }
 
     private void restoreAvatars() {
@@ -129,15 +140,18 @@ public class AnimationTask implements Consumer<Task> {
             AvatarInstance instance = avatars.get(snapshot.getUUID());
             if (instance != null) {
                 if (snapshot.isTerminal()) {
-                    instance.remove();
                     avatars.remove(snapshot.getUUID());
+                    entityIds.remove(instance.getEntityId());
+                    instance.remove();
                 } else {
                     instance.sync(snapshot, centerD);
                 }
             } else if (!snapshot.isTerminal()) {
                 instance = new AvatarInstance(snapshot.getUUID());
-                avatars.put(snapshot.getUUID(), instance);
                 instance.sync(snapshot, centerD);
+
+                avatars.put(snapshot.getUUID(), instance);
+                entityIds.add(instance.getEntityId());
             }
         }
     }

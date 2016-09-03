@@ -19,6 +19,8 @@ import java.util.UUID;
  */
 public class AvatarInstance {
 
+    public static final UUID DUMMY = UUID.fromString("00000000-0000-0000-0000-000000000000");
+
     private final UUID uuid;
     private WeakReference<World> world = new WeakReference<>(null);
     private WeakReference<Human> human = new WeakReference<>(null);
@@ -85,6 +87,14 @@ public class AvatarInstance {
             this.world = new WeakReference<>(world);
         }
         return world;
+    }
+
+    public UUID getEntityId() {
+        Human human = this.human.get();
+        if (human != null) {
+            return human.getUniqueId();
+        }
+        return DUMMY;
     }
 
     @Override

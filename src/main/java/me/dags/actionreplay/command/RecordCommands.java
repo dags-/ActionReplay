@@ -18,6 +18,11 @@ import org.spongepowered.api.entity.living.player.Player;
  */
 public class RecordCommands {
 
+    @Command(aliases = "recorder", perm = @Permission(id = "actionreplay.recorder", description = ""))
+    public void help(@Caller Player player) {
+        ActionReplay.sendHelp(player);
+    }
+
     @Command(aliases = "create", parent = "recorder", perm = @Permission(id = "actionreplay.recorder", description = ""))
     public void create(@Caller Player player, @One("name") String name, @One("radius") int radius, @One("height") int height) {
         if (getRecorder().isPresent()) {

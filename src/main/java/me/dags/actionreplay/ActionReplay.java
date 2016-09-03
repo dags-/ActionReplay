@@ -16,6 +16,7 @@ import me.dags.commandbus.utils.Format;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.data.DataManager;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.entity.spawn.SpawnCause;
@@ -124,5 +125,14 @@ public class ActionReplay {
 
     public static Database getDatabase() {
         return instance.database;
+    }
+
+    public static void sendHelp(Player player) {
+        getInstance().getFormat().stress("General Steps For Using ActionReplay: ").tell(player);
+        getInstance().getFormat().info("1. /recorder create <name> <radius> <height>").tell(player);
+        getInstance().getFormat().info("2. Build stuff").tell(player);
+        getInstance().getFormat().info("3. /recorder stop").tell(player);
+        getInstance().getFormat().info("4. /replay load <name>").tell(player);
+        getInstance().getFormat().info("5. /replay start <ticks per block>").tell(player);
     }
 }

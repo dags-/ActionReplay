@@ -4,7 +4,6 @@ import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import me.dags.actionreplay.ActionReplay;
 import me.dags.actionreplay.Config;
-import me.dags.actionreplay.animation.Animation;
 import me.dags.actionreplay.animation.Frame;
 import me.dags.actionreplay.animation.Recorder;
 import me.dags.actionreplay.animation.avatar.AvatarSnapshot;
@@ -100,11 +99,6 @@ public class SQLRecorder extends Recorder implements Consumer<Task> {
                 buffer.add(last);
             }
         }
-    }
-
-    @Override
-    public Animation getAnimation() {
-        return new SQLAnimation(name, center);
     }
 
     @Override
