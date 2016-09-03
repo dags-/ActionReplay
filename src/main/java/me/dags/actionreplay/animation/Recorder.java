@@ -1,10 +1,9 @@
-package me.dags.actionreplay.recorder;
+package me.dags.actionreplay.animation;
 
 import com.flowpowered.math.vector.Vector3i;
-import me.dags.actionreplay.animation.Animation;
-import me.dags.actionreplay.animation.Frame;
-import me.dags.actionreplay.avatar.AvatarSnapshot;
+import me.dags.actionreplay.animation.avatar.AvatarSnapshot;
 import me.dags.actionreplay.event.*;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.entity.living.player.Player;
@@ -25,18 +24,20 @@ import java.util.UUID;
 /**
  * @author dags <dags@dags.me>
  */
-public class Recorder {
+public abstract class Recorder {
 
-    public static final Recorder EMPTY = new Recorder();
+    public static final Recorder EMPTY = new Recorder(){
+        public Animation getAnimation() {
+            return null;
+        }
+    };
 
-    private final UUID worldId;
-    private final Vector3i center;
+    protected final Vector3i center;
     private final Vector3i min;
     private final Vector3i max;
+    private final UUID worldId;
 
     private boolean recording = false;
-    private Frame first = null;
-    private Frame last = null;
 
     private Recorder() {
         this.worldId = UUID.randomUUID();
@@ -89,6 +90,16 @@ public class Recorder {
         }
     }
 
+    public void start(Object plugin) {
+        setRecording(true);
+        Sponge.getEventManager().registerListeners(plugin, this);
+    }
+
+    public void stop() {
+        setRecording(false);
+        Sponge.getEventManager().unregisterListeners(this);
+    }
+
     public void addNextFrame(AvatarSnapshot snapshot, Change change) {}
 
     public Vector3i getCenter() {
@@ -99,9 +110,7 @@ public class Recorder {
         return this != EMPTY;
     }
 
-    public Animation getAnimation() {
-        return isRecording() ? Animation.EMPTY : new Animation(first, last).setCenter(center);
-    }
+    public abstract Animation getAnimation();
 
     public boolean isRecording() {
         return recording;

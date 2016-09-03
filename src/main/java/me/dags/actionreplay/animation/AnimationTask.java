@@ -2,8 +2,8 @@ package me.dags.actionreplay.animation;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-import me.dags.actionreplay.avatar.AvatarInstance;
-import me.dags.actionreplay.avatar.AvatarSnapshot;
+import me.dags.actionreplay.animation.avatar.AvatarInstance;
+import me.dags.actionreplay.animation.avatar.AvatarSnapshot;
 import org.spongepowered.api.scheduler.Task;
 
 import java.util.HashMap;
@@ -16,63 +16,99 @@ import java.util.function.Consumer;
  */
 public class AnimationTask implements Consumer<Task> {
 
-    static final AnimationTask EMPTY = new AnimationTask();
-
     private final Map<UUID, AvatarInstance> avatars = new HashMap<>();
-    private final Vector3i center;
-    private final boolean showAvatars;
+    private final FrameProvider frameProvider;
     private final int intervalTicks;
-    private int count = 0;
-    private Frame frame;
-    private boolean interrupt = false;
+    private final Vector3d centerD;
+    private final Vector3i center;
+    private final Runnable finishCallback;
 
-    private AnimationTask() {
-        this.center = Vector3i.ZERO;
-        this.intervalTicks = -1;
-        this.interrupt = true;
-        this.showAvatars = false;
+    private boolean showAvatars = true;
+    private boolean interrupted = false;
+    private int count = 0;
+    private Frame next;
+
+    public AnimationTask(FrameProvider frameProvider, Vector3i center, int intervalTicks) {
+        this.frameProvider = frameProvider;
+        this.intervalTicks = intervalTicks;
+        this.centerD = center.toDouble();
+        this.center = center;
+        this.count = intervalTicks;
+        this.finishCallback = () -> {};
     }
 
-    public AnimationTask(Vector3i center, Frame first, int intervalTicks, boolean showAvatars) {
-        this.center = center;
-        this.showAvatars = showAvatars;
+    public AnimationTask(FrameProvider frameProvider, Runnable finishCallback, Vector3i center, int intervalTicks) {
+        this.frameProvider = frameProvider;
         this.intervalTicks = intervalTicks;
-        this.frame = first;
+        this.centerD = center.toDouble();
+        this.center = center;
+        this.count = intervalTicks;
+        this.finishCallback = finishCallback;
     }
 
     @Override
     public void accept(Task task) {
-        if (interrupt) {
+        try {
+            if (isInterrupted()) {
+                this.clear();
+                task.cancel();
+                finishCallback.run();
+                frameProvider.close();
+                return;
+            }
+
+            if (next == null && !hasNext()) {
+                interrupt();
+                return;
+            }
+            if (count-- > 0) {
+                this.tick();
+            } else {
+                this.count = intervalTicks;
+                this.playFrame();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
             task.cancel();
-            removeAvatars();
-            return;
-        }
-        if (count-- > 0) {
-            pauseAvatars();
-        } else if (frame == null) {
-            stop();
-        } else {
-            count = intervalTicks;
-            syncAvatars(frame);
-            restoreChanges(frame);
-            frame = frame.next();
         }
     }
 
-    public boolean isPresent() {
-        return this != EMPTY;
+    public void interrupt() {
+        this.interrupted = true;
     }
+
 
     public boolean isInterrupted() {
-        return this.interrupt;
+        return interrupted;
     }
 
-    public void start(Object plugin) {
-        Task.builder().delayTicks(1).intervalTicks(1).execute(this).submit(plugin);
+    private boolean hasNext() throws Exception {
+        return frameProvider.hasNext();
     }
 
-    public void stop() {
-        this.interrupt = true;
+    private void tick() throws Exception {
+        this.pauseAvatars();
+        if (next == null) {
+            next = frameProvider.nextFrame();
+        }
+    }
+
+    private void playFrame() {
+        if (next != null) {
+            this.restoreAvatars();
+            this.restoreChanges();
+            next = null;
+        }
+    }
+    private void clear() {
+        removeAvatars();
+    }
+
+    private void restoreChanges() {
+        if (next == null) {
+            return;
+        }
+        next.getChange().restore(center);
     }
 
     private void pauseAvatars() {
@@ -84,28 +120,25 @@ public class AnimationTask implements Consumer<Task> {
         avatars.clear();
     }
 
-    private void syncAvatars(Frame frame) {
-        if (showAvatars) {
-            Vector3d relative = center.toDouble();
-            for (AvatarSnapshot snapshot : frame.getAvatars()) {
-                AvatarInstance instance = avatars.get(snapshot.getUUID());
-                if (instance != null) {
-                    if (snapshot.isTerminal()) {
-                        instance.remove();
-                        avatars.remove(snapshot.getUUID());
-                    } else {
-                        instance.sync(snapshot, relative);
-                    }
-                } else if (!snapshot.isTerminal()) {
-                    instance = new AvatarInstance(snapshot.getUUID());
-                    avatars.put(snapshot.getUUID(), instance);
-                    instance.sync(snapshot, relative);
+    private void restoreAvatars() {
+        if (!showAvatars || next == null) {
+            return;
+        }
+
+        for (AvatarSnapshot snapshot : next.getAvatars()) {
+            AvatarInstance instance = avatars.get(snapshot.getUUID());
+            if (instance != null) {
+                if (snapshot.isTerminal()) {
+                    instance.remove();
+                    avatars.remove(snapshot.getUUID());
+                } else {
+                    instance.sync(snapshot, centerD);
                 }
+            } else if (!snapshot.isTerminal()) {
+                instance = new AvatarInstance(snapshot.getUUID());
+                avatars.put(snapshot.getUUID(), instance);
+                instance.sync(snapshot, centerD);
             }
         }
-    }
-
-    private void restoreChanges(Frame frame) {
-        frame.getChange().restore(center);
     }
 }

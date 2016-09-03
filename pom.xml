@@ -33,6 +33,10 @@
                                     <pattern>me.dags.commandbus</pattern>
                                     <shadedPattern>me.dags.actionreplay.libs.comandbus</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>me.dags.data</pattern>
+                                    <shadedPattern>me.dags.actionreplay.libs.data</shadedPattern>
+                                </relocation>
                             </relocations>
                         </configuration>
                     </execution>
@@ -69,7 +73,17 @@
         <dependency>
             <groupId>com.github.dags-</groupId>
             <artifactId>CommandBus</artifactId>
-            <version>1.2.10-SNAPSHOT</version>
+            <version>1.2.11-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.dags-</groupId>
+            <artifactId>NodeData</artifactId>
+            <version>1.3.0-SNAPSHOT-20</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.dags-</groupId>
+            <artifactId>sqlutils</artifactId>
+            <version>master-SNAPSHOT</version>
         </dependency>
     </dependencies>
 </project>

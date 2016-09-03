@@ -1,4 +1,4 @@
-package me.dags.actionreplay.avatar;
+package me.dags.actionreplay.animation.avatar;
 
 import com.flowpowered.math.vector.Vector3d;
 import me.dags.actionreplay.ActionReplay;

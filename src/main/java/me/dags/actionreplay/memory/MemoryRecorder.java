@@ -1,8 +1,10 @@
-package me.dags.actionreplay.recorder;
+package me.dags.actionreplay.memory;
 
 import com.flowpowered.math.vector.Vector3i;
+import me.dags.actionreplay.animation.Animation;
 import me.dags.actionreplay.animation.Frame;
-import me.dags.actionreplay.avatar.AvatarSnapshot;
+import me.dags.actionreplay.animation.Recorder;
+import me.dags.actionreplay.animation.avatar.AvatarSnapshot;
 import me.dags.actionreplay.event.Change;
 
 import java.util.UUID;
@@ -29,5 +31,10 @@ public class MemoryRecorder extends Recorder {
             last.setNextAndUpdate(next, getCenter().toDouble());
             last = next;
         }
+    }
+
+    @Override
+    public Animation getAnimation() {
+        return new MemoryAnimation(center);
     }
 }

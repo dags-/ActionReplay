@@ -2,7 +2,7 @@ package me.dags.actionreplay.animation;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-import me.dags.actionreplay.avatar.AvatarSnapshot;
+import me.dags.actionreplay.animation.avatar.AvatarSnapshot;
 import me.dags.actionreplay.event.Change;
 import org.spongepowered.api.data.*;
 import org.spongepowered.api.data.persistence.AbstractDataBuilder;
@@ -48,7 +48,11 @@ public class Frame implements DataSerializable {
 
     public void setNextAndUpdate(Frame next, Vector3d relative) {
         setNext(next);
-        avatars.stream().map(avatar -> avatar.getUpdatedCopy(relative)).forEach(next.avatars::add);
+        next.updateFromPrevious(this, relative);
+    }
+
+    public void updateFromPrevious(Frame previous, Vector3d relative) {
+        previous.avatars.stream().map(avatar -> avatar.getUpdatedCopy(relative)).forEach(this.avatars::add);
     }
 
     public Collection<AvatarSnapshot> getAvatars() {
@@ -113,14 +117,18 @@ public class Frame implements DataSerializable {
             super(Frame.class, 0);
         }
 
-        @Override
-        public Optional<Frame> buildContent(DataView container) throws InvalidDataException {
+        public Frame fastBuild(DataView container) throws InvalidDataException {
             Optional<List<AvatarSnapshot>> avatars = container.getSerializableList(AVATARS, AvatarSnapshot.class);
             Optional<Change> change = container.getSerializable(CHANGE, Change.class);
             if (avatars.isPresent() && change.isPresent()) {
-                return Optional.of(new Frame(avatars.get(), change.get()));
+                return new Frame(avatars.get(), change.get());
             }
-            return Optional.empty();
+            return null;
+        }
+
+        @Override
+        public Optional<Frame> buildContent(DataView container) throws InvalidDataException {
+            return Optional.ofNullable(fastBuild(container));
         }
     }
 }

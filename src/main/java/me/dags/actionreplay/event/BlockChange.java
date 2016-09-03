@@ -3,7 +3,6 @@ package me.dags.actionreplay.event;
 import com.flowpowered.math.vector.Vector3i;
 import org.spongepowered.api.data.DataContainer;
 import org.spongepowered.api.data.DataQuery;
-import org.spongepowered.api.data.Queries;
 
 import java.util.List;
 
@@ -44,7 +43,7 @@ public class BlockChange implements Change {
     @Override
     public DataContainer toContainer() {
         return versionedContainer()
-                .set(Queries.CONTENT_VERSION, getContentVersion())
+                .set(BlockChange.TYPE, Change.BLOCK)
                 .set(BlockChange.TRANSACTIONS, transactions);
     }
 }

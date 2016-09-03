@@ -2,12 +2,10 @@ package me.dags.actionreplay.event;
 
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.data.DataView;
-import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.data.persistence.AbstractDataBuilder;
 import org.spongepowered.api.data.persistence.InvalidDataException;
 import org.spongepowered.api.text.Text;
 
-import java.lang.reflect.ParameterizedType;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,8 +13,6 @@ import java.util.Optional;
  * @author dags <dags@dags.me>
  */
 public class ChangeBuilder extends AbstractDataBuilder<Change> {
-
-    private static final Token<Transaction<BlockSnapshot>> BLOCK = new Token<Transaction<BlockSnapshot>>(){};
 
     public ChangeBuilder() {
         super(Change.class, 0);
@@ -46,12 +42,5 @@ public class ChangeBuilder extends AbstractDataBuilder<Change> {
         Optional<BlockSnapshot> block = view.getSerializable(SignChange.BLOCK, BlockSnapshot.class);
         Optional<List<Text>> lines = view.getSerializableList(SignChange.LINES, Text.class);
         return Optional.ofNullable(block.isPresent() && lines.isPresent() ? new SignChange(block.get(), lines.get()) : null);
-    }
-
-    private static class Token<T> {
-        @SuppressWarnings("unchecked")
-        private Class<T> get() {
-            return (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
-        }
     }
 }
