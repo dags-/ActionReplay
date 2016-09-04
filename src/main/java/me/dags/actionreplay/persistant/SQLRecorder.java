@@ -55,7 +55,7 @@ public class SQLRecorder extends Recorder implements Consumer<Task> {
 
     @Listener
     public void onJoin(ClientConnectionEvent.Join event) {
-        format().info("Recording: {} in world: {}", name, world).tell(event.getTargetEntity());
+        format().info("Recording: ").stress(name).info(" in world: ").stress(world).tell(event.getTargetEntity());
     }
 
     @Override
@@ -81,8 +81,8 @@ public class SQLRecorder extends Recorder implements Consumer<Task> {
         Task.builder()
                 .interval(ActionReplay.getInstance().getConfig().announceInterval, TimeUnit.SECONDS)
                 .execute(task -> {
-                    if (isPresent() && isRecording()) {
-                        format().info("Recording: {}", name).tell(Sponge.getServer().getBroadcastChannel());
+                    if (isPresent() && isRecording() && !Sponge.getServer().getOnlinePlayers().isEmpty()) {
+                        format().info("Recording: ").stress(name).tell(Sponge.getServer().getBroadcastChannel());
                     } else {
                         task.cancel();
                     }

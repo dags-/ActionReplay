@@ -39,7 +39,7 @@ public class ReplayCommands {
         }
         Animation animation = new SQLAnimation(name, player.getWorld().getLocation(pos));
         setAnimation(animation);
-        format().info("Loaded animation {} at {}", name, pos).tell(player);
+        format().info("Loaded animation ").stress(name).info("at ").stress(pos).tell(player);
         return Optional.of(animation);
     }
 
@@ -49,7 +49,7 @@ public class ReplayCommands {
         if (replay.isPresent()) {
             Location<World> location = player.getLocation();
             replay.get().setCenter(location);
-            format().info("Set the replay's position to {}", location).tell(player);
+            format().info("Set the replay's position to ").stress(location.getBlockPosition()).tell(player);
         }
     }
 
@@ -63,6 +63,7 @@ public class ReplayCommands {
             format().error("Animation is currently running").tell(player);
         } else {
             getAnimation().play(ActionReplay.getInstance(), ticks);
+            format().error("Playing...").tell(player);
         }
     }
 
