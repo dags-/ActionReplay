@@ -1,7 +1,7 @@
 package me.dags.actionreplay.animation;
 
 import com.flowpowered.math.vector.Vector3i;
-import me.dags.actionreplay.avatar.AvatarSnapshot;
+import me.dags.actionreplay.animation.avatar.AvatarSnapshot;
 import me.dags.actionreplay.event.BlockChange;
 import me.dags.actionreplay.event.BlockTransaction;
 import me.dags.actionreplay.event.Change;
@@ -35,10 +35,12 @@ public abstract class Recorder {
         }
     };
 
-    protected final Vector3i center;
     private final Vector3i min;
     private final Vector3i max;
+    protected final Vector3i center;
     protected final UUID worldId;
+    protected final int radius;
+    protected final int height;
 
     private boolean recording = false;
 
@@ -47,6 +49,8 @@ public abstract class Recorder {
         this.center = Vector3i.ZERO;
         this.min = Vector3i.ZERO;
         this.max = Vector3i.ZERO;
+        this.radius = 0;
+        this.height = 0;
     }
 
     protected Recorder(UUID worldId, Vector3i center, int radius, int height) {
@@ -54,6 +58,8 @@ public abstract class Recorder {
         this.center = center;
         this.min = new Vector3i(center.getX() - radius, center.getY() - height, center.getZ() - radius);
         this.max = new Vector3i(center.getX() + radius, center.getY() + height, center.getZ() + radius);
+        this.radius = radius;
+        this.height = height;
     }
 
     @Listener(order = Order.POST)

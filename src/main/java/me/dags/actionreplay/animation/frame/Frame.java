@@ -1,13 +1,17 @@
-package me.dags.actionreplay.animation;
+package me.dags.actionreplay.animation.frame;
 
 import com.flowpowered.math.vector.Vector3d;
-import me.dags.actionreplay.avatar.AvatarSnapshot;
+import com.google.common.collect.ImmutableSet;
+import me.dags.actionreplay.animation.avatar.AvatarSnapshot;
 import me.dags.actionreplay.event.Change;
 import org.spongepowered.api.data.*;
 import org.spongepowered.api.data.persistence.AbstractDataBuilder;
 import org.spongepowered.api.data.persistence.InvalidDataException;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author dags <dags@dags.me>
@@ -17,41 +21,26 @@ public class Frame implements DataSerializable {
     private static final DataQuery AVATARS = DataQuery.of("AVATARS");
     private static final DataQuery CHANGE = DataQuery.of("CHANGE");
 
-    private final Set<AvatarSnapshot> avatars = new HashSet<>();
+    private final ImmutableSet<AvatarSnapshot> avatars;
     private final Change change;
-    private Frame previous;
-    private Frame next;
+
+    public Frame(AvatarSnapshot avatar, Change change, Collection<AvatarSnapshot> avatars) {
+        this.change = change;
+        this.avatars = ImmutableSet.<AvatarSnapshot>builder().add(avatar).addAll(avatars).build();
+    }
 
     public Frame(AvatarSnapshot avatar, Change change) {
         this.change = change;
-        this.avatars.add(avatar);
+        this.avatars = ImmutableSet.of(avatar);
     }
 
     private Frame(Collection<AvatarSnapshot> avatars, Change change) {
-        this.avatars.addAll(avatars);
+        this.avatars = ImmutableSet.copyOf(avatars);
         this.change = change;
     }
 
-    public Frame next() {
-        return next;
-    }
-
-    public Frame previous() {
-        return previous;
-    }
-
-    public void setNext(Frame frame) {
-        frame.previous = this;
-        this.next = frame;
-    }
-
-    public void setNextAndUpdate(Frame next, Vector3d relative) {
-        setNext(next);
-        next.updateFromPrevious(this, relative);
-    }
-
-    public void updateFromPrevious(Frame previous, Vector3d relative) {
-        previous.avatars.stream().map(avatar -> avatar.getUpdatedCopy(relative)).forEach(this.avatars::add);
+    public Collection<AvatarSnapshot> getRelativeAvatars(Vector3d relative) {
+        return avatars.stream().map(a -> a.getUpdatedCopy(relative)).collect(Collectors.toList());
     }
 
     public Collection<AvatarSnapshot> getAvatars() {

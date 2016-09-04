@@ -1,17 +1,19 @@
 package me.dags.actionreplay.command;
 
-import com.flowpowered.math.vector.Vector3i;
 import me.dags.actionreplay.ActionReplay;
-import me.dags.actionreplay.Config;
+import me.dags.actionreplay.NodeUtils;
 import me.dags.actionreplay.animation.Animation;
+import me.dags.actionreplay.animation.Meta;
 import me.dags.actionreplay.animation.Recorder;
-import me.dags.actionreplay.persistant.SQLRecorder;
+import me.dags.actionreplay.impl.FileRecorder;
 import me.dags.commandbus.annotation.Caller;
 import me.dags.commandbus.annotation.Command;
 import me.dags.commandbus.annotation.One;
 import me.dags.commandbus.annotation.Permission;
 import me.dags.commandbus.utils.Format;
 import org.spongepowered.api.entity.living.player.Player;
+
+import java.util.Optional;
 
 /**
  * @author dags <dags@dags.me>
@@ -30,18 +32,17 @@ public class RecordCommands {
             return;
         }
 
-        Config.RecorderSettings settings = ActionReplay.getInstance().getConfig().recorderSettings;
-        if (!settings.name.equalsIgnoreCase(name)) {
-            format().error("Recorder {} was not recognised, the last one was: {}", name, settings.name).tell(player);
-            return;
+        Optional<Meta> meta = NodeUtils.loadMeta(name);
+        if (meta.isPresent()) {
+            Recorder recorder = new FileRecorder(meta.get());
+            setRecorder(recorder);
+            setAnimation(Animation.EMPTY);
+
+            format().info("Loaded recorder ").stress(meta.get().name).tell(player);
+            start(player);
+        } else {
+            format().error("Recorder {} was not recognised", name).tell(player);
         }
-
-        Recorder recorder = new SQLRecorder(settings.name, settings.worldId, settings.center, settings.radius, settings.height);
-        setRecorder(recorder);
-        setAnimation(Animation.EMPTY);
-
-        format().info("Loaded recorder ").stress(settings.name).tell(player);
-        start(player);
     }
 
 
@@ -49,18 +50,25 @@ public class RecordCommands {
     public void create(@Caller Player player, @One("name") String name, @One("radius") int radius, @One("height") int height) {
         if (getRecorder().isPresent()) {
             format().error("A recorder is already in use").tell(player);
-        } else {
-            Vector3i position = config().replaySettings.getOrDefault(name, player.getLocation().getBlockPosition());
-
-            config().replaySettings.put(name, position);
-            ActionReplay.getInstance().saveConfig();
-
-            setRecorder(new SQLRecorder(name, player.getWorld().getUniqueId(), position, radius, height));
-            setAnimation(Animation.EMPTY);
-
-            format().info("Created new recorder ").stress(name).tell(player);
-            start(player);
+            return;
         }
+
+        Meta meta = NodeUtils.loadMeta(name).orElse(new Meta());
+        meta.name = name;
+        meta.worldId = player.getWorld().getUniqueId();
+        meta.center = player.getLocation().getBlockPosition();
+        meta.radius = radius;
+        meta.height = height;
+
+        NodeUtils.saveMeta(meta);
+        ActionReplay.getInstance().getConfig().lastRecorder = name;
+        ActionReplay.getInstance().saveConfig();
+
+        setRecorder(new FileRecorder(meta));
+        setAnimation(Animation.EMPTY);
+
+        format().info("Created new recorder ").stress(name).tell(player);
+        start(player);
     }
 
     @Command(aliases = "start", parent = "recorder", perm = @Permission(id = "actionreplay.recorder", description = ""))
@@ -105,10 +113,6 @@ public class RecordCommands {
 
     private Format format() {
         return ActionReplay.getInstance().getFormat();
-    }
-
-    private Config config() {
-        return ActionReplay.getInstance().getConfig();
     }
 
     private Animation getAnimation() {

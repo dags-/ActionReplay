@@ -2,9 +2,10 @@ package me.dags.actionreplay;
 
 import com.google.inject.Inject;
 import me.dags.actionreplay.animation.Animation;
-import me.dags.actionreplay.animation.Frame;
+import me.dags.actionreplay.animation.Meta;
 import me.dags.actionreplay.animation.Recorder;
-import me.dags.actionreplay.avatar.AvatarSnapshot;
+import me.dags.actionreplay.animation.avatar.AvatarSnapshot;
+import me.dags.actionreplay.animation.frame.Frame;
 import me.dags.actionreplay.command.RecordCommands;
 import me.dags.actionreplay.command.ReplayCommands;
 import me.dags.actionreplay.event.BlockTransaction;
@@ -29,6 +30,9 @@ import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.format.TextColors;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
@@ -41,24 +45,26 @@ public class ActionReplay {
     private static final Logger LOGGER = LoggerFactory.getLogger("ActionReplay");
     private static ActionReplay instance;
 
-    private final Database database = new Database(this);
-    private final String dbString;
     private final Path configDir;
+    private final Path recordingsDir;
 
     private Format format = Format.DEFAULT;
     private Config config = new Config();
     private Recorder recorder = Recorder.EMPTY;
     private Animation animation = Animation.EMPTY;
 
-    public String getDBString() {
-        return dbString;
-    }
-
     @Inject
     public ActionReplay(@ConfigDir(sharedRoot = false) Path configDir) {
         ActionReplay.instance = this;
         this.configDir = configDir;
-        this.dbString = "jdbc:h2:" + configDir.resolve("recordings").toAbsolutePath();
+        this.recordingsDir = configDir.resolve("recordings");
+        if (!Files.exists(recordingsDir)) {
+            try {
+                Files.createDirectories(recordingsDir);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Listener
@@ -70,16 +76,15 @@ public class ActionReplay {
         manager.registerBuilder(BlockTransaction.class, new BlockTransaction.Builder());
 
         logger().info("Loading config");
-        config = Config.load(configDir.resolve("config.conf"));
+        config = NodeUtils.loadConfig(configDir.resolve("config.conf"));
     }
 
     @Listener
     public void init(GameInitializationEvent event) {
         CommandBus.builder().logger(logger()).build().register(RecordCommands.class).register(ReplayCommands.class).submit(this);
 
-        database.init();
-        format = Format.builder().info(TextColors.YELLOW).stress(TextColors.GREEN).error(TextColors.GRAY).warn(TextColors.RED).build();
-        recorder = config.recorderSettings.getRecorder().orElse(Recorder.EMPTY);
+        format = Format.builder().info(TextColors.AQUA).stress(TextColors.GREEN).error(TextColors.GRAY).warn(TextColors.RED).subdued(TextColors.GOLD).build();
+        recorder = NodeUtils.loadMeta(config.lastRecorder).filter(meta -> meta.recording).flatMap(Meta::getRecorder).orElse(Recorder.EMPTY);
 
         if (this.recorder.isPresent()) {
             Task.builder().execute(() -> {
@@ -91,10 +96,13 @@ public class ActionReplay {
 
     @Listener
     public void stop(GameStoppingEvent event) {
-        if (animation.isPresent()) {
+        saveConfig();
+        if (animation.isPresent() && animation.isPlaying()) {
             animation.stop();
         }
-        saveConfig();
+        if (recorder.isPresent() && recorder.isRecording()) {
+            recorder.stop();
+        }
     }
 
     public Format getFormat() {
@@ -122,7 +130,7 @@ public class ActionReplay {
     }
 
     public void saveConfig() {
-        Config.save(getConfig(), configDir.resolve("config.conf"));
+        NodeUtils.saveConfig(getConfig(), configDir.resolve("config.conf"));
     }
 
     public static Logger logger() {
@@ -137,8 +145,24 @@ public class ActionReplay {
         return Cause.source(ActionReplay.SPAWN_CAUSE).owner(ActionReplay.instance).build();
     }
 
-    public static Database getDatabase() {
-        return instance.database;
+    public static Path resolve(String string) {
+        return instance.configDir.resolve(string);
+    }
+
+    public static File getRecordingFile(String name) {
+        return getRecordingFile(name, true);
+    }
+
+    public static File getRecordingFile(String name, boolean create) {
+        File file = instance.recordingsDir.resolve(name).resolve(name + ".dat").toFile();
+        try {
+            if (create && file.createNewFile()) {
+                logger().info("Creating file {}", file);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return file;
     }
 
     public static void sendHelp(Player player) {

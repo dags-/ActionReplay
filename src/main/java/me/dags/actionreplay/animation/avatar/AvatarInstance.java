@@ -1,8 +1,8 @@
-package me.dags.actionreplay.avatar;
+package me.dags.actionreplay.animation.avatar;
 
 import com.flowpowered.math.vector.Vector3d;
 import me.dags.actionreplay.ActionReplay;
-import me.dags.actionreplay.Config;
+import me.dags.actionreplay.animation.Meta;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.Transform;
@@ -83,7 +83,7 @@ public class AvatarInstance {
         if (human != null) {
             return human.getUniqueId();
         }
-        return Config.DUMMY_ID;
+        return Meta.DUMMY_ID;
     }
 
     @Override

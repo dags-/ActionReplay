@@ -1,5 +1,6 @@
 package me.dags.actionreplay.animation;
 
+import me.dags.actionreplay.animation.frame.FrameProvider;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.Location;
@@ -45,8 +46,8 @@ public abstract class Animation {
         if (isPlaying()) {
             throw new UnsupportedOperationException("An animation is already playing");
         }
-        this.playing = true;
-        undoAllFrames(() -> start(plugin, intervalTicks));
+        playing = true;
+        undoAllFrames(() -> start(plugin, Math.max(intervalTicks, 1)));
     }
 
     public void stop() {
