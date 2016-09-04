@@ -1,6 +1,7 @@
 package me.dags.actionreplay.animation.avatar;
 
 import com.flowpowered.math.vector.Vector3d;
+import me.dags.actionreplay.animation.Meta;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.*;
 import org.spongepowered.api.data.persistence.AbstractDataBuilder;
@@ -22,6 +23,7 @@ public class AvatarSnapshot implements DataSerializable {
     private static final DataQuery POSITION = DataQuery.of("POSITION");
     private static final DataQuery ROTATION = DataQuery.of("ROTATION");
     private static final DataQuery ITEM = DataQuery.of("ITEM");
+    private static final DataQuery TERMINAL = DataQuery.of("TERMINAL");
 
     final UUID playerId;
     final String playerName;
@@ -45,7 +47,7 @@ public class AvatarSnapshot implements DataSerializable {
         this.position = mutable.position;
         this.rotation = mutable.rotation;
         this.inHand = mutable.inHand;
-        this.terminal = false;
+        this.terminal = mutable.terminal;
     }
 
     public AvatarSnapshot(Player player, Vector3d relative) {
@@ -53,7 +55,10 @@ public class AvatarSnapshot implements DataSerializable {
         playerName = player.getName();
         position = player.getTransform().getPosition().sub(relative);
         rotation = player.getTransform().getRotation();
-        inHand = player.getItemInHand().map(ItemStack::createSnapshot).orElse(ItemStackSnapshot.NONE);
+        inHand = player.getItemInHand()
+                .map(ItemStack::createSnapshot)
+                .orElse(ItemStackSnapshot.NONE);
+
         terminal = false;
     }
 
@@ -92,22 +97,26 @@ public class AvatarSnapshot implements DataSerializable {
 
     @Override
     public DataContainer toContainer() {
-        return new MemoryDataContainer()
+        DataContainer container = new MemoryDataContainer()
                 .set(PLAYER_ID, playerId.toString())
                 .set(PLAYER_NAME, playerName)
                 .set(POSITION, position)
                 .set(ROTATION, rotation)
                 .set(ITEM, inHand);
+        if (terminal) {
+            container.set(TERMINAL, true);
+        }
+        return container;
     }
 
     private static class Mutable {
 
-        UUID worldId = UUID.randomUUID();
-        UUID playerId = UUID.randomUUID();
+        UUID playerId = Meta.DUMMY_ID;
         String playerName = "";
         Vector3d position = Vector3d.ZERO;
         Vector3d rotation = Vector3d.ZERO;
         ItemStackSnapshot inHand = ItemStackSnapshot.NONE;
+        boolean terminal = false;
 
         AvatarSnapshot build() {
             return new AvatarSnapshot(this);
@@ -134,6 +143,7 @@ public class AvatarSnapshot implements DataSerializable {
                 mutable.position = position.get();
                 mutable.rotation = rotation.get();
                 mutable.inHand = item.get();
+                mutable.terminal = container.contains(TERMINAL);
                 return Optional.of(mutable.build());
             }
             return Optional.empty();
