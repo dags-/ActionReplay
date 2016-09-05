@@ -1,7 +1,7 @@
 package me.dags.actionreplay;
 
 import com.flowpowered.math.vector.Vector3i;
-import me.dags.actionreplay.animation.Meta;
+import me.dags.actionreplay.replay.Meta;
 import me.dags.data.NodeAdapter;
 import me.dags.data.node.Node;
 import me.dags.data.node.NodeObject;

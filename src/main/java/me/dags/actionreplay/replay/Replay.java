@@ -1,6 +1,6 @@
-package me.dags.actionreplay.animation;
+package me.dags.actionreplay.replay;
 
-import me.dags.actionreplay.animation.frame.FrameProvider;
+import me.dags.actionreplay.replay.frame.FrameProvider;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.Location;
@@ -9,9 +9,9 @@ import org.spongepowered.api.world.World;
 /**
  * @author dags <dags@dags.me>
  */
-public abstract class Animation {
+public abstract class Replay {
 
-    public static final Animation EMPTY = new Animation() {
+    public static final Replay EMPTY = new Replay() {
         public void undoAllFrames(Runnable callback) {}
         public void redoAllFrames(Runnable callback) {}
         public void onFinish() {}
@@ -22,11 +22,11 @@ public abstract class Animation {
 
     protected Location<World> center;
     protected boolean playing = false;
-    protected AnimationTask animationTask;
+    protected ReplayTask animationTask;
 
-    private Animation() {}
+    private Replay() {}
 
-    public Animation(Location<World> center) {
+    public Replay(Location<World> center) {
         this.center = center;
     }
 
@@ -44,7 +44,7 @@ public abstract class Animation {
 
     public void play(Object plugin, int intervalTicks) {
         if (isPlaying()) {
-            throw new UnsupportedOperationException("An animation is already playing");
+            throw new UnsupportedOperationException("An replay is already playing");
         }
         playing = true;
         undoAllFrames(() -> start(plugin, Math.max(intervalTicks, 1)));
@@ -65,7 +65,7 @@ public abstract class Animation {
 
     public void start(Object plugin, int intervalTicks) {
         try {
-            animationTask = new AnimationTask(getFrameProvider(), this::onFinish, center, intervalTicks);
+            animationTask = new ReplayTask(getFrameProvider(), this::onFinish, center, intervalTicks);
             Sponge.getEventManager().registerListeners(plugin, animationTask);
             Task.builder().intervalTicks(1).delayTicks(1).execute(animationTask).submit(plugin);
         } catch (Exception e) {

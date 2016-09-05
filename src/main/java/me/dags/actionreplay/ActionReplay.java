@@ -1,16 +1,16 @@
 package me.dags.actionreplay;
 
 import com.google.inject.Inject;
-import me.dags.actionreplay.animation.Animation;
-import me.dags.actionreplay.animation.Meta;
-import me.dags.actionreplay.animation.Recorder;
-import me.dags.actionreplay.animation.avatar.AvatarSnapshot;
-import me.dags.actionreplay.animation.frame.Frame;
 import me.dags.actionreplay.command.RecordCommands;
 import me.dags.actionreplay.command.ReplayCommands;
 import me.dags.actionreplay.event.BlockTransaction;
 import me.dags.actionreplay.event.Change;
 import me.dags.actionreplay.event.ChangeBuilder;
+import me.dags.actionreplay.replay.Meta;
+import me.dags.actionreplay.replay.Recorder;
+import me.dags.actionreplay.replay.Replay;
+import me.dags.actionreplay.replay.avatar.AvatarSnapshot;
+import me.dags.actionreplay.replay.frame.Frame;
 import me.dags.commandbus.CommandBus;
 import me.dags.commandbus.utils.Format;
 import org.slf4j.Logger;
@@ -51,7 +51,7 @@ public class ActionReplay {
     private Format format = Format.DEFAULT;
     private Config config = new Config();
     private Recorder recorder = Recorder.EMPTY;
-    private Animation animation = Animation.EMPTY;
+    private Replay animation = Replay.EMPTY;
 
     @Inject
     public ActionReplay(@ConfigDir(sharedRoot = false) Path configDir) {
@@ -109,7 +109,7 @@ public class ActionReplay {
         return format;
     }
 
-    public Animation getAnimation() {
+    public Replay getAnimation() {
         return animation;
     }
 
@@ -117,7 +117,7 @@ public class ActionReplay {
         return recorder;
     }
 
-    public void setAnimation(Animation animation) {
+    public void setAnimation(Replay animation) {
         this.animation = animation;
     }
 

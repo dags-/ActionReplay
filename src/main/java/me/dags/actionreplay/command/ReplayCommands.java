@@ -2,10 +2,10 @@ package me.dags.actionreplay.command;
 
 import me.dags.actionreplay.ActionReplay;
 import me.dags.actionreplay.NodeUtils;
-import me.dags.actionreplay.animation.Animation;
-import me.dags.actionreplay.animation.Meta;
-import me.dags.actionreplay.animation.Recorder;
-import me.dags.actionreplay.impl.FileAnimation;
+import me.dags.actionreplay.impl.FileReplay;
+import me.dags.actionreplay.replay.Meta;
+import me.dags.actionreplay.replay.Recorder;
+import me.dags.actionreplay.replay.Replay;
 import me.dags.commandbus.annotation.Caller;
 import me.dags.commandbus.annotation.Command;
 import me.dags.commandbus.annotation.One;
@@ -28,7 +28,7 @@ public class ReplayCommands {
     }
 
     @Command(aliases = "load", parent = "replay", perm = @Permission(id = "actionreplay.recorder", description = ""))
-    public Optional<Animation> load(@Caller Player player, @One("name") String name) {
+    public Optional<Replay> load(@Caller Player player, @One("name") String name) {
         if (getAnimation().isPresent() && getAnimation().isPlaying()) {
             format().error("A replay is currently playing").tell(player);
             return Optional.empty();
@@ -36,9 +36,9 @@ public class ReplayCommands {
 
         Optional<Meta> meta = NodeUtils.loadMeta(name);
         if (meta.isPresent()) {
-            Animation animation = new FileAnimation(name, player.getWorld().getLocation(meta.get().center));
+            Replay animation = new FileReplay(name, player.getWorld().getLocation(meta.get().center));
             setAnimation(animation);
-            format().info("Loaded animation ").stress(name).info(" at ").stress(meta.get().center).tell(player);
+            format().info("Loaded replay ").stress(name).info(" at ").stress(meta.get().center).tell(player);
             return Optional.of(animation);
         }
         return Optional.empty();
@@ -46,7 +46,7 @@ public class ReplayCommands {
 
     @Command(aliases = "here", parent = "replay load", perm = @Permission(id = "actionreplay.recorder", description = ""))
     public void loadHere(@Caller Player player, @One("name") String name) {
-        Optional<Animation> replay = load(player, name);
+        Optional<Replay> replay = load(player, name);
         if (replay.isPresent()) {
             Location<World> location = player.getLocation();
             replay.get().setCenter(location);
@@ -81,7 +81,7 @@ public class ReplayCommands {
     @Command(aliases = "reset", parent = "replay", perm = @Permission(id = "actionreplay.replay", description = ""))
     public void reset(@Caller Player player) {
         if (getAnimation().isPresent()) {
-            setAnimation(Animation.EMPTY);
+            setAnimation(Replay.EMPTY);
             format().info("Discarding replay").tell(player);
         } else {
             format().error("No replay playing").tell(player);
@@ -120,7 +120,7 @@ public class ReplayCommands {
         return ActionReplay.getInstance().getFormat();
     }
 
-    private Animation getAnimation() {
+    private Replay getAnimation() {
         return ActionReplay.getInstance().getAnimation();
     }
 
@@ -128,7 +128,7 @@ public class ReplayCommands {
         return ActionReplay.getInstance().getRecorder();
     }
 
-    private void setAnimation(Animation animation) {
+    private void setAnimation(Replay animation) {
         ActionReplay.getInstance().setAnimation(animation);
     }
 }

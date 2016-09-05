@@ -1,9 +1,9 @@
 package me.dags.actionreplay.impl;
 
 import me.dags.actionreplay.ActionReplay;
-import me.dags.actionreplay.animation.frame.Frame;
-import me.dags.actionreplay.animation.frame.FrameProvider;
-import me.dags.actionreplay.animation.frame.FrameReader;
+import me.dags.actionreplay.io.FrameFileReader;
+import me.dags.actionreplay.replay.frame.Frame;
+import me.dags.actionreplay.replay.frame.FrameProvider;
 
 import java.io.File;
 
@@ -13,7 +13,7 @@ import java.io.File;
 public class FileFrameProvider implements FrameProvider {
 
     private final File file;
-    private FrameReader frameReader;
+    private FrameFileReader reader;
 
     public FileFrameProvider(String name) {
         this.file = ActionReplay.getRecordingFile(name);
@@ -21,28 +21,28 @@ public class FileFrameProvider implements FrameProvider {
 
     @Override
     public Frame nextFrame() throws Exception {
-        return frameReader.next();
+        return reader.next();
     }
 
     @Override
     public boolean hasNext() throws Exception {
-        return frameReader.hasNext();
+        return reader.hasNext();
     }
 
     @Override
     public void close() throws Exception {
-        frameReader.close();
+        reader.close();
     }
 
     @Override
     public FileFrameProvider forward() throws Exception {
-        this.frameReader = new FrameReader.Forward(file);
+        this.reader = new FrameFileReader.Forward(file);
         return this;
     }
 
     @Override
     public FileFrameProvider backward() throws Exception {
-        this.frameReader = new FrameReader.Backward(file);
+        this.reader = new FrameFileReader.Backward(file);
         return this;
     }
 }

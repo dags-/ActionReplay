@@ -1,7 +1,7 @@
-package me.dags.actionreplay.animation.avatar;
+package me.dags.actionreplay.replay.avatar;
 
 import com.flowpowered.math.vector.Vector3d;
-import me.dags.actionreplay.animation.Meta;
+import me.dags.actionreplay.replay.Meta;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.*;
 import org.spongepowered.api.data.persistence.AbstractDataBuilder;

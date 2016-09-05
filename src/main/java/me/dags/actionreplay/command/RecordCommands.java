@@ -2,10 +2,10 @@ package me.dags.actionreplay.command;
 
 import me.dags.actionreplay.ActionReplay;
 import me.dags.actionreplay.NodeUtils;
-import me.dags.actionreplay.animation.Animation;
-import me.dags.actionreplay.animation.Meta;
-import me.dags.actionreplay.animation.Recorder;
 import me.dags.actionreplay.impl.FileRecorder;
+import me.dags.actionreplay.replay.Meta;
+import me.dags.actionreplay.replay.Recorder;
+import me.dags.actionreplay.replay.Replay;
 import me.dags.commandbus.annotation.Caller;
 import me.dags.commandbus.annotation.Command;
 import me.dags.commandbus.annotation.One;
@@ -36,7 +36,7 @@ public class RecordCommands {
         if (meta.isPresent()) {
             Recorder recorder = new FileRecorder(meta.get());
             setRecorder(recorder);
-            setAnimation(Animation.EMPTY);
+            setAnimation(Replay.EMPTY);
 
             format().info("Loaded recorder ").stress(meta.get().name).tell(player);
             start(player);
@@ -65,7 +65,7 @@ public class RecordCommands {
         ActionReplay.getInstance().saveConfig();
 
         setRecorder(new FileRecorder(meta));
-        setAnimation(Animation.EMPTY);
+        setAnimation(Replay.EMPTY);
 
         format().info("Created new recorder ").stress(name).tell(player);
         start(player);
@@ -115,7 +115,7 @@ public class RecordCommands {
         return ActionReplay.getInstance().getFormat();
     }
 
-    private Animation getAnimation() {
+    private Replay getAnimation() {
         return ActionReplay.getInstance().getAnimation();
     }
 
@@ -123,7 +123,7 @@ public class RecordCommands {
         return ActionReplay.getInstance().getRecorder();
     }
 
-    private void setAnimation(Animation animation) {
+    private void setAnimation(Replay animation) {
         ActionReplay.getInstance().setAnimation(animation);
     }
 

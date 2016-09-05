@@ -1,9 +1,9 @@
-package me.dags.actionreplay.animation;
+package me.dags.actionreplay.replay;
 
-import me.dags.actionreplay.animation.avatar.AvatarInstance;
-import me.dags.actionreplay.animation.avatar.AvatarSnapshot;
-import me.dags.actionreplay.animation.frame.Frame;
-import me.dags.actionreplay.animation.frame.FrameProvider;
+import me.dags.actionreplay.replay.avatar.AvatarInstance;
+import me.dags.actionreplay.replay.avatar.AvatarSnapshot;
+import me.dags.actionreplay.replay.frame.Frame;
+import me.dags.actionreplay.replay.frame.FrameProvider;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 /**
  * @author dags <dags@dags.me>
  */
-public class AnimationTask implements Consumer<Task> {
+public class ReplayTask implements Consumer<Task> {
 
     private final Map<UUID, AvatarInstance> avatars = new HashMap<>();
     private final Set<UUID> entityIds = new HashSet<>();
@@ -31,7 +31,7 @@ public class AnimationTask implements Consumer<Task> {
     private int count = 0;
     private Frame next;
 
-    public AnimationTask(FrameProvider frameProvider, Runnable finishCallback, Location<World> center, int intervalTicks) {
+    public ReplayTask(FrameProvider frameProvider, Runnable finishCallback, Location<World> center, int intervalTicks) {
         this.frameProvider = frameProvider;
         this.intervalTicks = intervalTicks;
         this.center = center;

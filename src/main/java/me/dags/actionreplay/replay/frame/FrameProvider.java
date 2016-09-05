@@ -1,4 +1,4 @@
-package me.dags.actionreplay.animation.frame;
+package me.dags.actionreplay.replay.frame;
 
 /**
  * @author dags <dags@dags.me>

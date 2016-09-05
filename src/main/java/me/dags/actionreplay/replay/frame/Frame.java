@@ -1,9 +1,9 @@
-package me.dags.actionreplay.animation.frame;
+package me.dags.actionreplay.replay.frame;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.google.common.collect.ImmutableSet;
-import me.dags.actionreplay.animation.avatar.AvatarSnapshot;
 import me.dags.actionreplay.event.Change;
+import me.dags.actionreplay.replay.avatar.AvatarSnapshot;
 import org.spongepowered.api.data.*;
 import org.spongepowered.api.data.persistence.AbstractDataBuilder;
 import org.spongepowered.api.data.persistence.InvalidDataException;

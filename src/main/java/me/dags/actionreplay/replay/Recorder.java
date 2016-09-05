@@ -1,10 +1,10 @@
-package me.dags.actionreplay.animation;
+package me.dags.actionreplay.replay;
 
 import com.flowpowered.math.vector.Vector3i;
-import me.dags.actionreplay.animation.avatar.AvatarSnapshot;
 import me.dags.actionreplay.event.BlockChange;
 import me.dags.actionreplay.event.BlockTransaction;
 import me.dags.actionreplay.event.Change;
+import me.dags.actionreplay.replay.avatar.AvatarSnapshot;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockState;
