@@ -1,6 +1,7 @@
 package me.dags.actionreplay.replay;
 
 import me.dags.actionreplay.replay.frame.FrameProvider;
+import me.dags.actionreplay.replay.frame.FrameTask;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.Location;
@@ -15,6 +16,7 @@ public abstract class Replay {
         public void undoAllFrames(Runnable callback) {}
         public void redoAllFrames(Runnable callback) {}
         public void onFinish() {}
+        public void stopNow() {}
         public FrameProvider getFrameProvider() throws Exception {
             throw new UnsupportedOperationException("EMPTY cannot provide a FrameProvider");
         }
@@ -23,6 +25,7 @@ public abstract class Replay {
     protected Location<World> center;
     protected boolean playing = false;
     protected ReplayTask animationTask;
+    protected FrameTask currentTask = null;
 
     private Replay() {}
 
@@ -60,12 +63,44 @@ public abstract class Replay {
         undoAllFrames(() -> redoAllFrames(() -> {
             playing = false;
             animationTask = null;
+            currentTask = null;
         }));
+    }
+
+    public void stopNow() {
+        if (!isPresent()) {
+            return;
+        }
+
+        if (isPlaying()) {
+            animationTask.interrupt();
+            animationTask.removeAvatars();
+        }
+
+        if (isPlaying() || (currentTask != null && currentTask.active())) {
+            try {
+                currentTask.interrupt();
+
+                try (FrameProvider undo = getFrameProvider().backward()) {
+                    while (undo.hasNext()) {
+                        undo.nextFrame().getChange().undo(center);
+                    }
+                }
+
+                try (FrameProvider restore = getFrameProvider().forward()) {
+                    while (restore.hasNext()) {
+                        restore.nextFrame().getChange().restore(center);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void start(Object plugin, int intervalTicks) {
         try {
-            animationTask = new ReplayTask(getFrameProvider(), this::onFinish, center, intervalTicks);
+            animationTask = new ReplayTask(getFrameProvider().forward(), this::onFinish, center, intervalTicks);
             Sponge.getEventManager().registerListeners(plugin, animationTask);
             Task.builder().intervalTicks(1).delayTicks(1).execute(animationTask).submit(plugin);
         } catch (Exception e) {
@@ -73,11 +108,14 @@ public abstract class Replay {
         }
     }
 
+    public void onFinish() {
+        animationTask = null;
+        playing = false;
+    }
+
     public abstract void undoAllFrames(Runnable callback);
 
     public abstract void redoAllFrames(Runnable callback);
-
-    public abstract void onFinish();
 
     public abstract FrameProvider getFrameProvider() throws Exception;
 }

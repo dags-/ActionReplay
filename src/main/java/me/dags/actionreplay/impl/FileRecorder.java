@@ -75,6 +75,16 @@ public class FileRecorder extends Recorder {
     }
 
     @Override
+    public void stopNow() {
+        super.stopNow();
+        try {
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public void addNextFrame(AvatarSnapshot snapshot, Change change) {
         if (change instanceof BlockChange && writer != null) {
             Frame next;

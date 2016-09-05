@@ -17,7 +17,6 @@ import java.util.function.Consumer;
 public class FileReplay extends Replay {
 
     private final String name;
-    private FrameTask currentTask = null;
 
     public FileReplay(String name, Location<World> center) {
         super(center);
@@ -59,13 +58,7 @@ public class FileReplay extends Replay {
     }
 
     @Override
-    public void onFinish() {
-        super.animationTask = null;
-        super.playing = false;
-    }
-
-    @Override
     public FrameProvider getFrameProvider() throws Exception {
-        return new FileFrameProvider(name).forward();
+        return new FileFrameProvider(name);
     }
 }

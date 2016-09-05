@@ -30,6 +30,10 @@ public class FrameTask implements Consumer<Task> {
         }
     }
 
+    public boolean active() {
+        return !interrupt;
+    }
+
     @Override
     public void accept(Task task) {
         if (interrupt) {

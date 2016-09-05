@@ -98,10 +98,10 @@ public class ActionReplay {
     public void stop(GameStoppingEvent event) {
         saveConfig();
         if (animation.isPresent() && animation.isPlaying()) {
-            animation.stop();
+            animation.stopNow();
         }
         if (recorder.isPresent() && recorder.isRecording()) {
-            recorder.stop();
+            recorder.stopNow();
         }
     }
 

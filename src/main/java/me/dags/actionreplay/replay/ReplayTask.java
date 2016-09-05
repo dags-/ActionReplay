@@ -1,5 +1,6 @@
 package me.dags.actionreplay.replay;
 
+import me.dags.actionreplay.ActionReplay;
 import me.dags.actionreplay.replay.avatar.AvatarInstance;
 import me.dags.actionreplay.replay.avatar.AvatarSnapshot;
 import me.dags.actionreplay.replay.frame.Frame;
@@ -43,9 +44,14 @@ public class ReplayTask implements Consumer<Task> {
     public void accept(Task task) {
         try {
             if (isInterrupted()) {
-                this.clear();
+                Task.builder()
+                        .delayTicks(5)
+                        .execute(() -> {
+                            this.clear();
+                            finishCallback.run();
+                        }).submit(ActionReplay.getInstance());
+
                 task.cancel();
-                finishCallback.run();
                 frameProvider.close();
                 return;
             }
@@ -116,7 +122,7 @@ public class ReplayTask implements Consumer<Task> {
         avatars.values().forEach(AvatarInstance::pause);
     }
 
-    private void removeAvatars() {
+    public void removeAvatars() {
         avatars.values().forEach(AvatarInstance::remove);
         avatars.clear();
         entityIds.clear();

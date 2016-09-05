@@ -26,7 +26,7 @@ import java.util.UUID;
  */
 public abstract class Recorder {
 
-    public static final Recorder EMPTY = new Recorder(){
+    public static final Recorder EMPTY = new Recorder() {
         public void start(Object plugin) {
             throw new UnsupportedOperationException("Cannot start EMPTY recorder!");
         }
@@ -84,6 +84,11 @@ public abstract class Recorder {
     }
 
     public void stop() {
+        setRecording(false);
+        Sponge.getEventManager().unregisterListeners(this);
+    }
+
+    public void stopNow() {
         setRecording(false);
         Sponge.getEventManager().unregisterListeners(this);
     }

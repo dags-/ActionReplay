@@ -40,7 +40,7 @@ public class FrameFileFormat {
 
     /**
      * Reads one 'block' forwards from the Frame file
-     * Expects that the file point is directly before the block
+     * Expects that the file pointer is directly before the block
      *
      * 1. Read int at the head of the block (the length of the following byte array)
      * 2. Read 'length' number of bytes into an array
