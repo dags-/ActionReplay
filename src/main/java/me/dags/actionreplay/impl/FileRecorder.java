@@ -3,8 +3,9 @@ package me.dags.actionreplay.impl;
 import com.flowpowered.math.vector.Vector3d;
 import me.dags.actionreplay.ActionReplay;
 import me.dags.actionreplay.NodeUtils;
-import me.dags.actionreplay.event.BlockChange;
 import me.dags.actionreplay.event.Change;
+import me.dags.actionreplay.event.blockchange.BlockChange;
+import me.dags.actionreplay.event.masschange.MassChange;
 import me.dags.actionreplay.io.FrameFileWriter;
 import me.dags.actionreplay.replay.Meta;
 import me.dags.actionreplay.replay.Recorder;
@@ -41,6 +42,7 @@ public class FileRecorder extends Recorder {
     }
 
     @Listener
+    @SuppressWarnings("unused")
     public void onJoin(ClientConnectionEvent.Join event) {
         format().info("Recording: ").stress(name).info(" in world: ").stress(world).tell(event.getTargetEntity());
     }
@@ -81,6 +83,20 @@ public class FileRecorder extends Recorder {
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void addNextFrame(Change change) {
+        if (change instanceof MassChange && writer != null) {
+            Frame next;
+            if (last == null) {
+                next = new Frame(change);
+            } else {
+                next = new Frame(last.getRelativeAvatars(centerD), change);
+            }
+            last = next;
+            writer.queue(next);
         }
     }
 

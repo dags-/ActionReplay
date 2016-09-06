@@ -1,5 +1,7 @@
 package me.dags.actionreplay.io;
 
+import com.google.common.primitives.Ints;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -13,8 +15,8 @@ import java.io.IOException;
  *
  * i.e. avoids:
  *     void writeTo(ByteArrayOutputStream stream, DataOutput output) {
- *         byte[] data = stream.toByteArray(); // Array.copy operation!
- *         output.write(data);
+ *         byte[] datatypes = stream.toByteArray(); // Array.copy operation!
+ *         output.writeTo(datatypes);
  *     }
  */
 public class ByteArrayDataOutputStream extends ByteArrayOutputStream {
@@ -25,5 +27,17 @@ public class ByteArrayDataOutputStream extends ByteArrayOutputStream {
 
     public void writeTo(DataOutput dataOutput) throws IOException {
         dataOutput.write(super.buf, 0, super.count);
+    }
+
+    public void writeInt(int integer) throws IOException {
+        super.write(Ints.toByteArray(integer));
+    }
+
+    public void writeByte(byte byt) throws IOException {
+        super.write(byt);
+    }
+
+    public byte[] getBytes() {
+        return super.buf;
     }
 }

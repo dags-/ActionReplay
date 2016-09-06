@@ -24,6 +24,11 @@ public class Frame implements DataSerializable {
     private final ImmutableSet<AvatarSnapshot> avatars;
     private final Change change;
 
+    public Frame(Change change) {
+        this.change = change;
+        this.avatars = ImmutableSet.of();
+    }
+
     public Frame(AvatarSnapshot avatar, Change change, Collection<AvatarSnapshot> avatars) {
         this.change = change;
         this.avatars = ImmutableSet.<AvatarSnapshot>builder().add(avatar).addAll(avatars).build();
@@ -34,7 +39,7 @@ public class Frame implements DataSerializable {
         this.avatars = ImmutableSet.of(avatar);
     }
 
-    private Frame(Collection<AvatarSnapshot> avatars, Change change) {
+    public Frame(Collection<AvatarSnapshot> avatars, Change change) {
         this.avatars = ImmutableSet.copyOf(avatars);
         this.change = change;
     }
@@ -69,7 +74,7 @@ public class Frame implements DataSerializable {
             super(Frame.class, 0);
         }
 
-        public Frame fastBuild(DataView container) throws InvalidDataException {
+        public Frame buildUnchecked(DataView container) throws InvalidDataException {
             Optional<List<AvatarSnapshot>> avatars = container.getSerializableList(AVATARS, AvatarSnapshot.class);
             Optional<Change> change = container.getSerializable(CHANGE, Change.class);
             if (avatars.isPresent() && change.isPresent()) {
@@ -80,7 +85,7 @@ public class Frame implements DataSerializable {
 
         @Override
         public Optional<Frame> buildContent(DataView container) throws InvalidDataException {
-            return Optional.ofNullable(fastBuild(container));
+            return Optional.ofNullable(buildUnchecked(container));
         }
     }
 }

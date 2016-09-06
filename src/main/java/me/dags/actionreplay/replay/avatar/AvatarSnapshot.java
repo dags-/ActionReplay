@@ -16,7 +16,7 @@ import java.util.UUID;
 /**
  * @author dags <dags@dags.me>
  */
-public class AvatarSnapshot implements DataSerializable {
+public class AvatarSnapshot extends Avatar implements DataSerializable {
 
     private static final DataQuery PLAYER_ID = DataQuery.of("PLAYER_ID");
     private static final DataQuery PLAYER_NAME = DataQuery.of("PLAYER_NAME");
@@ -62,6 +62,7 @@ public class AvatarSnapshot implements DataSerializable {
         terminal = false;
     }
 
+    @Override
     public UUID getUUID() {
         return playerId;
     }
@@ -74,16 +75,6 @@ public class AvatarSnapshot implements DataSerializable {
 
     public boolean isTerminal() {
         return terminal;
-    }
-
-    @Override
-    public int hashCode() {
-        return playerId.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return o != null && o instanceof AvatarSnapshot && o.hashCode() == hashCode();
     }
 
     public static Mutable mutable() {

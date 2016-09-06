@@ -55,7 +55,7 @@ public class ReplayCommands {
     }
 
     @Command(aliases = "start", parent = "replay", perm = @Permission(id = "actionreplay.replay", description = ""))
-    public void start(@Caller Player player, @One("ticks") int ticks) {
+    public void start(@Caller Player player, @One("interval ticks") int ticks, @One("changes per tick") int changes) {
         if (getRecorder().isRecording()) {
             format().error("Recorder is currently recording").tell(player);
         } else if (!getAnimation().isPresent()) {
@@ -63,7 +63,7 @@ public class ReplayCommands {
         } else if (getAnimation().isPlaying()) {
             format().error("Replay is currently running").tell(player);
         } else {
-            getAnimation().play(ActionReplay.getInstance(), ticks);
+            getAnimation().play(ActionReplay.getInstance(), ticks, changes);
             format().info("Playing...").tell(player);
         }
     }
@@ -88,7 +88,7 @@ public class ReplayCommands {
         }
     }
 
-    @Command(aliases = "restore", parent = "replay", perm = @Permission(id = "actionreplay.replay", description = ""))
+    @Command(aliases = "restoreRange", parent = "replay", perm = @Permission(id = "actionreplay.replay", description = ""))
     public void restore(@Caller Player player) {
         if (getAnimation().isPresent()) {
             if (getAnimation().isPlaying()) {

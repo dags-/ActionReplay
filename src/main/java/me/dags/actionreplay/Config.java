@@ -10,7 +10,8 @@ import me.dags.data.node.NodeTypeAdapter;
 public class Config {
 
     public int announceInterval = 60 * 5;
-    public int operationsPerTick = 1000;
+    public int minOperationsPerTick = 1;
+    public int maxOperationsPerTick = 1000;
     public String lastRecorder = "";
 
     public static class Adapter implements NodeTypeAdapter<Config> {
@@ -19,7 +20,7 @@ public class Config {
         public Node toNode(Config config) {
             NodeObject object = new NodeObject();
             object.put("announce_interval", config.announceInterval);
-            object.put("operations_per_tick", config.operationsPerTick);
+            object.put("operations_per_tick", config.minOperationsPerTick);
             object.put("last_recorder", config.lastRecorder);
             return object;
         }
@@ -29,7 +30,7 @@ public class Config {
             NodeObject object = node.asNodeObject();
             Config config = new Config();
             config.announceInterval = object.map("announce_interval", n -> n.asNumber().intValue(), 5 * 60);
-            config.operationsPerTick = object.map("operations_per_tick", n -> n.asNumber().intValue(), 1000);
+            config.minOperationsPerTick = object.map("operations_per_tick", n -> n.asNumber().intValue(), 1000);
             config.lastRecorder = object.map("last_recorder", Node::asString, "");
             return config;
         }

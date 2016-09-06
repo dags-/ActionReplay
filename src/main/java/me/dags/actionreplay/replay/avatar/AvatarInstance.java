@@ -18,7 +18,7 @@ import java.util.UUID;
 /**
  * @author dags <dags@dags.me>
  */
-public class AvatarInstance {
+public class AvatarInstance extends Avatar {
 
     private final UUID uuid;
     private WeakReference<Human> human = new WeakReference<>(null);
@@ -88,12 +88,7 @@ public class AvatarInstance {
     }
 
     @Override
-    public int hashCode() {
-        return uuid.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return o != null && o instanceof AvatarInstance && o.hashCode() == hashCode();
+    UUID getUUID() {
+        return uuid;
     }
 }

@@ -45,12 +45,12 @@ public abstract class Replay {
         return playing || animationTask != null;
     }
 
-    public void play(Object plugin, int intervalTicks) {
+    public void play(Object plugin, int intervalTicks, int changesPerTick) {
         if (isPlaying()) {
             throw new UnsupportedOperationException("An replay is already playing");
         }
         playing = true;
-        undoAllFrames(() -> start(plugin, Math.max(intervalTicks, 1)));
+        undoAllFrames(() -> start(plugin, intervalTicks, changesPerTick));
     }
 
     public void stop() {
@@ -73,8 +73,7 @@ public abstract class Replay {
         }
 
         if (isPlaying()) {
-            animationTask.interrupt();
-            animationTask.removeAvatars();
+            animationTask.stop();
         }
 
         if (isPlaying() || (currentTask != null && currentTask.active())) {
@@ -98,9 +97,9 @@ public abstract class Replay {
         }
     }
 
-    public void start(Object plugin, int intervalTicks) {
+    public void start(Object plugin, int interval, int changesPer) {
         try {
-            animationTask = new ReplayTask(getFrameProvider().forward(), this::onFinish, center, intervalTicks);
+            animationTask = new ReplayTask(getFrameProvider().forward(), this::onFinish, center, interval, changesPer);
             Sponge.getEventManager().registerListeners(plugin, animationTask);
             Task.builder().intervalTicks(1).delayTicks(1).execute(animationTask).submit(plugin);
         } catch (Exception e) {

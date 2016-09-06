@@ -15,8 +15,8 @@ import java.io.RandomAccessFile;
  */
 
 /**
- * Format of one block: { (int) dataLength : (byte[]) data : (int) dataLength }
- * Where 'data' is a byte array of length 'dataLength'
+ * Format of one block: { (int) dataLength : (byte[]) datatypes : (int) dataLength }
+ * Where 'datatypes' is a byte array of length 'dataLength'
  */
 public class FrameFileFormat {
 
@@ -82,6 +82,6 @@ public class FrameFileFormat {
 
     private Frame read(byte[] data) throws IOException {
         DataContainer container = DataFormats.NBT.readFrom(new ByteArrayInputStream(data));
-        return BUILDER.fastBuild(container);
+        return BUILDER.buildUnchecked(container);
     }
 }

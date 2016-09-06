@@ -1,9 +1,9 @@
 package me.dags.actionreplay.replay;
 
 import com.flowpowered.math.vector.Vector3i;
-import me.dags.actionreplay.event.BlockChange;
-import me.dags.actionreplay.event.BlockTransaction;
 import me.dags.actionreplay.event.Change;
+import me.dags.actionreplay.event.blockchange.BlockChange;
+import me.dags.actionreplay.event.blockchange.BlockTransaction;
 import me.dags.actionreplay.replay.avatar.AvatarSnapshot;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
@@ -41,6 +41,7 @@ public abstract class Recorder {
     protected final UUID worldId;
     protected final int radius;
     protected final int height;
+    private final String worldName;
 
     private boolean recording = false;
 
@@ -51,6 +52,7 @@ public abstract class Recorder {
         this.max = Vector3i.ZERO;
         this.radius = 0;
         this.height = 0;
+        this.worldName = "";
     }
 
     protected Recorder(UUID worldId, Vector3i center, int radius, int height) {
@@ -60,6 +62,11 @@ public abstract class Recorder {
         this.max = new Vector3i(center.getX() + radius, center.getY() + height, center.getZ() + radius);
         this.radius = radius;
         this.height = height;
+        this.worldName = Sponge.getServer().getWorld(worldId).map(World::getName).orElse("");
+    }
+
+    public String getWorldName() {
+        return worldName;
     }
 
     @Listener(order = Order.POST)
@@ -78,6 +85,10 @@ public abstract class Recorder {
         }
     }
 
+    public Vector3i center() {
+        return center;
+    }
+
     public void start(Object plugin) {
         setRecording(true);
         Sponge.getEventManager().registerListeners(plugin, this);
@@ -92,6 +103,8 @@ public abstract class Recorder {
         setRecording(false);
         Sponge.getEventManager().unregisterListeners(this);
     }
+
+    public void addNextFrame(Change change) {}
 
     public void addNextFrame(AvatarSnapshot snapshot, Change change) {}
 
@@ -113,6 +126,10 @@ public abstract class Recorder {
 
     private boolean activeLocation(Location<World> location) {
         return isRecording() && location.getExtent().getUniqueId().equals(worldId) && contains(location.getBlockPosition());
+    }
+
+    public boolean contains(int x, int y, int z) {
+        return x >= min.getX() && x <= max.getX() && y >= min.getY() && y <= max.getY() && z >= min.getZ() && z <= max.getZ();
     }
 
     private boolean contains(Vector3i pos) {

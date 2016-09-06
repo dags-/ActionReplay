@@ -61,6 +61,11 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+        <repository>
+            <id>worldedit-maven-repo</id>
+            <name>WorldEdit</name>
+            <url>http://maven.sk89q.com/repo/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -81,9 +86,10 @@
             <version>1.3.0-SNAPSHOT-20</version>
         </dependency>
         <dependency>
-            <groupId>com.github.dags-</groupId>
-            <artifactId>sqlutils</artifactId>
-            <version>master-SNAPSHOT</version>
+            <groupId>com.sk89q.worldedit</groupId>
+            <artifactId>worldedit-core</artifactId>
+            <version>6.0.0-SNAPSHOT</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

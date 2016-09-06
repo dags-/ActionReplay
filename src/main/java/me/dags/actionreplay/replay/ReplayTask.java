@@ -1,18 +1,15 @@
 package me.dags.actionreplay.replay;
 
 import me.dags.actionreplay.ActionReplay;
-import me.dags.actionreplay.replay.avatar.AvatarInstance;
-import me.dags.actionreplay.replay.avatar.AvatarSnapshot;
-import me.dags.actionreplay.replay.frame.Frame;
 import me.dags.actionreplay.replay.frame.FrameProvider;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import java.util.*;
 import java.util.function.Consumer;
 
 /**
@@ -20,62 +17,30 @@ import java.util.function.Consumer;
  */
 public class ReplayTask implements Consumer<Task> {
 
-    private final Map<UUID, AvatarInstance> avatars = new HashMap<>();
-    private final Set<UUID> entityIds = new HashSet<>();
-    private final FrameProvider frameProvider;
-    private final int intervalTicks;
+    private final ReplayPlayer framePlayer;
     private final Location<World> center;
     private final Runnable finishCallback;
+    private final int intervalTicks;
 
-    private boolean showAvatars = true;
     private boolean interrupted = false;
-    private int count = 0;
-    private Frame next;
+    private int ticker = 0;
 
-    public ReplayTask(FrameProvider frameProvider, Runnable finishCallback, Location<World> center, int intervalTicks) {
-        this.frameProvider = frameProvider;
-        this.intervalTicks = intervalTicks;
+    public ReplayTask(FrameProvider provider, Runnable callback, Location<World> center, int interval, int operations) {
+        this.framePlayer = new ReplayPlayer(provider, operations);
         this.center = center;
-        this.count = intervalTicks;
-        this.finishCallback = finishCallback;
+        this.finishCallback = callback;
+        this.intervalTicks = interval;
+        this.ticker = interval;
     }
 
-    @Override
-    public void accept(Task task) {
+    public void stop() {
+        interrupt();
+        Sponge.getEventManager().unregisterListeners(this);
         try {
-            if (isInterrupted()) {
-                Task.builder()
-                        .delayTicks(5)
-                        .execute(() -> {
-                            this.clear();
-                            finishCallback.run();
-                        }).submit(ActionReplay.getInstance());
-
-                task.cancel();
-                frameProvider.close();
-                return;
-            }
-
-            if (next == null && !hasNext()) {
-                interrupt();
-                return;
-            }
-            if (count-- > 0) {
-                this.tick();
-            } else {
-                this.count = intervalTicks;
-                this.playFrame();
-            }
+            framePlayer.stop();
+            framePlayer.clear();
         } catch (Exception e) {
             e.printStackTrace();
-            task.cancel();
-        }
-    }
-
-    @Listener
-    public void damageListener(DamageEntityEvent event) {
-        if (entityIds.contains(event.getTargetEntity().getUniqueId())) {
-            event.setCancelled(true);
         }
     }
 
@@ -88,68 +53,39 @@ public class ReplayTask implements Consumer<Task> {
         return interrupted;
     }
 
-    private boolean hasNext() throws Exception {
-        return frameProvider.hasNext();
-    }
-
-    private void tick() throws Exception {
-        this.pauseAvatars();
-        if (next == null) {
-            next = frameProvider.nextFrame();
+    @Listener (order = Order.PRE)
+    public void damageListener(DamageEntityEvent event) {
+        if (framePlayer.protect(event.getTargetEntity())) {
+            event.setCancelled(true);
         }
     }
 
-    private void playFrame() {
-        if (next != null) {
-            this.restoreAvatars();
-            this.restoreChanges();
-            next = null;
-        }
-    }
-    private void clear() {
-        removeAvatars();
-        Sponge.getEventManager().unregisterListeners(this);
-    }
-
-    private void restoreChanges() {
-        if (next == null) {
-            return;
-        }
-        next.getChange().restore(center);
-    }
-
-    private void pauseAvatars() {
-        avatars.values().forEach(AvatarInstance::pause);
-    }
-
-    public void removeAvatars() {
-        avatars.values().forEach(AvatarInstance::remove);
-        avatars.clear();
-        entityIds.clear();
-    }
-
-    private void restoreAvatars() {
-        if (!showAvatars || next == null) {
-            return;
-        }
-
-        for (AvatarSnapshot snapshot : next.getAvatars()) {
-            AvatarInstance instance = avatars.get(snapshot.getUUID());
-            if (instance != null) {
-                if (snapshot.isTerminal()) {
-                    avatars.remove(snapshot.getUUID());
-                    entityIds.remove(instance.getEntityId());
-                    instance.remove();
-                } else {
-                    instance.sync(snapshot, center);
-                }
-            } else if (!snapshot.isTerminal()) {
-                instance = new AvatarInstance(snapshot.getUUID());
-                instance.sync(snapshot, center);
-
-                avatars.put(snapshot.getUUID(), instance);
-                entityIds.add(instance.getEntityId());
+    @Override
+    public void accept(Task task) {
+        try {
+            if (isInterrupted()) {
+                task.cancel();
+                finishCallback.run();
+                Task.builder().delayTicks(5).execute(this::stop).submit(ActionReplay.getInstance());
+                return;
             }
+
+            if (framePlayer.finished()) {
+                interrupt();
+                return;
+            }
+
+            if (ticker-- > 0) {
+                framePlayer.pause();
+                framePlayer.loadNext();
+            } else {
+                ticker = intervalTicks;
+                framePlayer.playNext(center);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            task.cancel();
+            stop();
         }
     }
 }

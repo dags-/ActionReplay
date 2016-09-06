@@ -1,8 +1,13 @@
-package me.dags.actionreplay.event;
+package me.dags.actionreplay.event.blockchange;
 
 import com.flowpowered.math.vector.Vector3i;
+import me.dags.actionreplay.event.Positional;
+import me.dags.actionreplay.event.Transactional;
 import org.spongepowered.api.block.BlockState;
-import org.spongepowered.api.data.*;
+import org.spongepowered.api.data.DataContainer;
+import org.spongepowered.api.data.DataSerializable;
+import org.spongepowered.api.data.DataView;
+import org.spongepowered.api.data.MemoryDataContainer;
 import org.spongepowered.api.data.persistence.AbstractDataBuilder;
 import org.spongepowered.api.data.persistence.InvalidDataException;
 
@@ -11,14 +16,7 @@ import java.util.Optional;
 /**
  * @author dags <dags@dags.me>
  */
-public class BlockTransaction  implements DataSerializable {
-
-    private static final DataQuery FROM = DataQuery.of("FROM");
-    private static final DataQuery TO = DataQuery.of("TO");
-    private static final DataQuery POS = DataQuery.of("POS");
-    private static final DataQuery X = DataQuery.of("X");
-    private static final DataQuery Y = DataQuery.of("Y");
-    private static final DataQuery Z = DataQuery.of("Z");
+public class BlockTransaction  implements DataSerializable, Positional, Transactional {
 
     private final Vector3i position;
     private final BlockState from;

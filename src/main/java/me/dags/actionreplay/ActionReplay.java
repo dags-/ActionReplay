@@ -3,9 +3,9 @@ package me.dags.actionreplay;
 import com.google.inject.Inject;
 import me.dags.actionreplay.command.RecordCommands;
 import me.dags.actionreplay.command.ReplayCommands;
-import me.dags.actionreplay.event.BlockTransaction;
 import me.dags.actionreplay.event.Change;
 import me.dags.actionreplay.event.ChangeBuilder;
+import me.dags.actionreplay.event.blockchange.BlockTransaction;
 import me.dags.actionreplay.replay.Meta;
 import me.dags.actionreplay.replay.Recorder;
 import me.dags.actionreplay.replay.Replay;
@@ -81,11 +81,10 @@ public class ActionReplay {
 
     @Listener
     public void init(GameInitializationEvent event) {
+        Support.of("WorldEdit", "com.sk89q.worldedit.WorldEdit", "me.dags.actionreplay.event.masschange.worldedit.WESupport").start(this);
         CommandBus.builder().logger(logger()).build().register(RecordCommands.class).register(ReplayCommands.class).submit(this);
-
         format = Format.builder().info(TextColors.AQUA).stress(TextColors.GREEN).error(TextColors.GRAY).warn(TextColors.RED).subdued(TextColors.GOLD).build();
         recorder = NodeUtils.loadMeta(config.lastRecorder).filter(meta -> meta.recording).flatMap(Meta::getRecorder).orElse(Recorder.EMPTY);
-
         if (this.recorder.isPresent()) {
             Task.builder().execute(() -> {
                 logger().info("Starting recorder...");
