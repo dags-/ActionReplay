@@ -3,7 +3,6 @@ package me.dags.actionreplay.replay.frame;
 import me.dags.actionreplay.ActionReplay;
 import org.spongepowered.api.scheduler.Task;
 
-import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -44,9 +43,9 @@ public class FrameTask implements Consumer<Task> {
         try {
             int count = operations;
             while (count-- > 0 && frameProvider.hasNext()) {
-                Optional<Frame> frame = frameProvider.nextFrame();
-                if (frame.isPresent()) {
-                    action.accept(frame.get());
+                Frame frame = frameProvider.nextFrame();
+                if (frame != null) {
+                    action.accept(frame);
                 }
             }
             if (!frameProvider.hasNext()) {
@@ -66,9 +65,9 @@ public class FrameTask implements Consumer<Task> {
 
     private void flush() throws Exception {
         while (frameProvider.hasNext()) {
-            Optional<Frame> frame = frameProvider.nextFrame();
-            if (frame.isPresent()) {
-                action.accept(frame.get());
+            Frame frame = frameProvider.nextFrame();
+            if (frame != null) {
+                action.accept(frame);
             }
         }
         frameProvider.close();
