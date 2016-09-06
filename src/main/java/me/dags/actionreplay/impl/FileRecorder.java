@@ -16,7 +16,6 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.scheduler.Task;
-import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.world.World;
 
@@ -129,13 +128,16 @@ public class FileRecorder extends Recorder {
         Task.builder()
                 .interval(ActionReplay.getInstance().getConfig().announceInterval, TimeUnit.SECONDS)
                 .execute(task -> {
-                    if (isPresent() && isRecording() && !Sponge.getServer().getOnlinePlayers().isEmpty()) {
-                        Text message = format().info("Recording: ").stress(name).build();
-                        Sponge.getServer().getBroadcastChannel().send(message, ChatTypes.ACTION_BAR);
+                    if (isPresent() && isRecording()) {
+                        broadcast();
                     } else {
                         task.cancel();
                     }
                 }).submit(plugin);
+    }
+
+    private void broadcast() {
+        format().info("Recording: ").stress(name).tell(ChatTypes.ACTION_BAR, Sponge.getServer().getBroadcastChannel());
     }
 
     private Meta toMeta() {
