@@ -7,7 +7,6 @@ import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.Human;
-import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -37,9 +36,8 @@ public class AvatarInstance extends Avatar {
                 Vector3d pos = relative.getPosition();
                 Transform<World> transform = new Transform<>(world, snapshot.position.add(pos), snapshot.rotation);
 
-                ItemStack itemStack = snapshot.inHand.createStack();
-
-                human.setItemInHand(itemStack);
+                // ItemStack itemStack = snapshot.inHand.createStack();
+                // human.setItemInHand(itemStack);
                 human.setTransform(transform);
                 human.setHeadRotation(snapshot.rotation);
             }

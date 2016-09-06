@@ -4,8 +4,6 @@ import com.flowpowered.math.vector.Vector3d;
 import me.dags.actionreplay.ActionReplay;
 import me.dags.actionreplay.NodeUtils;
 import me.dags.actionreplay.event.Change;
-import me.dags.actionreplay.event.blockchange.BlockChange;
-import me.dags.actionreplay.event.masschange.MassChange;
 import me.dags.actionreplay.io.FrameFileWriter;
 import me.dags.actionreplay.replay.Meta;
 import me.dags.actionreplay.replay.Recorder;
@@ -87,7 +85,7 @@ public class FileRecorder extends Recorder {
 
     @Override
     public void addNextFrame(Change change) {
-        if (change instanceof MassChange && writer != null) {
+        if (writer != null) {
             Frame next;
             if (last == null) {
                 next = new Frame(change);
@@ -101,7 +99,7 @@ public class FileRecorder extends Recorder {
 
     @Override
     public void addNextFrame(AvatarSnapshot snapshot, Change change) {
-        if (change instanceof BlockChange && writer != null) {
+        if (writer != null) {
             Frame next;
             if (last == null) {
                 next = new Frame(snapshot, change);

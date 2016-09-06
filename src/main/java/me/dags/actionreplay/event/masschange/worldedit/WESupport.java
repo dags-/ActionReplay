@@ -32,7 +32,7 @@ public class WESupport implements Support.Hook {
         World world = event.getWorld();
         Actor actor = event.getActor();
 
-        if (world == null || actor == null || !actor.isPlayer()) {
+        if (world == null || actor == null) {
             return;
         }
 
