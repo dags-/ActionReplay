@@ -7,21 +7,27 @@ import com.sk89q.worldedit.extent.AbstractDelegateExtent;
 import com.sk89q.worldedit.extent.Extent;
 import com.sk89q.worldedit.function.operation.Operation;
 import me.dags.actionreplay.replay.Recorder;
+import me.dags.actionreplay.replay.avatar.AvatarSnapshot;
+import org.spongepowered.api.Sponge;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * @author dags <dags@dags.me>
  */
 class WEExtent extends AbstractDelegateExtent {
 
-    private final Recorder recorder;
+    private final UUID playerId;
     private final Vector center;
+    private final Recorder recorder;
     private final List<WETransaction> transactions = new ArrayList<>();
 
-    WEExtent(Recorder recorder, Extent extent) {
+    WEExtent(UUID playerId, Recorder recorder, Extent extent) {
         super(extent);
+        this.playerId = playerId;
         this.recorder = recorder;
         this.center = new Vector(recorder.getCenter().getX(), recorder.center().getY(), recorder.getCenter().getZ());
     }
@@ -41,10 +47,17 @@ class WEExtent extends AbstractDelegateExtent {
 
     @Override
     protected Operation commitBefore() {
-        System.out.println(transactions.size());
         if (transactions.size() > 0) {
+            Optional<AvatarSnapshot> avatar = Sponge.getServer().getPlayer(playerId)
+                    .map(p -> new AvatarSnapshot(p, recorder.getCenter().toDouble()));
+
             WEMassChange change = new WEMassChange(transactions.toArray(new WETransaction[transactions.size()]));
-            recorder.addNextFrame(change);
+
+            if (avatar.isPresent()) {
+                recorder.addNextFrame(avatar.get(), change);
+            } else {
+                recorder.addNextFrame(change);
+            }
         }
         return null;
     }

@@ -3,6 +3,7 @@ package me.dags.actionreplay.event.masschange.worldedit;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.event.extent.EditSessionEvent;
+import com.sk89q.worldedit.extension.platform.Actor;
 import com.sk89q.worldedit.util.eventbus.Subscribe;
 import com.sk89q.worldedit.world.World;
 import me.dags.actionreplay.ActionReplay;
@@ -29,13 +30,16 @@ public class WESupport implements Support.Hook {
         }
 
         World world = event.getWorld();
-        if (world != null && getRecorder().isRecording() && world.getName().equals(getRecorder().getWorldName())) {
-            WEExtent extent = new WEExtent(getRecorder(), event.getExtent());
+        Actor actor = event.getActor();
+
+        if (world == null || actor == null || !actor.isPlayer()) {
+            return;
+        }
+
+        Recorder recorder = ActionReplay.getInstance().getRecorder();
+        if (recorder.isRecording() && world.getName().equals(recorder.getWorldName())) {
+            WEExtent extent = new WEExtent(actor.getUniqueId(), recorder, event.getExtent());
             event.setExtent(extent);
         }
-    }
-
-    private static Recorder getRecorder() {
-        return ActionReplay.getInstance().getRecorder();
     }
 }
