@@ -1,9 +1,7 @@
 package me.dags.actionreplay.replay;
 
 import me.dags.actionreplay.ActionReplay;
-import me.dags.actionreplay.event.Change;
 import me.dags.actionreplay.event.masschange.MassChange;
-import me.dags.actionreplay.replay.avatar.Avatar;
 import me.dags.actionreplay.replay.avatar.AvatarInstance;
 import me.dags.actionreplay.replay.avatar.AvatarSnapshot;
 import me.dags.actionreplay.replay.frame.Frame;
@@ -25,15 +23,13 @@ public class ReplayPlayer {
     private final int minOperations;
     private final int maxOperations;
 
-    private boolean reuseCurrent = false;
     private int progress = 0;
     private Frame current;
 
     public ReplayPlayer(FrameProvider provider, int minOperations) {
         this.provider = provider;
-        this.progress = minOperations;
-        this.minOperations = minOperations;
-        this.maxOperations = ActionReplay.getInstance().getConfig().maxOperationsPerTick;
+        this.minOperations = Math.max(minOperations, 1);
+        this.maxOperations = Math.max(ActionReplay.getInstance().getConfig().maxOperationsPerTick, 1);
     }
 
     public boolean protect(Entity entity) {
@@ -41,7 +37,7 @@ public class ReplayPlayer {
     }
 
     public boolean finished() throws Exception {
-        return !provider.hasNext();
+        return !provider.hasNext() && current == null;
     }
 
     public void stop() throws Exception {
@@ -61,13 +57,12 @@ public class ReplayPlayer {
     // loads next Frame if one isn't already loaded
     // if frame is spanning multiple ticks, do not load a new one
     public void loadNext() throws Exception {
-        if (current == null || !reuseCurrent) {
+        if (current == null) {
             if (!provider.hasNext()) {
                 return;
             }
 
             progress = 0;
-            reuseCurrent = false;
             current = provider.nextFrame();
         }
     }
@@ -82,13 +77,46 @@ public class ReplayPlayer {
     }
 
     private void play(Frame frame, Location<World> offset) throws Exception {
-        // handle MassChanges differently
         if (frame.getChange() instanceof MassChange) {
-            playMassChange((MassChange) frame.getChange(), offset);
+            playMassChange(frame, offset);
         } else {
-            playSingleChange(frame.getChange(), offset);
+            playSingleChange(frame, offset);
+        }
+    }
+
+    private void playMassChange(Frame frame, Location<World> offset) throws Exception {
+        MassChange change = (MassChange) frame.getChange();
+
+        // bulk restore from current progress position and update position
+        progress += change.restoreRange(progress, maxOperations, offset);
+
+        if (progress >= change.size() - 1) {
+            current = null;
         }
 
+        syncAvatars(frame, offset);
+    }
+
+    private void playSingleChange(Frame frame, Location<World> offset) throws Exception {
+        frame.getChange().restore(offset);
+
+        if (progress == 0) {
+            Frame last = current;
+
+            while (++progress < minOperations && provider.hasNext()) {
+                last = provider.nextFrame();
+
+                if (last != null) {
+                    play(last, offset);
+                }
+            }
+
+            syncAvatars(last, offset);
+            current = null;
+        }
+    }
+
+    private void syncAvatars(Frame frame, Location<World> offset) {
         // sync active avatars creating them if necessary. Remove any marked as terminal
         for (AvatarSnapshot snapshot : frame.getAvatars()) {
             AvatarInstance instance = avatars.get(snapshot.getUUID());
@@ -108,39 +136,6 @@ public class ReplayPlayer {
                 avatars.put(snapshot.getUUID(), instance);
                 entityIds.add(instance.getEntityId());
             }
-        }
-
-        // if restoring multiple changes per tick, may have skipped over terminal snapshots, so remove if
-        // not present in the latest Frame
-        if (minOperations > 1) {
-            // N.B. AvatarInstance & AvatarSnapshot inherit hashCode() & equals(..) methods from Avatar
-            Collection<? extends Avatar> active = frame.getAvatars();
-            Iterator<? extends  Avatar> removalIterator = avatars.values().iterator();
-            while (removalIterator.hasNext()) {
-                if (!active.contains(removalIterator.next())) {
-                    removalIterator.remove();
-                }
-            }
-        }
-    }
-
-    private void playMassChange(MassChange change, Location<World> offset) throws Exception {
-        // mark current frame as being re-used
-        reuseCurrent = true;
-
-        // bulk restore from current progress position and update position
-        progress += change.restoreRange(progress, maxOperations, offset);
-
-        // un-mark frame as in-use if nothing left to restore
-        if (progress >= change.size()) {
-            reuseCurrent = false;
-        }
-    }
-
-    private void playSingleChange(Change change, Location<World> offset) throws Exception {
-        while (progress++ < minOperations) {
-            change.restore(offset);
-            playNext(offset);
         }
     }
 }

@@ -47,16 +47,11 @@ public class FrameFileWriter implements AutoCloseable, Consumer<Task> {
                 Frame frame = buffer.poll();
                 counter.getAndAdd(-1);
                 if (frame != null) {
-                    write(outputStream, frame);
+                    FrameFileFormat.FORMAT.write(outputStream, frame);
                 }
             }
             outputStream.writeTo(file);
         }
-    }
-
-    private void write(ByteArrayDataOutputStream buffer, Frame frame) throws IOException {
-        FrameFileFormat.FORMAT.write(buffer, frame);
-        file.write(buffer.toByteArray());
     }
 
     @Override
@@ -107,10 +102,10 @@ public class FrameFileWriter implements AutoCloseable, Consumer<Task> {
             while (!buffer.isEmpty()) {
                 Frame frame = buffer.poll();
                 if (frame != null) {
-                    write(outputStream, frame);
+                    FrameFileFormat.FORMAT.write(outputStream, frame);
                 }
             }
-            file.write(outputStream.toByteArray());
+            outputStream.writeTo(file);
             counter.set(0);
         }
     }

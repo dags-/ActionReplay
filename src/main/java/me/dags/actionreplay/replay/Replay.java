@@ -25,7 +25,7 @@ public abstract class Replay {
     protected Location<World> center;
     protected boolean playing = false;
     protected ReplayTask animationTask;
-    protected FrameTask currentTask = null;
+    protected FrameTask currentOperation = null;
 
     private Replay() {}
 
@@ -58,12 +58,14 @@ public abstract class Replay {
             throw new UnsupportedOperationException("Animation is not playing");
         }
 
-        animationTask.interrupt();
+        if (animationTask != null) {
+            animationTask.interrupt();
+        }
 
         undoAllFrames(() -> redoAllFrames(() -> {
             playing = false;
             animationTask = null;
-            currentTask = null;
+            currentOperation = null;
         }));
     }
 
@@ -76,9 +78,9 @@ public abstract class Replay {
             animationTask.stop();
         }
 
-        if (isPlaying() || (currentTask != null && currentTask.active())) {
+        if (isPlaying() || (currentOperation != null && currentOperation.active())) {
             try {
-                currentTask.interrupt();
+                currentOperation.interrupt();
 
                 try (FrameProvider undo = getFrameProvider().backward()) {
                     while (undo.hasNext()) {

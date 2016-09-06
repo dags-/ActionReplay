@@ -32,12 +32,4 @@ public class ByteArrayDataOutputStream extends ByteArrayOutputStream {
     public void writeInt(int integer) throws IOException {
         super.write(Ints.toByteArray(integer));
     }
-
-    public void writeByte(byte byt) throws IOException {
-        super.write(byt);
-    }
-
-    public byte[] getBytes() {
-        return super.buf;
-    }
 }

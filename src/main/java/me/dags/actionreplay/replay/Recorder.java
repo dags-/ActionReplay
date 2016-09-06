@@ -41,7 +41,6 @@ public abstract class Recorder {
     protected final UUID worldId;
     protected final int radius;
     protected final int height;
-    private final String worldName;
 
     private boolean recording = false;
 
@@ -52,7 +51,6 @@ public abstract class Recorder {
         this.max = Vector3i.ZERO;
         this.radius = 0;
         this.height = 0;
-        this.worldName = "";
     }
 
     protected Recorder(UUID worldId, Vector3i center, int radius, int height) {
@@ -62,11 +60,10 @@ public abstract class Recorder {
         this.max = new Vector3i(center.getX() + radius, center.getY() + height, center.getZ() + radius);
         this.radius = radius;
         this.height = height;
-        this.worldName = Sponge.getServer().getWorld(worldId).map(World::getName).orElse("");
     }
 
     public String getWorldName() {
-        return worldName;
+        return Sponge.getServer().getWorld(worldId).map(World::getName).orElse("");
     }
 
     @Listener(order = Order.POST)

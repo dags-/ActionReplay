@@ -1,6 +1,5 @@
 package me.dags.actionreplay.io;
 
-import com.google.common.primitives.Ints;
 import me.dags.actionreplay.replay.frame.Frame;
 import org.spongepowered.api.data.DataContainer;
 import org.spongepowered.api.data.DataSerializable;
@@ -32,10 +31,9 @@ public class FrameFileFormat {
         ByteArrayDataOutputStream content = new ByteArrayDataOutputStream(8192);
         DataFormats.NBT.writeTo(content, data.toContainer());
 
-        byte[] size = Ints.toByteArray(content.size());
-        output.write(size);
+        output.writeInt(content.size());
         content.writeTo(output);
-        output.write(size);
+        output.writeInt(content.size());
     }
 
     /**
@@ -52,7 +50,7 @@ public class FrameFileFormat {
 
         byte[] data = new byte[size];
         file.read(data);
-        file.skipBytes(INT_BYTES);
+        file.readInt();
 
         return read(data);
     }

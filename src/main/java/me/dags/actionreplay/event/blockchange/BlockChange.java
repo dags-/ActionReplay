@@ -54,8 +54,7 @@ public class BlockChange implements Change, Transactional {
 
     @Override
     public DataContainer toContainer() {
-        return versionedContainer()
-                .set(BlockChange.TRANSACTIONS, transactions);
+        return versionedContainer().set(BlockChange.TRANSACTIONS, transactions);
     }
 
     private boolean validLocation(Location<World> location) {

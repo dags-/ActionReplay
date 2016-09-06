@@ -88,7 +88,7 @@ public class ReplayCommands {
         }
     }
 
-    @Command(aliases = "restoreRange", parent = "replay", perm = @Permission(id = "actionreplay.replay", description = ""))
+    @Command(aliases = "restore", parent = "replay", perm = @Permission(id = "actionreplay.replay", description = ""))
     public void restore(@Caller Player player) {
         if (getAnimation().isPresent()) {
             if (getAnimation().isPlaying()) {

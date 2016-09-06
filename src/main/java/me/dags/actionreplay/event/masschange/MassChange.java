@@ -34,7 +34,7 @@ public interface MassChange<T extends BinaryBlockTransaction> extends Change, Tr
     }
 
     default int restoreRange(int offset, int operations, Location<World> location) throws Exception {
-        if (offset < 1 || operations < 1) {
+        if (offset < 0 || operations < 1) {
             return 0;
         }
 
@@ -106,7 +106,7 @@ public interface MassChange<T extends BinaryBlockTransaction> extends Change, Tr
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return versionedContainer().set(MASS_ID, getMID()).set(TRANSACTIONS, data.getBytes());
+        return versionedContainer().set(MASS_ID, getMID()).set(TRANSACTIONS, data.toByteArray());
     }
 
     interface Builder {

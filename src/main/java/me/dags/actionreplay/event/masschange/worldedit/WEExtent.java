@@ -41,8 +41,11 @@ class WEExtent extends AbstractDelegateExtent {
 
     @Override
     protected Operation commitBefore() {
-        WEMassChange change = new WEMassChange(transactions.toArray(new WETransaction[transactions.size()]));
-        recorder.addNextFrame(change);
+        System.out.println(transactions.size());
+        if (transactions.size() > 0) {
+            WEMassChange change = new WEMassChange(transactions.toArray(new WETransaction[transactions.size()]));
+            recorder.addNextFrame(change);
+        }
         return null;
     }
 }

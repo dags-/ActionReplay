@@ -20,13 +20,14 @@ public class FrameTask implements Consumer<Task> {
         this.frameProvider = frameProvider;
         this.callback = callback;
         this.action = action;
-        this.operations = ActionReplay.getInstance().getConfig().minOperationsPerTick;
+        this.operations = ActionReplay.getInstance().getConfig().maxOperationsPerTick;
     }
 
     public void interrupt() throws Exception {
         if (!interrupt) {
             this.interrupt = true;
             flush();
+            frameProvider.close();
         }
     }
 
@@ -36,11 +37,12 @@ public class FrameTask implements Consumer<Task> {
 
     @Override
     public void accept(Task task) {
-        if (interrupt) {
-            task.cancel();
-            return;
-        }
         try {
+            if (interrupt) {
+                task.cancel();
+                return;
+            }
+
             int count = operations;
             while (count-- > 0 && frameProvider.hasNext()) {
                 Frame frame = frameProvider.nextFrame();
@@ -54,6 +56,7 @@ public class FrameTask implements Consumer<Task> {
                 frameProvider.close();
             }
         } catch (Exception e) {
+            e.printStackTrace();
             task.cancel();
             try {
                 frameProvider.close();
@@ -70,6 +73,5 @@ public class FrameTask implements Consumer<Task> {
                 action.accept(frame);
             }
         }
-        frameProvider.close();
     }
 }

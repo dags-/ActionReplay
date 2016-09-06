@@ -25,31 +25,33 @@ public class FileReplay extends Replay {
 
     @Override
     public void undoAllFrames(Runnable callback) {
-        final Location<World> location = center;
-        doTask(frame -> frame.getChange().undo(location), callback);
+        try {
+            final Location<World> location = center;
+            doTask(new FileFrameProvider(name).backward(), frame -> frame.getChange().undo(location), callback);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void redoAllFrames(Runnable callback) {
-        final Location<World> location = center;
-        doTask(frame -> frame.getChange().restore(location), callback);
-    }
-
-    private void doTask(Consumer<Frame> action, Runnable callback) {
-        FrameProvider frameProvider = null;
         try {
-            if (currentTask != null) {
-                currentTask.interrupt();
-            }
-
-            frameProvider = new FileFrameProvider(name);
-            currentTask = new FrameTask(frameProvider, action, callback);
-            Task.builder().execute(currentTask).delayTicks(1).intervalTicks(1).submit(ActionReplay.getInstance());
+            final Location<World> location = center;
+            doTask(new FileFrameProvider(name).forward(), frame -> frame.getChange().restore(location), callback);
         } catch (Exception e) {
             e.printStackTrace();
-            if (frameProvider != null) {
+        }
+    }
+
+    private void doTask(FrameProvider provider, Consumer<Frame> action, Runnable callback) {
+        try {
+            currentOperation = new FrameTask(provider, action, callback);
+            Task.builder().execute(currentOperation).delayTicks(1).intervalTicks(1).submit(ActionReplay.getInstance());
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (provider != null) {
                 try {
-                    frameProvider.close();
+                    provider.close();
                 } catch (Exception e1) {
                     e1.printStackTrace();
                 }

@@ -14,7 +14,6 @@ public abstract class FrameFileReader implements AutoCloseable {
 
     private final RandomAccessFile file;
     private final long length;
-    private long pos = 0;
 
     private FrameFileReader(File file) throws FileNotFoundException {
         this.file = new RandomAccessFile(file, "r");
@@ -38,7 +37,7 @@ public abstract class FrameFileReader implements AutoCloseable {
 
         @Override
         public boolean hasNext() throws IOException {
-            return super.pos + FrameFileFormat.INT_BYTES < super.length;
+            return super.file.getFilePointer() + FrameFileFormat.INT_BYTES < super.length;
         }
 
         @Override
@@ -49,14 +48,14 @@ public abstract class FrameFileReader implements AutoCloseable {
 
     public static class Backward extends FrameFileReader {
 
-        public Backward(File file) throws FileNotFoundException {
+        public Backward(File file) throws IOException {
             super(file);
-            super.pos = super.length;
+            super.file.seek(super.length);
         }
 
         @Override
         public boolean hasNext() throws IOException {
-            return super.pos - FrameFileFormat.INT_BYTES >= 0;
+            return super.file.getFilePointer() - FrameFileFormat.INT_BYTES >= 0;
         }
 
         @Override
