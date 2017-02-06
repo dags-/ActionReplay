@@ -20,12 +20,12 @@ import java.util.Optional;
  */
 public class RecordCommands {
 
-    @Command(aliases = "recorder", perm = @Permission(id = "actionreplay.recorder", description = ""))
+    @Command(aliases = "recorder", perm = @Permission("actionreplay.recorder"))
     public void help(@Caller Player player) {
         ActionReplay.sendHelp(player);
     }
 
-    @Command(aliases = "load", parent = "recorder", perm = @Permission(id = "actionreplay.recorder", description = ""))
+    @Command(aliases = "load", parent = "recorder", perm = @Permission("actionreplay.recorder"))
     public void load(@Caller Player player, @One("name") String name) {
         if (getRecorder().isPresent()) {
             format().error("A recorder is already in use").tell(player);
@@ -46,7 +46,7 @@ public class RecordCommands {
     }
 
 
-    @Command(aliases = "create", parent = "recorder", perm = @Permission(id = "actionreplay.recorder", description = ""))
+    @Command(aliases = "create", parent = "recorder", perm = @Permission("actionreplay.recorder"))
     public void create(@Caller Player player, @One("name") String name, @One("radius") int radius, @One("height") int height) {
         if (getRecorder().isPresent()) {
             format().error("A recorder is already in use").tell(player);
@@ -71,7 +71,7 @@ public class RecordCommands {
         start(player);
     }
 
-    @Command(aliases = "start", parent = "recorder", perm = @Permission(id = "actionreplay.recorder", description = ""))
+    @Command(aliases = "start", parent = "recorder", perm = @Permission("actionreplay.recorder"))
     public void start(@Caller Player player) {
         if (getRecorder().isPresent()) {
             if (getRecorder().isRecording()) {
@@ -85,7 +85,7 @@ public class RecordCommands {
         }
     }
 
-    @Command(aliases = "stop", parent = "recorder", perm = @Permission(id = "actionreplay.recorder", description = ""))
+    @Command(aliases = "stop", parent = "recorder", perm = @Permission("actionreplay.recorder"))
     public void stop(@Caller Player player) {
         if (getRecorder().isPresent() && getRecorder().isRecording()) {
             getRecorder().stop();
@@ -95,7 +95,7 @@ public class RecordCommands {
         }
     }
 
-    @Command(aliases = "reset", parent = "recorder", perm = @Permission(id = "actionreplay.recorder", description = ""))
+    @Command(aliases = "reset", parent = "recorder", perm = @Permission("actionreplay.recorder"))
     public void reset(@Caller Player player) {
         if (getRecorder().isPresent()) {
             if (getRecorder().isRecording()) {

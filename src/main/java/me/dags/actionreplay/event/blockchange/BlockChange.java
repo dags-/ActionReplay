@@ -1,5 +1,6 @@
 package me.dags.actionreplay.event.blockchange;
 
+import me.dags.actionreplay.ActionReplay;
 import me.dags.actionreplay.event.Change;
 import me.dags.actionreplay.event.Ids;
 import me.dags.actionreplay.event.Transactional;
@@ -27,7 +28,7 @@ public class BlockChange implements Change, Transactional {
         for (BlockTransaction transaction : transactions) {
             Location<World> loc = location.add(transaction.getPosition());
             if (validLocation(loc)) {
-                loc.setBlock(transaction.getTo());
+                loc.setBlock(transaction.getTo(), ActionReplay.blockChangeCause());
             }
         }
     }
@@ -37,7 +38,7 @@ public class BlockChange implements Change, Transactional {
         for (BlockTransaction transaction : transactions) {
             Location<World> loc = location.add(transaction.getPosition());
             if (validLocation(loc)) {
-                loc.setBlock(transaction.getFrom());
+                loc.setBlock(transaction.getFrom(), ActionReplay.blockChangeCause());
             }
         }
     }

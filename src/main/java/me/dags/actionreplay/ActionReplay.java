@@ -27,6 +27,7 @@ import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStoppingEvent;
 import org.spongepowered.api.plugin.Plugin;
+import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.format.TextColors;
 
@@ -47,6 +48,8 @@ public class ActionReplay {
 
     private final Path configDir;
     private final Path recordingsDir;
+    private final Cause blockCause;
+    private final Cause entityCause;
 
     private Format format = Format.DEFAULT;
     private Config config = new Config();
@@ -54,10 +57,12 @@ public class ActionReplay {
     private Replay replay = Replay.EMPTY;
 
     @Inject
-    public ActionReplay(@ConfigDir(sharedRoot = false) Path configDir) {
+    public ActionReplay(PluginContainer container, @ConfigDir(sharedRoot = false) Path configDir) {
         ActionReplay.instance = this;
         this.configDir = configDir;
         this.recordingsDir = configDir.resolve("recordings");
+        this.blockCause = Cause.source(container).build();
+        this.entityCause = Cause.source(ActionReplay.SPAWN_CAUSE).owner(ActionReplay.instance).build();
         if (!Files.exists(recordingsDir)) {
             try {
                 Files.createDirectories(recordingsDir);
@@ -141,7 +146,11 @@ public class ActionReplay {
     }
 
     public static Cause spawnCause() {
-        return Cause.source(ActionReplay.SPAWN_CAUSE).owner(ActionReplay.instance).build();
+        return getInstance().entityCause;
+    }
+
+    public static Cause blockChangeCause() {
+        return getInstance().blockCause;
     }
 
     public static Path resolve(String string) {

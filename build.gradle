@@ -1,0 +1,42 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '1.2.4'
+}
+
+group 'me.dags'
+version '1.0-SNAPSHOT'
+def spongeAPI = '5.1.0'
+def spongeChannel = 'SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'http://repo.spongepowered.org/maven'
+    }
+    maven {
+        url 'http://maven.sk89q.com/repo'
+    }
+    maven {
+        url 'https://jitpack.io'
+    }
+}
+
+dependencies {
+    apply plugin: 'java'
+    compile "org.spongepowered:spongeapi:${spongeAPI}-$spongeChannel"
+    compile 'com.github.dags-:NodeData:1.3.0-SNAPSHOT-20'
+    compile 'com.github.dags-:CommandBus:1.4.0-SNAPSHOT-1'
+    compile 'com.sk89q.worldedit:worldedit-core:6.0.0-SNAPSHOT'
+}
+
+shadowJar {
+    dependencies {
+        include dependency('com.github.dags-:NodeData')
+        include dependency('com.github.dags-:CommandBus')
+    }
+    relocate 'me.dags.commandbus', 'me.dags.actionreplay.libs.commandbus'
+    relocate 'me.dags.data', 'me.dags.actionreplay.libs.data'
+    archiveName = "${baseName}-${version}-SpongeAPI-${spongeAPI}.jar"
+}
+
+jar.dependsOn shadowJar
+jar.enabled = false

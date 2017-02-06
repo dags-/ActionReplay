@@ -6,6 +6,7 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.*;
 import org.spongepowered.api.data.persistence.AbstractDataBuilder;
 import org.spongepowered.api.data.persistence.InvalidDataException;
+import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
@@ -55,7 +56,7 @@ public class AvatarSnapshot extends Avatar implements DataSerializable {
         playerName = player.getName();
         position = player.getTransform().getPosition().sub(relative);
         rotation = player.getTransform().getRotation();
-        inHand = player.getItemInHand()
+        inHand = player.getItemInHand(HandTypes.MAIN_HAND)
                 .map(ItemStack::createSnapshot)
                 .orElse(ItemStackSnapshot.NONE);
 

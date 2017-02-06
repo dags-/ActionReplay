@@ -22,12 +22,12 @@ import java.util.Optional;
  */
 public class ReplayCommands {
 
-    @Command(aliases = "replay", perm = @Permission(id = "actionreplay.replay", description = ""))
+    @Command(aliases = "replay", perm = @Permission("actionreplay.replay"))
     public void help(@Caller Player player) {
         ActionReplay.sendHelp(player);
     }
 
-    @Command(aliases = "load", parent = "replay", perm = @Permission(id = "actionreplay.recorder", description = ""))
+    @Command(aliases = "load", parent = "replay", perm = @Permission("actionreplay.recorder"))
     public Optional<Replay> load(@Caller Player player, @One("name") String name) {
         if (getReplay().isPresent() && getReplay().isPlaying()) {
             format().error("A replay is currently playing").tell(player);
@@ -44,7 +44,7 @@ public class ReplayCommands {
         return Optional.empty();
     }
 
-    @Command(aliases = "here", parent = "replay load", perm = @Permission(id = "actionreplay.recorder", description = ""))
+    @Command(aliases = "here", parent = "replay load", perm = @Permission("actionreplay.recorder"))
     public void loadHere(@Caller Player player, @One("name") String name) {
         Optional<Replay> replay = load(player, name);
         if (replay.isPresent()) {
@@ -54,7 +54,7 @@ public class ReplayCommands {
         }
     }
 
-    @Command(aliases = "start", parent = "replay", perm = @Permission(id = "actionreplay.replay", description = ""))
+    @Command(aliases = "start", parent = "replay", perm = @Permission("actionreplay.replay"))
     public void start(@Caller Player player, @One("interval ticks") int ticks, @One("changes per tick") int changes) {
         if (getRecorder().isRecording()) {
             format().error("Recorder is currently recording").tell(player);
@@ -68,7 +68,7 @@ public class ReplayCommands {
         }
     }
 
-    @Command(aliases = "stop", parent = "replay", perm = @Permission(id = "actionreplay.replay", description = ""))
+    @Command(aliases = "stop", parent = "replay", perm = @Permission("actionreplay.replay"))
     public void stop(@Caller Player player) {
         if (getReplay().isPlaying()) {
             getReplay().stop();
@@ -78,7 +78,7 @@ public class ReplayCommands {
         }
     }
 
-    @Command(aliases = "reset", parent = "replay", perm = @Permission(id = "actionreplay.replay", description = ""))
+    @Command(aliases = "reset", parent = "replay", perm = @Permission("actionreplay.replay"))
     public void reset(@Caller Player player) {
         if (getReplay().isPresent()) {
             setReplay(Replay.EMPTY);
@@ -88,7 +88,7 @@ public class ReplayCommands {
         }
     }
 
-    @Command(aliases = "restore", parent = "replay", perm = @Permission(id = "actionreplay.replay", description = ""))
+    @Command(aliases = "restore", parent = "replay", perm = @Permission("actionreplay.replay"))
     public void restore(@Caller Player player) {
         if (getReplay().isPresent()) {
             if (getReplay().isPlaying()) {
@@ -102,7 +102,7 @@ public class ReplayCommands {
         }
     }
 
-    @Command(aliases = "undo", parent = "replay", perm = @Permission(id = "actionreplay.replay", description = ""))
+    @Command(aliases = "undo", parent = "replay", perm = @Permission("actionreplay.replay"))
     public void undo(@Caller Player player) {
         if (getReplay().isPresent()) {
             if (getReplay().isPlaying()) {

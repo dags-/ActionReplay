@@ -4,6 +4,7 @@ import com.flowpowered.math.vector.Vector3d;
 import me.dags.actionreplay.ActionReplay;
 import me.dags.actionreplay.replay.Meta;
 import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.Human;
@@ -62,11 +63,13 @@ public class AvatarInstance extends Avatar {
     private Human getEntity(AvatarSnapshot snapshot, Location<World> relative) {
         Human human = this.human.get();
         if (human == null) {
-            human = relative.getExtent().createEntity(EntityTypes.HUMAN, relative.getPosition().add(snapshot.position))
-                    .filter(Human.class::isInstance)
-                    .map(Human.class::cast)
-                    .orElse(null);
+            Entity entity = relative.getExtent().createEntity(EntityTypes.HUMAN, relative.getPosition());
 
+            if (!Human.class.isInstance(entity)) {
+                return null;
+            }
+
+            human = Human.class.cast(entity);
             human.offer(Keys.SKIN_UNIQUE_ID, snapshot.playerId);
             human.offer(Keys.DISPLAY_NAME, Text.of(snapshot.playerName));
 
