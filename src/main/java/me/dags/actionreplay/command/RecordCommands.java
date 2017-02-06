@@ -36,7 +36,7 @@ public class RecordCommands {
         if (meta.isPresent()) {
             Recorder recorder = new FileRecorder(meta.get());
             setRecorder(recorder);
-            setAnimation(Replay.EMPTY);
+            setReplay(Replay.EMPTY);
 
             format().info("Loaded recorder ").stress(meta.get().name).tell(player);
             start(player);
@@ -65,7 +65,7 @@ public class RecordCommands {
         ActionReplay.getInstance().saveConfig();
 
         setRecorder(new FileRecorder(meta));
-        setAnimation(Replay.EMPTY);
+        setReplay(Replay.EMPTY);
 
         format().info("Created new recorder ").stress(name).tell(player);
         start(player);
@@ -101,8 +101,8 @@ public class RecordCommands {
             if (getRecorder().isRecording()) {
                 getRecorder().stop();
             }
-            if (getAnimation().isPlaying()) {
-                getAnimation().stop();
+            if (getReplay().isPlaying()) {
+                getReplay().stop();
             }
             setRecorder(Recorder.EMPTY);
             format().info("Cleared recorder").tell(player);
@@ -115,16 +115,16 @@ public class RecordCommands {
         return ActionReplay.getInstance().getFormat();
     }
 
-    private Replay getAnimation() {
-        return ActionReplay.getInstance().getAnimation();
+    private Replay getReplay() {
+        return ActionReplay.getInstance().getReplay();
     }
 
     private Recorder getRecorder() {
         return ActionReplay.getInstance().getRecorder();
     }
 
-    private void setAnimation(Replay animation) {
-        ActionReplay.getInstance().setAnimation(animation);
+    private void setReplay(Replay replay) {
+        ActionReplay.getInstance().setReplay(replay);
     }
 
     private void setRecorder(Recorder recorder) {

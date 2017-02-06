@@ -18,6 +18,7 @@ import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.world.World;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -105,6 +106,20 @@ public class FileRecorder extends Recorder {
                 next = new Frame(snapshot, change);
             } else {
                 next = new Frame(snapshot, change, last.getRelativeAvatars(centerD));
+            }
+            last = next;
+            writer.queue(next);
+        }
+    }
+
+    @Override
+    public void addNextFrame(Collection<AvatarSnapshot> avatars, Change change) {
+        if (writer != null) {
+            Frame next;
+            if (last == null) {
+                next = new Frame(avatars, change);
+            } else {
+                next = new Frame(avatars, change, last.getRelativeAvatars(centerD));
             }
             last = next;
             writer.queue(next);

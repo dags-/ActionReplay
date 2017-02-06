@@ -8,7 +8,7 @@ import org.spongepowered.api.data.DataView;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 
 /**
@@ -16,9 +16,9 @@ import java.util.Optional;
  */
 public class BlockChange implements Change, Transactional {
 
-    private final List<BlockTransaction> transactions;
+    private final Collection<BlockTransaction> transactions;
 
-    public BlockChange(List<BlockTransaction> transactions) {
+    public BlockChange(Collection<BlockTransaction> transactions) {
         this.transactions = transactions;
     }
 

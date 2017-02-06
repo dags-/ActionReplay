@@ -24,7 +24,7 @@ public abstract class Replay {
 
     protected Location<World> center;
     protected boolean playing = false;
-    protected ReplayTask animationTask;
+    protected ReplayTask replayTask;
     protected FrameTask currentOperation = null;
 
     private Replay() {}
@@ -42,12 +42,12 @@ public abstract class Replay {
     }
 
     public boolean isPlaying() {
-        return playing || animationTask != null;
+        return playing || replayTask != null;
     }
 
     public void play(Object plugin, int intervalTicks, int changesPerTick) {
         if (isPlaying()) {
-            throw new UnsupportedOperationException("An replay is already playing");
+            throw new UnsupportedOperationException("A replay is already playing");
         }
         playing = true;
         undoAllFrames(() -> start(plugin, intervalTicks, changesPerTick));
@@ -55,16 +55,16 @@ public abstract class Replay {
 
     public void stop() {
         if (!isPlaying()) {
-            throw new UnsupportedOperationException("Animation is not playing");
+            throw new UnsupportedOperationException("Replay is not already playing");
         }
 
-        if (animationTask != null) {
-            animationTask.interrupt();
+        if (replayTask != null) {
+            replayTask.interrupt();
         }
 
         undoAllFrames(() -> redoAllFrames(() -> {
             playing = false;
-            animationTask = null;
+            replayTask = null;
             currentOperation = null;
         }));
     }
@@ -75,7 +75,7 @@ public abstract class Replay {
         }
 
         if (isPlaying()) {
-            animationTask.stop();
+            replayTask.stop();
         }
 
         if (isPlaying() || (currentOperation != null && currentOperation.active())) {
@@ -101,16 +101,16 @@ public abstract class Replay {
 
     public void start(Object plugin, int interval, int changesPer) {
         try {
-            animationTask = new ReplayTask(getFrameProvider().forward(), this::onFinish, center, interval, changesPer);
-            Sponge.getEventManager().registerListeners(plugin, animationTask);
-            Task.builder().intervalTicks(1).delayTicks(1).execute(animationTask).submit(plugin);
+            replayTask = new ReplayTask(getFrameProvider().forward(), this::onFinish, center, interval, changesPer);
+            Sponge.getEventManager().registerListeners(plugin, replayTask);
+            Task.builder().intervalTicks(1).delayTicks(1).execute(replayTask).submit(plugin);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public void onFinish() {
-        animationTask = null;
+        replayTask = null;
         playing = false;
     }
 

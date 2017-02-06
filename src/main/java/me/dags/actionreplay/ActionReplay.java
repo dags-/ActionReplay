@@ -51,7 +51,7 @@ public class ActionReplay {
     private Format format = Format.DEFAULT;
     private Config config = new Config();
     private Recorder recorder = Recorder.EMPTY;
-    private Replay animation = Replay.EMPTY;
+    private Replay replay = Replay.EMPTY;
 
     @Inject
     public ActionReplay(@ConfigDir(sharedRoot = false) Path configDir) {
@@ -96,8 +96,8 @@ public class ActionReplay {
     @Listener
     public void stop(GameStoppingEvent event) {
         saveConfig();
-        if (animation.isPresent() && animation.isPlaying()) {
-            animation.stopNow();
+        if (replay.isPresent() && replay.isPlaying()) {
+            replay.stopNow();
         }
         if (recorder.isPresent() && recorder.isRecording()) {
             recorder.stopNow();
@@ -108,16 +108,16 @@ public class ActionReplay {
         return format;
     }
 
-    public Replay getAnimation() {
-        return animation;
+    public Replay getReplay() {
+        return replay;
     }
 
     public Recorder getRecorder() {
         return recorder;
     }
 
-    public void setAnimation(Replay animation) {
-        this.animation = animation;
+    public void setReplay(Replay replay) {
+        this.replay = replay;
     }
 
     public void setRecorder(Recorder recorder) {

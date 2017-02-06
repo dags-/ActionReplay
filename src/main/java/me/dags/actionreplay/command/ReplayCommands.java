@@ -29,17 +29,17 @@ public class ReplayCommands {
 
     @Command(aliases = "load", parent = "replay", perm = @Permission(id = "actionreplay.recorder", description = ""))
     public Optional<Replay> load(@Caller Player player, @One("name") String name) {
-        if (getAnimation().isPresent() && getAnimation().isPlaying()) {
+        if (getReplay().isPresent() && getReplay().isPlaying()) {
             format().error("A replay is currently playing").tell(player);
             return Optional.empty();
         }
 
         Optional<Meta> meta = NodeUtils.loadMeta(name);
         if (meta.isPresent()) {
-            Replay animation = new FileReplay(name, player.getWorld().getLocation(meta.get().center));
-            setAnimation(animation);
+            Replay replay = new FileReplay(name, player.getWorld().getLocation(meta.get().center));
+            setReplay(replay);
             format().info("Loaded replay ").stress(name).info(" at ").stress(meta.get().center).tell(player);
-            return Optional.of(animation);
+            return Optional.of(replay);
         }
         return Optional.empty();
     }
@@ -58,20 +58,20 @@ public class ReplayCommands {
     public void start(@Caller Player player, @One("interval ticks") int ticks, @One("changes per tick") int changes) {
         if (getRecorder().isRecording()) {
             format().error("Recorder is currently recording").tell(player);
-        } else if (!getAnimation().isPresent()) {
+        } else if (!getReplay().isPresent()) {
             format().error("Replay has not been created yet").tell(player);
-        } else if (getAnimation().isPlaying()) {
+        } else if (getReplay().isPlaying()) {
             format().error("Replay is currently running").tell(player);
         } else {
-            getAnimation().play(ActionReplay.getInstance(), ticks, changes);
+            getReplay().play(ActionReplay.getInstance(), ticks, changes);
             format().info("Playing...").tell(player);
         }
     }
 
     @Command(aliases = "stop", parent = "replay", perm = @Permission(id = "actionreplay.replay", description = ""))
     public void stop(@Caller Player player) {
-        if (getAnimation().isPlaying()) {
-            getAnimation().stop();
+        if (getReplay().isPlaying()) {
+            getReplay().stop();
             format().info("Stopping replay").tell(player);
         } else {
             format().error("No replay playing").tell(player);
@@ -80,8 +80,8 @@ public class ReplayCommands {
 
     @Command(aliases = "reset", parent = "replay", perm = @Permission(id = "actionreplay.replay", description = ""))
     public void reset(@Caller Player player) {
-        if (getAnimation().isPresent()) {
-            setAnimation(Replay.EMPTY);
+        if (getReplay().isPresent()) {
+            setReplay(Replay.EMPTY);
             format().info("Discarding replay").tell(player);
         } else {
             format().error("No replay playing").tell(player);
@@ -90,13 +90,13 @@ public class ReplayCommands {
 
     @Command(aliases = "restore", parent = "replay", perm = @Permission(id = "actionreplay.replay", description = ""))
     public void restore(@Caller Player player) {
-        if (getAnimation().isPresent()) {
-            if (getAnimation().isPlaying()) {
+        if (getReplay().isPresent()) {
+            if (getReplay().isPlaying()) {
                 format().error("The replay is currently playing, you must stop it first").tell(player);
                 return;
             }
             format().info("Restoring all frames...").tell(player);
-            getAnimation().redoAllFrames(() -> {});
+            getReplay().redoAllFrames(() -> {});
         } else {
             format().error("No replays are currently loaded").tell(player);
         }
@@ -104,13 +104,13 @@ public class ReplayCommands {
 
     @Command(aliases = "undo", parent = "replay", perm = @Permission(id = "actionreplay.replay", description = ""))
     public void undo(@Caller Player player) {
-        if (getAnimation().isPresent()) {
-            if (getAnimation().isPlaying()) {
+        if (getReplay().isPresent()) {
+            if (getReplay().isPlaying()) {
                 format().error("The replay is currently playing, you must stop it first").tell(player);
                 return;
             }
             format().info("Undoing all frames...").tell(player);
-            getAnimation().undoAllFrames(() -> {});
+            getReplay().undoAllFrames(() -> {});
         } else {
             format().error("No replays are currently loaded").tell(player);
         }
@@ -120,15 +120,15 @@ public class ReplayCommands {
         return ActionReplay.getInstance().getFormat();
     }
 
-    private Replay getAnimation() {
-        return ActionReplay.getInstance().getAnimation();
+    private Replay getReplay() {
+        return ActionReplay.getInstance().getReplay();
     }
 
     private Recorder getRecorder() {
         return ActionReplay.getInstance().getRecorder();
     }
 
-    private void setAnimation(Replay animation) {
-        ActionReplay.getInstance().setAnimation(animation);
+    private void setReplay(Replay replay) {
+        ActionReplay.getInstance().setReplay(replay);
     }
 }

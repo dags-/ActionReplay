@@ -44,6 +44,11 @@ public class Frame implements DataSerializable {
         this.change = change;
     }
 
+    public Frame(Collection<AvatarSnapshot> avatars, Change change, Collection<AvatarSnapshot> others) {
+        this.change = change;
+        this.avatars = ImmutableSet.<AvatarSnapshot>builder().addAll(avatars).addAll(others).build();
+    }
+
     public Collection<AvatarSnapshot> getRelativeAvatars(Vector3d relative) {
         return avatars.stream().map(a -> a.getUpdatedCopy(relative)).collect(Collectors.toList());
     }
