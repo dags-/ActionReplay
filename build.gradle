@@ -1,42 +1,38 @@
 plugins {
-    id 'com.github.johnrengelman.shadow' version '1.2.4'
+    id "com.github.johnrengelman.shadow" version "2.0.2"
+    id "java"
 }
 
-group 'me.dags'
-version '1.0-SNAPSHOT'
-def spongeAPI = '5.1.0'
+group "me.dags"
+version "1.0-SNAPSHOT"
+def spongeAPI = '7.1.0'
 def spongeChannel = 'SNAPSHOT'
+def libraries = "${project.group}.replay.libs"
+
+configurations {
+    shade
+    compile.extendsFrom shade
+}
 
 repositories {
     mavenCentral()
-    maven {
-        url 'http://repo.spongepowered.org/maven'
-    }
-    maven {
-        url 'http://maven.sk89q.com/repo'
-    }
-    maven {
-        url 'https://jitpack.io'
-    }
+    maven { url "https://jitpack.io" }
+    maven { url 'http://repo.spongepowered.org/maven' }
 }
 
 dependencies {
-    apply plugin: 'java'
-    compile "org.spongepowered:spongeapi:${spongeAPI}-$spongeChannel"
-    compile 'com.github.dags-:NodeData:1.3.0-SNAPSHOT-20'
-    compile 'com.github.dags-:CommandBus:1.4.0-SNAPSHOT-1'
-    compile 'com.sk89q.worldedit:worldedit-core:6.0.0-SNAPSHOT'
+    compileOnly "org.spongepowered:spongeapi:${spongeAPI}-${spongeChannel}"
+    compile fileTree(dir: "libs", include: "*.jar")
+    shade "com.github.dags-:CommandBus:2.0.3"
+    shade ("com.github.dags-:Config:1.0.2") { transitive = false }
 }
 
 shadowJar {
-    dependencies {
-        include dependency('com.github.dags-:NodeData')
-        include dependency('com.github.dags-:CommandBus')
-    }
-    relocate 'me.dags.commandbus', 'me.dags.actionreplay.libs.commandbus'
-    relocate 'me.dags.data', 'me.dags.actionreplay.libs.data'
+    configurations = [project.configurations.shade]
+    relocate "me.dags.commandbus.", "${libraries}.command."
+    relocate "me.dags.config.", "${libraries}.config."
     archiveName = "${baseName}-${version}-SpongeAPI-${spongeAPI}.jar"
 }
 
-jar.dependsOn shadowJar
+build.dependsOn shadowJar
 jar.enabled = false
