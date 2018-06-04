@@ -1,11 +1,12 @@
 package me.dags.replay.io;
 
 import com.sk89q.jnbt.NBTOutputStream;
+import me.dags.replay.frame.FrameSink;
+import me.dags.replay.frame.FrameView;
+
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.zip.GZIPOutputStream;
-import me.dags.replay.frame.FrameSink;
-import me.dags.replay.frame.FrameView;
 
 /**
  * @author dags <dags@dags.me>

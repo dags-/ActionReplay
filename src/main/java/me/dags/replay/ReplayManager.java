@@ -1,12 +1,6 @@
 package me.dags.replay;
 
 import com.flowpowered.math.vector.Vector3i;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 import me.dags.commandbus.fmt.Fmt;
 import me.dags.config.Config;
 import me.dags.config.Node;
@@ -20,6 +14,13 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.AABB;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author dags <dags@dags.me>
@@ -57,17 +58,13 @@ public class ReplayManager implements CatalogRegistryModule<ReplayFile> {
         return !replay.isPresent() && recorder.isPresent() && recorder.isRecording();
     }
 
-    public boolean isplaying() {
+    public boolean isPlaying() {
         return !recorder.isPresent() && replay.isPresent() && replay.isPlaying();
     }
 
-    public Text createRecorder(String name, World world, AABB bounds) {
-        if (replay.isPresent()) {
-            return Fmt.error("Cannot set up recorder while a replay is active").build();
-        }
-
-        if (recorder.isPresent()) {
-            return Fmt.error("Cannot set up a new recorder while a recorder is active").build();
+    public Text startRecorder(String name, World world, AABB bounds, Vector3i origin) {
+        if (recorder.isRecording() || replay.isPlaying()) {
+            return Fmt.error("Cannot set up recorder while a replay or recorder is active").build();
         }
 
         File replay = new File(replayDir, name + EXTENSION);
@@ -78,8 +75,9 @@ public class ReplayManager implements CatalogRegistryModule<ReplayFile> {
         try {
             ReplayFile file = new ReplayFile(name, replay);
             FrameSink sink = file.getSink();
-            recorder = new FrameRecorder(world, bounds, sink, this);
+            recorder = new FrameRecorder(world, bounds, origin, sink, this);
             updateRegistry();
+            recorder.start(plugin);
             return Fmt.info("Successfully created recorder").build();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -87,35 +85,17 @@ public class ReplayManager implements CatalogRegistryModule<ReplayFile> {
         }
     }
 
-    public Text startRecorder() {
-        if (replay.isPresent()) {
-            return Fmt.error("Cannot start recorder while a replay is active").build();
-        }
-        if (recorder.isAbsent()) {
-            return Fmt.error("A recorder has not been set up yet").build();
-        }
-        if (recorder.isRecording()) {
-            return Fmt.error("The recorder is already recording").build();
-
-        }
-        recorder.start(plugin);
-        return Fmt.error("Recorder successfully started").build();
-    }
-
     public Text stopRecorder() {
-        if (!recorder.isPresent()) {
-            return Fmt.error("A recorder has not been set up yet").build();
-        }
         if (!recorder.isRecording()) {
-            return Fmt.error("The recorder is not currently recording").build();
+            return Fmt.error("Recorder is not active").build();
         }
         recorder.stop();
         return Fmt.info("Stopping recorder...").build();
     }
 
     public Text loadReplay(Location<World> origin, ReplayFile file) {
-        if (recorder.isPresent()) {
-            return Fmt.error("Cannot load replay while a recorder is active").build();
+        if (recorder.isRecording() || replay.isPlaying()) {
+            return Fmt.error("Cannot load replay while a recorder or replay is active").build();
         }
 
         if (!file.exists()) {
@@ -129,28 +109,22 @@ public class ReplayManager implements CatalogRegistryModule<ReplayFile> {
                     .info(" at ").stress(origin.getBlockPosition()).build();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-            return Fmt.error("Unable to load replay %s", file.getName()).build();
+            return Fmt.error("Unable to load replay " + file.getName()).build();
         }
     }
 
     public Text startReplay(int intervalTicks) {
+        if (recorder.isRecording() || replay.isPlaying()) {
+            return Fmt.error("Cannot start reply while recorder or replay is active").build();
+        }
         if (!replay.isPresent()) {
             return Fmt.error("A replay has not been loaded").build();
-        }
-        if (replay.isPlaying()) {
-            return Fmt.error("The replay is already playing").build();
         }
         replay.start(plugin, intervalTicks);
         return Fmt.info("Starting replay...").build();
     }
 
     public Text stopReplay() {
-        if (!replay.isPresent()) {
-            return Fmt.error("A replay has not been loaded").build();
-        }
-        if (!replay.isPlaying()) {
-            return Fmt.error("The replay is not currently playing").build();
-        }
         replay.stop();
         return Fmt.info("Stopping replay...").build();
     }
@@ -178,7 +152,6 @@ public class ReplayManager implements CatalogRegistryModule<ReplayFile> {
     public void onRecorderStopped() {
         config.clear();
         config.save();
-        recorder = FrameRecorder.NONE;
         Fmt.info("Recording stopped").tell(Sponge.getServer().getBroadcastChannel());
     }
 
@@ -187,33 +160,32 @@ public class ReplayManager implements CatalogRegistryModule<ReplayFile> {
     }
 
     public void onReplayStopped() {
-        replay = Replay.NONE;
         Fmt.info("Replay stopped").tell(Sponge.getServer().getBroadcastChannel());
     }
 
-    public boolean loadFromConfig() {
+    public void loadFromConfig() {
         String name = config.get("name", "");
         Optional<ReplayFile> replay = getById(name);
         if (!replay.isPresent()) {
-            return false;
+            return;
         }
 
         String worldName = config.get("world", "");
         Optional<World> world = Sponge.getServer().getWorld(worldName);
         if (!world.isPresent()) {
-            return false;
+            return;
         }
 
         try {
             FrameSink sink = replay.get().getSink();
+            Vector3i origin = readVec(config.node("origin"));
             Vector3i min = readVec(config.node("min"));
             Vector3i max = readVec(config.node("max"));
             AABB bounds = new AABB(min, max);
-            recorder = new FrameRecorder(world.get(), bounds, sink, this);
-            return true;
+            recorder = new FrameRecorder(world.get(), bounds, origin, sink, this);
+            recorder.start(plugin);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-            return false;
         }
     }
 

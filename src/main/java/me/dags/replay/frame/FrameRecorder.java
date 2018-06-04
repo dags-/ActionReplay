@@ -8,13 +8,7 @@ import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.event.extent.PasteEvent;
 import com.sk89q.worldedit.regions.CuboidRegion;
-import com.sk89q.worldedit.util.eventbus.EventHandler;
 import com.sk89q.worldedit.util.eventbus.Subscribe;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 import me.dags.config.Node;
 import me.dags.replay.ReplayManager;
 import me.dags.replay.avatar.AvatarSnapshot;
@@ -40,6 +34,8 @@ import org.spongepowered.api.util.AABB;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
+import java.util.*;
+
 /**
  * @author dags <dags@dags.me>
  */
@@ -61,11 +57,11 @@ public class FrameRecorder implements OptionalValue {
         this.manager = null;
     }
 
-    public FrameRecorder(World world, AABB bounds, FrameSink recorder, ReplayManager manager) {
+    public FrameRecorder(World world, AABB bounds, Vector3i origin, FrameSink recorder, ReplayManager manager) {
         this.world = world.getUniqueId();
-        this.sink = new BufferedFrameSink(recorder, 20*2);
+        this.sink = new BufferedFrameSink(recorder);
         this.bounds = bounds;
-        this.origin = bounds.getMin().toInt();
+        this.origin = origin;
         this.manager = manager;
     }
 
@@ -117,7 +113,7 @@ public class FrameRecorder implements OptionalValue {
         writeVec(bounds.getMax().toInt(), node.node("max"));
     }
 
-    @Subscribe(priority = EventHandler.Priority.VERY_LATE)
+    @Subscribe
     public void onPaste(PasteEvent event) {
         // only interested in pastes to the world
         if (event.getExtent() instanceof com.sk89q.worldedit.world.World) {
@@ -197,7 +193,7 @@ public class FrameRecorder implements OptionalValue {
 
             UUID uuid = player.getUniqueId();
             String name = player.getName();
-            Vector3d position = player.getLocation().getPosition();
+            Vector3d position = player.getLocation().getPosition().sub(origin.getX(), origin.getY(), origin.getZ());
             Vector3d rotation = player.getRotation();
             boolean flying = player.get(Keys.IS_FLYING).orElse(false);
             ItemStack stack = player.getItemInHand(HandTypes.MAIN_HAND).map(ItemStack::copy).orElse(ItemStack.empty());

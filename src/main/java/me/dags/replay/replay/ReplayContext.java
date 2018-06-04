@@ -1,12 +1,8 @@
 package me.dags.replay.replay;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 import me.dags.replay.avatar.Avatar;
+
+import java.util.*;
 
 /**
  * @author dags <dags@dags.me>

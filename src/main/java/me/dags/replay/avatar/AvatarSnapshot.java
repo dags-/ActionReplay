@@ -2,7 +2,6 @@ package me.dags.replay.avatar;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.sk89q.jnbt.CompoundTag;
-import java.util.UUID;
 import me.dags.replay.serialize.Serializer;
 import me.dags.replay.serialize.Serializers;
 import me.dags.replay.util.DataBuilder;
@@ -15,6 +14,8 @@ import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
+
+import java.util.UUID;
 
 /**
  * @author dags <dags@dags.me>
@@ -46,6 +47,7 @@ public class AvatarSnapshot {
             Vector3d position = origin.getPosition().add(offset);
             Entity entity = origin.getExtent().createEntity(EntityTypes.HUMAN, position);
             entity.offer(Keys.SKIN_UNIQUE_ID, uuid);
+            entity.offer(Keys.INVULNERABLE, true);
             entity.offer(Keys.IS_FLYING, flying);
             entity.offer(Keys.HAS_GRAVITY, !flying);
             entity.offer(Keys.DISPLAY_NAME, Text.of(name));

@@ -7,16 +7,17 @@ import com.sk89q.jnbt.ByteArrayTag;
 import com.sk89q.jnbt.CompoundTag;
 import com.sk89q.jnbt.ListTag;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
+import me.dags.replay.util.DataBuilder;
+import org.spongepowered.api.data.DataContainer;
+import org.spongepowered.api.data.persistence.DataFormats;
+import org.spongepowered.api.item.inventory.ItemStack;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import me.dags.replay.util.DataBuilder;
-import org.spongepowered.api.data.DataContainer;
-import org.spongepowered.api.data.persistence.DataFormats;
-import org.spongepowered.api.item.inventory.ItemStack;
 
 /**
  * @author dags <dags@dags.me>
@@ -108,7 +109,7 @@ public class Serializers {
             format = ClipboardFormat.SCHEMATIC;
         }
 
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream();) {
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             schematic.save(out, format);
             map.put("format", formatName);
             map.put("schematic", out.toByteArray());

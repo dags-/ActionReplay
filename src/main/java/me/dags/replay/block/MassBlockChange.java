@@ -8,6 +8,7 @@ import com.sk89q.worldedit.Vector;
 import me.dags.replay.serialize.Serializer;
 import me.dags.replay.serialize.Serializers;
 import me.dags.replay.util.DataBuilder;
+import me.dags.replay.worldedit.WEHelper;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -26,10 +27,14 @@ public class MassBlockChange implements BlockChange {
 
     @Override
     public void apply(Location<World> origin) {
+        if (schematic == null) {
+            return;
+        }
         Vector3i position = origin.getBlockPosition().add(offset);
+        System.out.println("PASTING AT " + position);
         com.sk89q.worldedit.world.World world = FaweAPI.getWorld(origin.getExtent().getName());
-        Vector vector = new Vector(position.getX(), position.getY(), position.getZ());
-        schematic.paste(world, vector, false, true, null);
+        Vector vector = WEHelper.toVec(position);
+        schematic.paste(world, vector, false, true, null).flushQueue();
     }
 
     public static final Serializer<MassBlockChange> SERIALIZER = new Serializer<MassBlockChange>() {

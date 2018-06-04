@@ -1,12 +1,13 @@
 package me.dags.replay.worldedit;
 
 import com.flowpowered.math.vector.Vector3i;
-import java.util.Optional;
-import java.util.function.Supplier;
 import me.dags.replay.util.OptionalValue;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.util.AABB;
 import org.spongepowered.api.world.World;
+
+import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * @author dags <dags@dags.me>

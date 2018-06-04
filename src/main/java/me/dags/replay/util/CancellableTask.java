@@ -1,7 +1,8 @@
 package me.dags.replay.util;
 
-import java.util.function.Consumer;
 import org.spongepowered.api.scheduler.Task;
+
+import java.util.function.Consumer;
 
 /**
  * @author dags <dags@dags.me>
@@ -10,13 +11,13 @@ public abstract class CancellableTask implements Consumer<Task> {
 
     private volatile boolean cancelled = false;
 
-    public final CancellableTask startSync(Object plugin, int intervalTicks) {
-        Task.builder().execute(this).intervalTicks(intervalTicks).submit(plugin);
+    public final CancellableTask startSync(Object plugin) {
+        Task.builder().execute(this).delayTicks(1).intervalTicks(1).submit(plugin);
         return this;
     }
 
-    public final CancellableTask startAsync(Object plugin, int intervalTicks) {
-        Task.builder().execute(this).intervalTicks(intervalTicks).submit(plugin);
+    public final CancellableTask startAsync(Object plugin) {
+        Task.builder().execute(this).delayTicks(1).intervalTicks(1).async().submit(plugin);
         return this;
     }
 

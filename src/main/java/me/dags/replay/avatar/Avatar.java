@@ -1,5 +1,6 @@
 package me.dags.replay.avatar;
 
+import com.flowpowered.math.vector.Vector3d;
 import me.dags.replay.util.OptionalValue;
 import org.spongepowered.api.entity.living.Human;
 import org.spongepowered.api.world.Location;
@@ -34,6 +35,7 @@ public class Avatar implements OptionalValue {
 
     public void tick() {
         human.setLocation(location);
+        human.setVelocity(Vector3d.ZERO);
     }
 
     public void setLocation(Location<World> location) {

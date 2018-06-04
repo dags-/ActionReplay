@@ -1,8 +1,6 @@
 package me.dags.replay;
 
 import com.google.inject.Inject;
-import java.io.File;
-import java.util.Optional;
 import me.dags.commandbus.CommandBus;
 import me.dags.commandbus.annotation.Command;
 import me.dags.commandbus.annotation.Src;
@@ -19,6 +17,9 @@ import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.AABB;
 import org.spongepowered.api.world.World;
+
+import java.io.File;
+import java.util.Optional;
 
 /**
  * @author dags <dags@dags.me>
@@ -46,9 +47,7 @@ public class ActionReplay {
 
         Task.builder().execute(() -> {
             manager.updateRegistry();
-            if (manager.loadFromConfig()) {
-                manager.startRecorder();
-            }
+            manager.loadFromConfig();
         }).submit(this);
     }
 
@@ -71,7 +70,7 @@ public class ActionReplay {
             return;
         }
 
-        Text text = manager.createRecorder(name, player.getWorld(), selection);
+        Text text = manager.startRecorder(name, player.getWorld(), selection, player.getLocation().getBlockPosition());
         player.sendMessage(text);
     }
 
@@ -80,7 +79,7 @@ public class ActionReplay {
         Text text;
         if (manager.isRecording()) {
             text = manager.stopRecorder();
-        } else if (manager.isplaying()) {
+        } else if (manager.isPlaying()) {
             text = manager.stopReplay();
         } else {
             text = Fmt.error("No recorder or replay is active right now").build();

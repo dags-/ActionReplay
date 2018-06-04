@@ -1,8 +1,6 @@
 package me.dags.replay.io;
 
 import com.sk89q.jnbt.CompoundTag;
-import java.io.IOException;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import me.dags.replay.frame.FrameSink;
 import me.dags.replay.frame.FrameView;
 import me.dags.replay.replay.ReplayContext;
@@ -10,24 +8,25 @@ import me.dags.replay.util.CancellableTask;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
+import java.io.IOException;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 /**
  * @author dags <dags@dags.me>
  */
 public class BufferedFrameSink extends CancellableTask implements FrameSink {
 
-    private final int interval;
     private final FrameSink sink;
     private final ConcurrentLinkedQueue<FrameView> buffer = new ConcurrentLinkedQueue<>();
 
     private volatile boolean stopped = false;
 
-    public BufferedFrameSink(FrameSink sink, int interval) {
+    public BufferedFrameSink(FrameSink sink) {
         this.sink = sink;
-        this.interval = interval;
     }
 
     public void start(Object plugin) {
-        startAsync(plugin, interval);
+        startAsync(plugin);
     }
 
     public void stop() {

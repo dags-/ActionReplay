@@ -1,17 +1,17 @@
 package me.dags.replay.worldedit;
 
-import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import com.sk89q.worldedit.IncompleteRegionException;
 import com.sk89q.worldedit.LocalSession;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.regions.Region;
-import java.util.Optional;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.util.AABB;
 import org.spongepowered.api.world.World;
+
+import java.util.Optional;
 
 /**
  * @author dags <dags@dags.me>
@@ -20,7 +20,7 @@ public class WEHelper implements WEAPI {
 
     @Override
     public boolean isPresent() {
-        return false;
+        return true;
     }
 
     @Override
@@ -78,15 +78,7 @@ public class WEHelper implements WEAPI {
         return new Vector3i(vector.getBlockX(), vector.getBlockY(), vector.getBlockZ());
     }
 
-    public static Vector3d toVec3d(Vector vector) {
-        return new Vector3d(vector.getX(), vector.getY(), vector.getZ());
-    }
-
     public static Vector toVec(Vector3i vector) {
-        return new Vector(vector.getX(), vector.getY(), vector.getZ());
-    }
-
-    public static Vector toVec(Vector3d vector) {
         return new Vector(vector.getX(), vector.getY(), vector.getZ());
     }
 }

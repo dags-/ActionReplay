@@ -1,11 +1,12 @@
 package me.dags.replay.serialize;
 
 import com.sk89q.jnbt.CompoundTag;
+import me.dags.replay.util.DataBuilder;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import me.dags.replay.util.DataBuilder;
 
 /**
  * @author dags <dags@dags.me>

@@ -1,8 +1,6 @@
 package me.dags.replay.replay;
 
-import java.io.IOException;
 import me.dags.replay.ReplayManager;
-import me.dags.replay.frame.Frame;
 import me.dags.replay.frame.FrameSource;
 import me.dags.replay.frame.FrameView;
 import me.dags.replay.util.CancellableTask;
@@ -41,7 +39,7 @@ public class Replay extends CancellableTask implements OptionalValue {
     }
 
     public void start(Object plugin, int intervalTicks) {
-        startSync(plugin, intervalTicks);
+        startSync(plugin);
         interval = intervalTicks;
         playing = true;
         manager.onReplayStarted();
@@ -54,8 +52,9 @@ public class Replay extends CancellableTask implements OptionalValue {
 
     @Override
     public void run() {
+        context.tick();
+
         if (!isFrameTick()) {
-            context.tick();
             return;
         }
 
@@ -63,13 +62,13 @@ public class Replay extends CancellableTask implements OptionalValue {
             FrameView frame = frames.next();
 
             if (!frame.isPresent()) {
-                setCancelled(true);
+                stop();
                 return;
             }
 
             frame.apply(origin, context);
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Throwable t) {
+            t.printStackTrace();
         }
     }
 

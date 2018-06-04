@@ -1,9 +1,6 @@
 package me.dags.replay.frame;
 
 import com.sk89q.jnbt.CompoundTag;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import me.dags.replay.avatar.Avatar;
 import me.dags.replay.avatar.AvatarSnapshot;
 import me.dags.replay.block.BlockChange;
@@ -14,6 +11,10 @@ import me.dags.replay.util.DataBuilder;
 import me.dags.replay.util.OptionalValue;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author dags <dags@dags.me>

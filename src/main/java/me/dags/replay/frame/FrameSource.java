@@ -14,4 +14,6 @@ public interface FrameSource {
     FrameView last() throws IOException;
 
     FrameSource reset() throws IOException;
+
+    void close() throws IOException;
 }
