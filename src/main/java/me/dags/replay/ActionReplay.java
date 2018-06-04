@@ -26,11 +26,12 @@ import org.spongepowered.api.world.World;
 @Plugin(id = "replay", name = "ActionReplay", version = "1.0", authors = "dags", description = "Time lapse thing")
 public class ActionReplay {
 
-    private final ReplayManager manager;
+    private final File configDir;
+    private ReplayManager manager;
 
     @Inject
     public ActionReplay(@ConfigDir(sharedRoot = false) File configDir) {
-        this.manager = new ReplayManager(this, configDir);
+        this.configDir = configDir;
     }
 
     @Listener
@@ -39,8 +40,10 @@ public class ActionReplay {
             throw new IllegalStateException("WorldEdit/FAWE not detected. ActionReplay cannot function without!");
         }
 
+        manager = new ReplayManager(this, configDir);
         Sponge.getRegistry().registerModule(ReplayFile.class, manager);
         CommandBus.create(this).register(this).submit();
+
         Task.builder().execute(() -> {
             manager.updateRegistry();
             if (manager.loadFromConfig()) {
@@ -49,7 +52,7 @@ public class ActionReplay {
         }).submit(this);
     }
 
-    @Command("recorder create <name>")
+    @Command("ar create <name>")
     public void createRecorder(@Src Player player, String name) {
         Optional<World> world = WEAPI.get().getSelectionWorld(player);
         if (!world.isPresent()) {
@@ -63,37 +66,59 @@ public class ActionReplay {
             return;
         }
 
+        if (selection == WEAPI.INVALID_BOX) {
+            Fmt.error("Your selection is too small").tell(player);
+            return;
+        }
+
         Text text = manager.createRecorder(name, player.getWorld(), selection);
         player.sendMessage(text);
     }
 
-    @Command("recorder start")
-    public void startRecorder(@Src CommandSource source) {
-        Text text = manager.startRecorder();
-        source.sendMessage(text);
-    }
-
-    @Command("recorder stop")
+    @Command("ar stop")
     public void stopRecorder(@Src CommandSource source) {
-        Text text = manager.stopRecorder();
-        source.sendMessage(text);
+        Text text;
+        if (manager.isRecording()) {
+            text = manager.stopRecorder();
+        } else if (manager.isplaying()) {
+            text = manager.stopReplay();
+        } else {
+            text = Fmt.error("No recorder or replay is active right now").build();
+        }
+        if (text != Text.EMPTY) {
+            source.sendMessage(text);
+        }
     }
 
-    @Command("replay start <name> <interval>")
-    public void startReplay(@Src Player player, ReplayFile replay, int interval) {
-        Text text = manager.startReplay(player.getLocation(), replay, interval);
-        player.sendMessage(text);
+    @Command("ar load <replay>")
+    public void loadReplay(@Src Player player, ReplayFile replay) {
+        Text text = manager.loadReplay(player.getLocation(), replay);
+        if (text != Text.EMPTY) {
+            player.sendMessage(text);
+        }
     }
 
-    @Command("replay stop")
-    public void stopReplay(@Src CommandSource source) {
-        Text text = manager.stopReplay();
-        source.sendMessage(text);
+    @Command("ar start <interval>")
+    public void startReplay(@Src Player player) {
+        Text text = manager.startReplay(5);
+        if (text != Text.EMPTY) {
+            player.sendMessage(text);
+        }
     }
 
-    @Command("replay delete")
+    @Command("ar start <interval>")
+    public void startReplay(@Src Player player, int interval) {
+        Text text = manager.startReplay(interval);
+        if (text != Text.EMPTY) {
+            player.sendMessage(text);
+        }
+    }
+
+    @Command("ar delete <replay>")
     public void deleteReplay(@Src CommandSource source, ReplayFile replay) {
         Text text = manager.delete(replay);
-        source.sendMessage(text);
+        if (text != Text.EMPTY) {
+            source.sendMessage(text);
+        }
     }
 }

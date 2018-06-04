@@ -4,6 +4,7 @@ import java.io.IOException;
 import me.dags.replay.ReplayManager;
 import me.dags.replay.frame.Frame;
 import me.dags.replay.frame.FrameSource;
+import me.dags.replay.frame.FrameView;
 import me.dags.replay.util.CancellableTask;
 import me.dags.replay.util.OptionalValue;
 import org.spongepowered.api.world.Location;
@@ -18,15 +19,14 @@ public class Replay extends CancellableTask implements OptionalValue {
     private final ReplayContext context;
     private final Location<World> origin;
     private final FrameSource frames;
-    private final long interval;
 
     private long tick = 0L;
+    private long interval = 1L;
     private boolean playing = false;
 
-    public Replay(FrameSource frames, Location<World> origin, long ticks, ReplayManager manager) {
+    public Replay(FrameSource frames, Location<World> origin, ReplayManager manager) {
         this.frames = frames;
         this.origin = origin;
-        this.interval = ticks;
         this.manager = manager;
         this.context = new ReplayContext();
     }
@@ -40,8 +40,9 @@ public class Replay extends CancellableTask implements OptionalValue {
         return playing;
     }
 
-    public void start(Object plugin) {
-        startSync(plugin, 1);
+    public void start(Object plugin, int intervalTicks) {
+        startSync(plugin, intervalTicks);
+        interval = intervalTicks;
         playing = true;
         manager.onReplayStarted();
     }
@@ -59,7 +60,7 @@ public class Replay extends CancellableTask implements OptionalValue {
         }
 
         try {
-            Frame frame = frames.next();
+            FrameView frame = frames.next();
 
             if (!frame.isPresent()) {
                 setCancelled(true);
@@ -81,19 +82,19 @@ public class Replay extends CancellableTask implements OptionalValue {
     private boolean isFrameTick() {
         if (++tick >= interval) {
             tick = 0;
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
 
-    public static final Replay NONE = new Replay(null, null, 0, null) {
+    public static final Replay NONE = new Replay(null, null, null) {
         @Override
         public boolean isPresent() {
             return false;
         }
 
         @Override
-        public void start(Object plugin) {
+        public void start(Object plugin, int intervalTicks) {
 
         }
 

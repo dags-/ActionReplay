@@ -52,6 +52,9 @@ public class WEHelper implements WEAPI {
 
             Vector3i min = toVec3i(selection.getMinimumPoint());
             Vector3i max = toVec3i(selection.getMaximumPoint());
+            if (min.getX() >= max.getX() || min.getY() >= max.getY() || min.getZ() >= max.getZ()) {
+                return INVALID_BOX;
+            }
             return new AABB(min, max);
         } catch (IncompleteRegionException e) {
             return NULL_BOX;

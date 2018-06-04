@@ -13,36 +13,36 @@ import java.util.Map;
 /**
  * @author dags <dags@dags.me>
  */
-public class CompoundBuilder {
+public class DataBuilder {
 
     private final Map<String, Tag> backing = new HashMap<>();
 
-    public CompoundBuilder put(String key, Tag tag) {
+    public DataBuilder put(String key, Tag tag) {
         backing.put(key, tag);
         return this;
     }
 
-    public CompoundBuilder put(String key, byte[] value) {
+    public DataBuilder put(String key, byte[] value) {
         backing.put(key, new ByteArrayTag(value));
         return this;
     }
 
-    public CompoundBuilder put(String key, int value) {
+    public DataBuilder put(String key, int value) {
         backing.put(key, new IntTag(value));
         return this;
     }
 
-    public CompoundBuilder put(String key, double value) {
+    public DataBuilder put(String key, double value) {
         backing.put(key, new DoubleTag(value));
         return this;
     }
 
-    public CompoundBuilder put(String key, boolean value) {
+    public DataBuilder put(String key, boolean value) {
         backing.put(key, new ByteTag(value ? (byte) 1 : 0));
         return this;
     }
 
-    public CompoundBuilder put(String key, String value) {
+    public DataBuilder put(String key, String value) {
         backing.put(key, new StringTag(value));
         return this;
     }

@@ -7,11 +7,11 @@ import java.io.IOException;
  */
 public interface FrameSource {
 
-    Frame next() throws IOException;
+    FrameView next() throws IOException;
 
-    Frame first() throws IOException;
+    FrameView first() throws IOException;
 
-    Frame last() throws IOException;
+    FrameView last() throws IOException;
 
     FrameSource reset() throws IOException;
 }

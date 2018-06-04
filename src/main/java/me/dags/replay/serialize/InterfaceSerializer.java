@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import me.dags.replay.util.CompoundBuilder;
+import me.dags.replay.util.DataBuilder;
 
 /**
  * @author dags <dags@dags.me>
@@ -26,7 +26,7 @@ public class InterfaceSerializer<T> implements Serializer<T> {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void serialize(T p, CompoundBuilder builder) {
+    public void serialize(T p, DataBuilder builder) {
         Entry entry = serializers.get(p.getClass());
         if (entry != null) {
             entry.serializer.serialize(p, builder);

@@ -3,6 +3,7 @@ package me.dags.replay.io;
 import com.sk89q.jnbt.CompoundTag;
 import com.sk89q.jnbt.NBTInputStream;
 import com.sk89q.jnbt.Tag;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.zip.GZIPInputStream;
@@ -22,15 +23,21 @@ public class FileSource implements FrameSource {
 
     @Override
     public Frame next() throws IOException {
+        if (file.getFilePointer() >= file.length()) {
+            return Frame.NONE;
+        }
+
         int length = file.readInt();
-        if (file.getFilePointer() + length < file.length()) {
-            try (NBTInputStream nbt = new NBTInputStream(new GZIPInputStream(new SegmentInputStream(file, length)))) {
-                Tag tag = nbt.readNamedTag().getTag();
-                if (tag instanceof CompoundTag) {
-                    return Frame.SERIALIZER.deserialize((CompoundTag) tag);
-                }
+        byte[] data = new byte[length];
+        file.read(data);
+
+        try (NBTInputStream nbt = new NBTInputStream(new GZIPInputStream(new ByteArrayInputStream(data)))) {
+            Tag tag = nbt.readNamedTag().getTag();
+            if (tag instanceof CompoundTag) {
+                return Frame.SERIALIZER.deserialize((CompoundTag) tag);
             }
         }
+
         return Frame.NONE;
     }
 

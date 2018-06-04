@@ -23,6 +23,7 @@ public class ReplayContext {
 
     public void setAvatar(UUID uuid, Avatar avatar) {
         avatars.put(uuid, avatar);
+        active.add(uuid);
     }
 
     public void tick() {

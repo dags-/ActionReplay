@@ -7,5 +7,5 @@ import java.io.IOException;
  */
 public interface FrameSink {
 
-    void accept(Frame frame) throws IOException;
+    void accept(FrameView frame) throws IOException;
 }

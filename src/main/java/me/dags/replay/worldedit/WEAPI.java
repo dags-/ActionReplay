@@ -13,7 +13,8 @@ import org.spongepowered.api.world.World;
  */
 public interface WEAPI extends OptionalValue {
 
-    AABB NULL_BOX = new AABB(Vector3i.ZERO, Vector3i.ZERO);
+    AABB NULL_BOX = new AABB(Vector3i.ZERO, Vector3i.ONE);
+    AABB INVALID_BOX = new AABB(Vector3i.ZERO, Vector3i.ONE);
 
     AABB getSelection(Player player, World world);
 
@@ -23,7 +24,6 @@ public interface WEAPI extends OptionalValue {
         return INSTANCE;
     }
 
-    // don't look at me!
     WEAPI INSTANCE = ((Supplier<WEAPI>) () -> {
         try {
             Class.forName("com.boydti.fawe.FaweAPI");

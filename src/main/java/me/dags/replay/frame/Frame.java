@@ -8,17 +8,17 @@ import me.dags.replay.avatar.Avatar;
 import me.dags.replay.avatar.AvatarSnapshot;
 import me.dags.replay.block.BlockChange;
 import me.dags.replay.replay.ReplayContext;
-import me.dags.replay.util.CompoundBuilder;
-import me.dags.replay.util.OptionalValue;
 import me.dags.replay.serialize.Serializer;
 import me.dags.replay.serialize.Serializers;
+import me.dags.replay.util.DataBuilder;
+import me.dags.replay.util.OptionalValue;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 /**
  * @author dags <dags@dags.me>
  */
-public class Frame implements OptionalValue {
+public class Frame implements OptionalValue, FrameView {
 
     public static final Frame NONE = new Frame(Collections.emptyList(), Collections.emptyList()) {
         @Override
@@ -40,26 +40,26 @@ public class Frame implements OptionalValue {
     }
 
     @Override
+    public CompoundTag toData() {
+        DataBuilder builder = new DataBuilder();
+        SERIALIZER.serialize(this, builder);
+        return builder.build();
+    }
+
+    @Override
     public boolean isPresent() {
         return true;
     }
 
-    public List<BlockChange> getChanges() {
-        return changes;
-    }
-
-    public List<AvatarSnapshot> getAvatars() {
-        return avatars;
-    }
-
+    @Override
     public void apply(Location<World> origin, ReplayContext context) {
         context.push();
 
-        for (BlockChange change : getChanges()) {
+        for (BlockChange change : changes) {
             change.apply(origin);
         }
 
-        for (AvatarSnapshot snapshot : getAvatars()) {
+        for (AvatarSnapshot snapshot : avatars) {
             Avatar avatar = context.getAvatar(snapshot.getUUID());
             if (!avatar.isPresent()) {
                 avatar = snapshot.create(origin);
@@ -76,9 +76,9 @@ public class Frame implements OptionalValue {
 
     public static final Serializer<Frame> SERIALIZER = new Serializer<Frame>() {
         @Override
-        public void serialize(Frame frame, CompoundBuilder builder) {
-            Serializers.list(builder, "changes", frame.getChanges(), BlockChange.SERIALIZER);
-            Serializers.list(builder, "avatars", frame.getAvatars(), AvatarSnapshot.SERIALIZER);
+        public void serialize(Frame frame, DataBuilder builder) {
+            Serializers.list(builder, "changes", frame.changes, BlockChange.SERIALIZER);
+            Serializers.list(builder, "avatars", frame.avatars, AvatarSnapshot.SERIALIZER);
         }
 
         @Override

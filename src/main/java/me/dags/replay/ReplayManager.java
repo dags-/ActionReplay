@@ -14,7 +14,6 @@ import me.dags.replay.frame.FrameRecorder;
 import me.dags.replay.frame.FrameSink;
 import me.dags.replay.frame.FrameSource;
 import me.dags.replay.replay.Replay;
-import me.dags.replay.util.Util;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.registry.CatalogRegistryModule;
 import org.spongepowered.api.text.Text;
@@ -54,9 +53,21 @@ public class ReplayManager implements CatalogRegistryModule<ReplayFile> {
         return registry.values();
     }
 
+    public boolean isRecording() {
+        return !replay.isPresent() && recorder.isPresent() && recorder.isRecording();
+    }
+
+    public boolean isplaying() {
+        return !recorder.isPresent() && replay.isPresent() && replay.isPlaying();
+    }
+
     public Text createRecorder(String name, World world, AABB bounds) {
         if (replay.isPresent()) {
             return Fmt.error("Cannot set up recorder while a replay is active").build();
+        }
+
+        if (recorder.isPresent()) {
+            return Fmt.error("Cannot set up a new recorder while a recorder is active").build();
         }
 
         File replay = new File(replayDir, name + EXTENSION);
@@ -87,7 +98,7 @@ public class ReplayManager implements CatalogRegistryModule<ReplayFile> {
             return Fmt.error("The recorder is already recording").build();
 
         }
-        recorder.start(this);
+        recorder.start(plugin);
         return Fmt.error("Recorder successfully started").build();
     }
 
@@ -95,14 +106,14 @@ public class ReplayManager implements CatalogRegistryModule<ReplayFile> {
         if (!recorder.isPresent()) {
             return Fmt.error("A recorder has not been set up yet").build();
         }
-        if (!recorder.isRecording()) { ;
+        if (!recorder.isRecording()) {
             return Fmt.error("The recorder is not currently recording").build();
         }
         recorder.stop();
-        return Fmt.error("").build();
+        return Fmt.info("Stopping recorder...").build();
     }
 
-    public Text startReplay(Location<World> origin, ReplayFile file, int intervalTicks) {
+    public Text loadReplay(Location<World> origin, ReplayFile file) {
         if (recorder.isPresent()) {
             return Fmt.error("Cannot load replay while a recorder is active").build();
         }
@@ -113,13 +124,24 @@ public class ReplayManager implements CatalogRegistryModule<ReplayFile> {
 
         try {
             FrameSource source = file.getSource();
-            replay = new Replay(source, origin, intervalTicks, this);
-            replay.start(plugin);
-            return Fmt.info("Successfully started replay").build();
+            replay = new Replay(source, origin, this);
+            return Fmt.info("Loaded replay in ").stress(origin.getExtent().getName())
+                    .info(" at ").stress(origin.getBlockPosition()).build();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             return Fmt.error("Unable to load replay %s", file.getName()).build();
         }
+    }
+
+    public Text startReplay(int intervalTicks) {
+        if (!replay.isPresent()) {
+            return Fmt.error("A replay has not been loaded").build();
+        }
+        if (replay.isPlaying()) {
+            return Fmt.error("The replay is already playing").build();
+        }
+        replay.start(plugin, intervalTicks);
+        return Fmt.info("Starting replay...").build();
     }
 
     public Text stopReplay() {
@@ -130,7 +152,7 @@ public class ReplayManager implements CatalogRegistryModule<ReplayFile> {
             return Fmt.error("The replay is not currently playing").build();
         }
         replay.stop();
-        return Fmt.info("Successfully stopped replay").build();
+        return Fmt.info("Stopping replay...").build();
     }
 
     public Text delete(ReplayFile file) {

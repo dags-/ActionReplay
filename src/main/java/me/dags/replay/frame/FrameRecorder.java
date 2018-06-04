@@ -4,11 +4,9 @@ import com.boydti.fawe.FaweAPI;
 import com.boydti.fawe.object.schematic.Schematic;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.event.extent.PasteEvent;
-import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.util.eventbus.EventHandler;
 import com.sk89q.worldedit.util.eventbus.Subscribe;
@@ -23,9 +21,9 @@ import me.dags.replay.avatar.AvatarSnapshot;
 import me.dags.replay.block.BlockChange;
 import me.dags.replay.block.MassBlockChange;
 import me.dags.replay.block.SingleBlockChange;
-import me.dags.replay.io.AsyncFrameSink;
+import me.dags.replay.io.BufferedFrameSink;
 import me.dags.replay.util.OptionalValue;
-import me.dags.replay.util.Util;
+import me.dags.replay.worldedit.WEHelper;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockState;
@@ -50,7 +48,7 @@ public class FrameRecorder implements OptionalValue {
     private final UUID world;
     private final AABB bounds;
     private final Vector3i origin;
-    private final AsyncFrameSink sink;
+    private final BufferedFrameSink sink;
     private final ReplayManager manager;
 
     private boolean recording = false;
@@ -65,7 +63,7 @@ public class FrameRecorder implements OptionalValue {
 
     public FrameRecorder(World world, AABB bounds, FrameSink recorder, ReplayManager manager) {
         this.world = world.getUniqueId();
-        this.sink = new AsyncFrameSink(recorder);
+        this.sink = new BufferedFrameSink(recorder, 20*2);
         this.bounds = bounds;
         this.origin = bounds.getMin().toInt();
         this.manager = manager;
@@ -198,11 +196,12 @@ public class FrameRecorder implements OptionalValue {
             }
 
             UUID uuid = player.getUniqueId();
+            String name = player.getName();
             Vector3d position = player.getLocation().getPosition();
             Vector3d rotation = player.getRotation();
             boolean flying = player.get(Keys.IS_FLYING).orElse(false);
-            ItemStack stack = player.getItemInHand(HandTypes.MAIN_HAND).orElse(ItemStack.empty()).copy();
-            AvatarSnapshot snapshot = new AvatarSnapshot(uuid, position, rotation, stack, flying);
+            ItemStack stack = player.getItemInHand(HandTypes.MAIN_HAND).map(ItemStack::copy).orElse(ItemStack.empty());
+            AvatarSnapshot snapshot = new AvatarSnapshot(uuid, name, position, rotation, stack, flying);
             avatars.add(snapshot);
         }
         return avatars;
@@ -214,12 +213,11 @@ public class FrameRecorder implements OptionalValue {
             return;
         }
 
-        Vector min = new Vector(bounds.getMin().getX(), bounds.getMin().getY(), bounds.getMin().getZ());
-        Vector max = new Vector(bounds.getMax().getX(), bounds.getMax().getY(), bounds.getMax().getZ());
+        Vector min = WEHelper.toVec(bounds.getMin().toInt());
+        Vector max = WEHelper.toVec(bounds.getMax().toInt());
         com.sk89q.worldedit.world.World world = FaweAPI.getWorld(worldName);
-        EditSession session = FaweAPI.getEditSessionBuilder(world).build();
-        Clipboard clipboard = session.lazyCopy(new CuboidRegion(min, max));
-        Schematic schematic = new Schematic(clipboard);
+        CuboidRegion region = new CuboidRegion(world, min, max);
+        Schematic schematic = new Schematic(region);
         MassBlockChange change = new MassBlockChange(origin, schematic);
         sink.accept(new Frame(change, Collections.emptyList()));
     }
