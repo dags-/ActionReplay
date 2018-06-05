@@ -133,7 +133,7 @@ public class Commands {
         ActionReplay.getSelector().pos2(player, player.getLocation().getBlockPosition());
     }
 
-    @Command("ar pos2")
+    @Command("ar expand")
     @Permission(Commands.SELECT)
     @Description("Expand your selection vertically")
     public void expand(@Src Player player) {
