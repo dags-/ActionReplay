@@ -1,6 +1,6 @@
 package me.dags.replay.replay;
 
-import me.dags.replay.avatar.Avatar;
+import me.dags.replay.frame.avatar.Avatar;
 
 import java.util.*;
 

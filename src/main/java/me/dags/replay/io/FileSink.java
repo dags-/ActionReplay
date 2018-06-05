@@ -2,7 +2,7 @@ package me.dags.replay.io;
 
 import com.sk89q.jnbt.NBTOutputStream;
 import me.dags.replay.frame.FrameSink;
-import me.dags.replay.frame.FrameView;
+import me.dags.replay.serialize.DataView;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -22,16 +22,31 @@ public class FileSink implements FrameSink {
     }
 
     @Override
-    public void accept(FrameView frame) throws IOException {
-        // reset buffer
+    public void skipHeader() throws IOException {
+        int length = file.readInt();
+        file.seek(file.getFilePointer() + length);
+    }
+
+    @Override
+    public void writeHeader(DataView header) throws IOException {
+        file.seek(0);
+        file.setLength(0);
+        write(header);
+    }
+
+    @Override
+    public void write(DataView data) throws IOException {
         buffer.reset();
 
-        // write ot buffer
         try (NBTOutputStream nbt = new NBTOutputStream(new GZIPOutputStream(buffer))) {
-            nbt.writeNamedTag("", frame.toData());
+            nbt.writeNamedTag("", data.getData());
         }
 
-        // writes the length of the data and then the data itself to file
         buffer.writeTo(file);
+    }
+
+    @Override
+    public void close() throws IOException {
+        file.close();
     }
 }

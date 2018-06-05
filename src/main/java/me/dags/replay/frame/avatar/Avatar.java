@@ -1,4 +1,4 @@
-package me.dags.replay.avatar;
+package me.dags.replay.frame.avatar;
 
 import com.flowpowered.math.vector.Vector3d;
 import me.dags.replay.util.OptionalValue;

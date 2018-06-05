@@ -1,7 +1,6 @@
 package me.dags.replay.serialize;
 
 import com.sk89q.jnbt.CompoundTag;
-import me.dags.replay.util.DataBuilder;
 import me.dags.replay.util.OptionalValue;
 
 /**
@@ -9,7 +8,7 @@ import me.dags.replay.util.OptionalValue;
  */
 public interface Serializer<T> extends OptionalValue {
 
-    void serialize(T t, DataBuilder builder);
+    void serialize(T t, TagBuilder builder);
 
     T deserialize(CompoundTag tag);
 
@@ -25,7 +24,7 @@ public interface Serializer<T> extends OptionalValue {
         }
 
         @Override
-        public void serialize(Object o, DataBuilder builder) {
+        public void serialize(Object o, TagBuilder builder) {
 
         }
 

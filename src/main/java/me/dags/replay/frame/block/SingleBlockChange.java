@@ -1,11 +1,11 @@
-package me.dags.replay.block;
+package me.dags.replay.frame.block;
 
 import com.flowpowered.math.vector.Vector3i;
 import com.sk89q.jnbt.CompoundTag;
 import com.sk89q.jnbt.StringTag;
 import me.dags.replay.serialize.Serializer;
 import me.dags.replay.serialize.Serializers;
-import me.dags.replay.util.DataBuilder;
+import me.dags.replay.serialize.TagBuilder;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
@@ -27,6 +27,11 @@ public class SingleBlockChange implements BlockChange {
     public SingleBlockChange(BlockState state, Vector3i offset) {
         this.offset = offset;
         this.state = state;
+    }
+
+    @Override
+    public String getType() {
+        return "single";
     }
 
     @Override
@@ -63,7 +68,7 @@ public class SingleBlockChange implements BlockChange {
 
     public static final Serializer<SingleBlockChange> SERIALIZER = new Serializer<SingleBlockChange>() {
         @Override
-        public void serialize(SingleBlockChange change, DataBuilder builder) {
+        public void serialize(SingleBlockChange change, TagBuilder builder) {
             Serializers.vector3i(builder, change.offset, "x", "y", "z");
             builder.put("state", new StringTag(change.state.toString()));
         }

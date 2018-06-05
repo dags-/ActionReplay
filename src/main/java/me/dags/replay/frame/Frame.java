@@ -1,13 +1,14 @@
 package me.dags.replay.frame;
 
 import com.sk89q.jnbt.CompoundTag;
-import me.dags.replay.avatar.Avatar;
-import me.dags.replay.avatar.AvatarSnapshot;
-import me.dags.replay.block.BlockChange;
+import me.dags.replay.frame.avatar.Avatar;
+import me.dags.replay.frame.avatar.AvatarSnapshot;
+import me.dags.replay.frame.block.BlockChange;
 import me.dags.replay.replay.ReplayContext;
+import me.dags.replay.serialize.DataView;
 import me.dags.replay.serialize.Serializer;
 import me.dags.replay.serialize.Serializers;
-import me.dags.replay.util.DataBuilder;
+import me.dags.replay.serialize.TagBuilder;
 import me.dags.replay.util.OptionalValue;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -19,14 +20,7 @@ import java.util.List;
 /**
  * @author dags <dags@dags.me>
  */
-public class Frame implements OptionalValue, FrameView {
-
-    public static final Frame NONE = new Frame(Collections.emptyList(), Collections.emptyList()) {
-        @Override
-        public boolean isPresent() {
-            return false;
-        }
-    };
+public class Frame implements OptionalValue, DataView, FrameView {
 
     private final List<BlockChange> changes;
     private final List<AvatarSnapshot> avatars;
@@ -41,8 +35,8 @@ public class Frame implements OptionalValue, FrameView {
     }
 
     @Override
-    public CompoundTag toData() {
-        DataBuilder builder = new DataBuilder();
+    public CompoundTag getData() {
+        TagBuilder builder = new TagBuilder();
         SERIALIZER.serialize(this, builder);
         return builder.build();
     }
@@ -77,7 +71,7 @@ public class Frame implements OptionalValue, FrameView {
 
     public static final Serializer<Frame> SERIALIZER = new Serializer<Frame>() {
         @Override
-        public void serialize(Frame frame, DataBuilder builder) {
+        public void serialize(Frame frame, TagBuilder builder) {
             Serializers.list(builder, "changes", frame.changes, BlockChange.SERIALIZER);
             Serializers.list(builder, "avatars", frame.avatars, AvatarSnapshot.SERIALIZER);
         }
@@ -89,6 +83,18 @@ public class Frame implements OptionalValue, FrameView {
             Serializers.list(tag.getList("changes", CompoundTag.class), changes, BlockChange.SERIALIZER);
             Serializers.list(tag.getList("avatars", CompoundTag.class), avatars, AvatarSnapshot.SERIALIZER);
             return new Frame(changes, avatars);
+        }
+    };
+
+    public static final Frame NONE = new Frame(Collections.emptyList(), Collections.emptyList()) {
+        @Override
+        public boolean isPresent() {
+            return false;
+        }
+
+        @Override
+        public void apply(Location<World> origin, ReplayContext context) {
+
         }
     };
 }

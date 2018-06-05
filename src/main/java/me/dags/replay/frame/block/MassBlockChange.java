@@ -1,14 +1,11 @@
-package me.dags.replay.block;
+package me.dags.replay.frame.block;
 
-import com.boydti.fawe.FaweAPI;
-import com.boydti.fawe.object.schematic.Schematic;
 import com.flowpowered.math.vector.Vector3i;
 import com.sk89q.jnbt.CompoundTag;
-import com.sk89q.worldedit.Vector;
+import me.dags.replay.frame.schematic.Schem;
 import me.dags.replay.serialize.Serializer;
 import me.dags.replay.serialize.Serializers;
-import me.dags.replay.util.DataBuilder;
-import me.dags.replay.worldedit.WEHelper;
+import me.dags.replay.serialize.TagBuilder;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -18,11 +15,16 @@ import org.spongepowered.api.world.World;
 public class MassBlockChange implements BlockChange {
 
     private final Vector3i offset;
-    private final Schematic schematic;
+    private final Schem schematic;
 
-    public MassBlockChange(Vector3i offset, Schematic schematic) {
+    public MassBlockChange(Vector3i offset, Schem schematic) {
         this.offset = offset;
         this.schematic = schematic;
+    }
+
+    @Override
+    public String getType() {
+        return "mass";
     }
 
     @Override
@@ -30,24 +32,23 @@ public class MassBlockChange implements BlockChange {
         if (schematic == null) {
             return;
         }
-        Vector3i position = origin.getBlockPosition().add(offset);
-        System.out.println("PASTING AT " + position);
-        com.sk89q.worldedit.world.World world = FaweAPI.getWorld(origin.getExtent().getName());
-        Vector vector = WEHelper.toVec(position);
-        schematic.paste(world, vector, false, true, null).flushQueue();
+        schematic.apply(origin);
     }
 
     public static final Serializer<MassBlockChange> SERIALIZER = new Serializer<MassBlockChange>() {
         @Override
-        public void serialize(MassBlockChange change, DataBuilder builder) {
-            Serializers.vector3i(builder, change.offset, "x", "y", "z");
-            Serializers.schem(builder, change.schematic, "schem2");
+        public void serialize(MassBlockChange change, TagBuilder builder) {
+            TagBuilder schem = new TagBuilder();
+            Schem.SERIALIZER.serialize(change.schematic, schem);
+            builder.put("x", "y", "z", change.offset);
+            builder.put("schem", schem.build());
         }
 
         @Override
         public MassBlockChange deserialize(CompoundTag tag) {
             Vector3i offset = Serializers.vector3i(tag, "x", "y", "z");
-            Schematic schematic = Serializers.schem(tag);
+            CompoundTag schem = (CompoundTag) tag.getValue().get("schem");
+            Schem schematic = Schem.SERIALIZER.deserialize(schem);
             return new MassBlockChange(offset, schematic);
         }
     };

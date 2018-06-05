@@ -1,10 +1,10 @@
-package me.dags.replay.avatar;
+package me.dags.replay.frame.avatar;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.sk89q.jnbt.CompoundTag;
 import me.dags.replay.serialize.Serializer;
 import me.dags.replay.serialize.Serializers;
-import me.dags.replay.util.DataBuilder;
+import me.dags.replay.serialize.TagBuilder;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.Entity;
@@ -73,7 +73,7 @@ public class AvatarSnapshot {
 
     public static final Serializer<AvatarSnapshot> SERIALIZER = new Serializer<AvatarSnapshot>() {
         @Override
-        public void serialize(AvatarSnapshot avatar, DataBuilder builder) {
+        public void serialize(AvatarSnapshot avatar, TagBuilder builder) {
             builder.put("id", avatar.uuid.toString());
             builder.put("name", avatar.name);
             builder.put("flying", avatar.flying);

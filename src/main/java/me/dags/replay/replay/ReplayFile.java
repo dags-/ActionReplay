@@ -1,4 +1,4 @@
-package me.dags.replay;
+package me.dags.replay.replay;
 
 import me.dags.replay.frame.FrameSink;
 import me.dags.replay.frame.FrameSource;
@@ -18,7 +18,7 @@ public class ReplayFile implements CatalogType {
     private final String name;
     private final File file;
 
-    ReplayFile(String name, File file) {
+    public ReplayFile(String name, File file) {
         this.name = name;
         this.file = file;
     }
