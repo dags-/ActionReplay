@@ -1,9 +1,6 @@
 package me.dags.replay.frame.selector;
 
 import com.flowpowered.math.vector.Vector3i;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 import me.dags.commandbus.fmt.Fmt;
 import me.dags.replay.frame.schematic.Schem;
 import me.dags.replay.frame.schematic.SpongeSchematic;
@@ -17,6 +14,10 @@ import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.extent.ArchetypeVolume;
 import org.spongepowered.api.world.schematic.BlockPaletteTypes;
 import org.spongepowered.api.world.schematic.Schematic;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * @author dags <dags@dags.me>

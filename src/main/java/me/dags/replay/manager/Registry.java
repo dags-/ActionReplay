@@ -1,12 +1,13 @@
 package me.dags.replay.manager;
 
+import me.dags.replay.replay.ReplayFile;
+import org.spongepowered.api.registry.CatalogRegistryModule;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import me.dags.replay.replay.ReplayFile;
-import org.spongepowered.api.registry.CatalogRegistryModule;
 
 /**
  * @author dags <dags@dags.me>

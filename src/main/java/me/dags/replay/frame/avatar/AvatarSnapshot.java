@@ -1,10 +1,11 @@
 package me.dags.replay.frame.avatar;
 
 import com.flowpowered.math.vector.Vector3d;
-import java.util.UUID;
 import me.dags.replay.data.Node;
 import me.dags.replay.data.Serializer;
+import org.spongepowered.api.data.DataContainer;
 import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.data.persistence.DataFormats;
 import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityTypes;
@@ -13,6 +14,11 @@ import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.UUID;
 
 /**
  * @author dags <dags@dags.me>
@@ -74,7 +80,7 @@ public class AvatarSnapshot {
             node.put("id", avatar.uuid.toString());
             node.put("name", avatar.name);
             node.put("flying", avatar.flying);
-            node.put("held", avatar.held, h -> null);
+            node.put("held", serializeStack(avatar.held));
             node.put("x", "y", "z", avatar.offset);
             node.put("rx", "ry", "rz", avatar.rotation);
         }
@@ -84,10 +90,36 @@ public class AvatarSnapshot {
             String id = node.getString("id");
             String name = node.getString("name");
             boolean flying = node.getBool("flying");
-            ItemStack held = node.fromBytes("held", b -> null);
+            byte[] bytes = node.getBytes("held");
+            ItemStack held = deserializeStack(bytes);
             Vector3d offset = node.getVec3d("x", "y", "z");
             Vector3d rotation = node.getVec3d("rx", "ry", "rz");
             return new AvatarSnapshot(UUID.fromString(id), name, offset, rotation, held, flying);
+        }
+
+        private byte[] serializeStack(ItemStack stack) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            try {
+                DataFormats.NBT.writeTo(out, stack.toContainer());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return out.toByteArray();
+        }
+
+        private ItemStack deserializeStack(byte[] bytes) {
+            if (bytes.length == 0) {
+                return ItemStack.empty();
+            }
+
+            ByteArrayInputStream in = new ByteArrayInputStream(bytes);
+            try {
+                DataContainer container = DataFormats.NBT.readFrom(in);
+                return ItemStack.builder().fromContainer(container).build();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return ItemStack.empty();
+            }
         }
     };
 }

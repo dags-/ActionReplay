@@ -10,9 +10,10 @@ import com.sk89q.worldedit.extent.inventory.BlockBag;
 import com.sk89q.worldedit.session.SessionKey;
 import com.sk89q.worldedit.util.Location;
 import com.sk89q.worldedit.world.World;
+
+import javax.annotation.Nullable;
 import java.lang.ref.WeakReference;
 import java.util.UUID;
-import javax.annotation.Nullable;
 
 /**
  * @author dags <dags@dags.me>

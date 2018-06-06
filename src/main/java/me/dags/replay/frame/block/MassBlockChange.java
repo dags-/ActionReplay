@@ -36,14 +36,15 @@ public class MassBlockChange implements BlockChange {
     public static final Serializer<MassBlockChange> SERIALIZER = new Serializer<MassBlockChange>() {
         @Override
         public void serialize(MassBlockChange change, Node node) {
+            Node schem = Schem.SERIALIZER.serialize(change.schematic);
             node.put("x", "y", "z", change.offset);
-            Schem.SERIALIZER.serialize(change.schematic, node);
+            node.put("schem", schem);
         }
 
         @Override
         public MassBlockChange deserialize(Node node) {
+            Schem schematic = Schem.SERIALIZER.deserialize(node.getChild("schem"));
             Vector3i offset = node.getVec3i("x", "y", "z");
-            Schem schematic = Schem.SERIALIZER.deserialize(node);
             return new MassBlockChange(schematic, offset);
         }
     };

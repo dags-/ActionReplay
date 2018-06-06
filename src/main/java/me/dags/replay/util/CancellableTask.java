@@ -1,8 +1,9 @@
 package me.dags.replay.util;
 
+import org.spongepowered.api.scheduler.Task;
+
 import java.io.Closeable;
 import java.util.function.Consumer;
-import org.spongepowered.api.scheduler.Task;
 
 /**
  * @author dags <dags@dags.me>

@@ -1,8 +1,6 @@
 package me.dags.replay;
 
 import com.flowpowered.math.vector.Vector3i;
-import java.io.File;
-import java.io.IOException;
 import me.dags.commandbus.annotation.Command;
 import me.dags.commandbus.annotation.Description;
 import me.dags.commandbus.annotation.Permission;
@@ -18,6 +16,9 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.util.AABB;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * @author dags <dags@dags.me>
@@ -36,37 +37,41 @@ public class Commands {
     @Permission(Commands.CREATE)
     @Description("Create a new replay recording using your current selection")
     public void create(@Src Player player, String name) {
-        AABB bounds = ActionReplay.getSelector().getSelection(player);
-        if (bounds == Selector.NULL_BOX) {
-            Fmt.error("Unable to retrieve your selection").tell(player);
-            return;
-        }
-
-        if (bounds == Selector.INVALID_BOX) {
-            Fmt.error("Your selection is too small").tell(player);
-            return;
-        }
-
-        File file = new File(name);
-        if (file.exists()) {
-            Fmt.error("File already exists").tell(player);
-            return;
-        }
-
-        Location<World> origin = player.getLocation();
-        Vector3i sub = origin.getBlockPosition().mul(-1);
-        AABB relative = bounds.offset(sub);
-
         try {
-            ReplayFile replay = ActionReplay.getManager().getRegistry().newReplayFile(name);
-            ReplayMeta meta = new ReplayMeta(origin, relative);
-            try (FrameSink sink = replay.getSink()) {
-                Node node = ReplayMeta.SERIALIZER.serialize(meta);
-                sink.writeHeader(node);
+            AABB bounds = ActionReplay.getSelector().getSelection(player);
+            if (bounds == Selector.NULL_BOX) {
+                Fmt.error("Unable to retrieve your selection").tell(player);
+                return;
             }
-            ActionReplay.getManager().attachReplayFile(player, replay);
-        } catch (IOException e) {
-            e.printStackTrace();
+
+            if (bounds == Selector.INVALID_BOX) {
+                Fmt.error("Your selection is too small").tell(player);
+                return;
+            }
+
+            File file = new File(name);
+            if (file.exists()) {
+                Fmt.error("File already exists").tell(player);
+                return;
+            }
+
+            Location<World> origin = player.getLocation();
+            Vector3i sub = origin.getBlockPosition().mul(-1);
+            AABB relative = bounds.offset(sub);
+
+            try {
+                ReplayFile replay = ActionReplay.getManager().getRegistry().newReplayFile(name);
+                ReplayMeta meta = new ReplayMeta(origin, relative);
+                try (FrameSink sink = replay.getSink()) {
+                    Node node = ReplayMeta.SERIALIZER.serialize(meta);
+                    sink.writeHeader(node);
+                }
+                ActionReplay.getManager().attachReplayFile(player, replay);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } catch (Throwable t) {
+            t.printStackTrace();
         }
     }
 

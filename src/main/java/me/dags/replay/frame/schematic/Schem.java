@@ -13,8 +13,6 @@ public interface Schem extends Serializer.Type, OptionalValue {
 
     void apply(Location<World> location);
 
-    byte[] getBytes();
-
     TypedSerializer<Schem> SERIALIZER = new TypedSerializer<Schem>()
             .register("sponge", SpongeSchematic.SERIALIZER);
 
@@ -22,11 +20,6 @@ public interface Schem extends Serializer.Type, OptionalValue {
         @Override
         public void apply(Location<World> location) {
 
-        }
-
-        @Override
-        public byte[] getBytes() {
-            return new byte[0];
         }
 
         @Override

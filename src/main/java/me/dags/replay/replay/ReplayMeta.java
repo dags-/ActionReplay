@@ -1,7 +1,6 @@
 package me.dags.replay.replay;
 
 import com.flowpowered.math.vector.Vector3i;
-import java.util.Optional;
 import me.dags.replay.data.Node;
 import me.dags.replay.data.Serializer;
 import me.dags.replay.frame.selector.Selector;
@@ -10,6 +9,8 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.util.AABB;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
+
+import java.util.Optional;
 
 /**
  * @author dags <dags@dags.me>
@@ -78,8 +79,10 @@ public class ReplayMeta implements OptionalValue {
             Vector3i origin = node.getVec3i("x", "y", "z");
             Vector3i min = node.getVec3i("x0", "y0", "z0");
             Vector3i max = node.getVec3i("x1", "y1", "z1");
+            System.out.println(min + ":" + max);
+            AABB bounds = Selector.getBounds(min, max);
             Optional<World> extent = Sponge.getServer().getWorld(world);
-            return extent.map(w -> new ReplayMeta(new Location<>(w, origin), new AABB(min, max))).orElse(ReplayMeta.NONE);
+            return extent.map(w -> new ReplayMeta(new Location<>(w, origin), bounds)).orElse(ReplayMeta.NONE);
         }
     };
 }

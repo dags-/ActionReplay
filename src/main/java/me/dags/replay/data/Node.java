@@ -2,12 +2,13 @@ package me.dags.replay.data;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
+import me.dags.replay.util.OptionalValue;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.function.Function;
-import me.dags.replay.util.OptionalValue;
 
 /**
  * @author dags <dags@dags.me>
@@ -17,7 +18,11 @@ public abstract class Node implements OptionalValue {
     private static final byte[] empty = new byte[0];
 
     public int getInt(String key) {
-        return get(key, 0, int.class);
+        return get(key, 0, Integer.class);
+    }
+
+    public byte getByte(String key) {
+        return get(key, (byte) 0, Byte.class);
     }
 
     public String getString(String key) {
@@ -25,7 +30,7 @@ public abstract class Node implements OptionalValue {
     }
 
     public double getDouble(String key) {
-        return get(key, 0D, double.class);
+        return get(key, 0D, Double.class);
     }
 
     public byte[] getBytes(String key) {
@@ -33,7 +38,7 @@ public abstract class Node implements OptionalValue {
     }
 
     public boolean getBool(String key) {
-        return get(key, (byte) 0, byte.class) == 1;
+        return getByte(key) == 1;
     }
 
     public Vector3i getVec3i(String x, String y, String z) {
@@ -42,11 +47,6 @@ public abstract class Node implements OptionalValue {
 
     public Vector3d getVec3d(String x, String y, String z) {
         return new Vector3d(getDouble(x), getDouble(y), getDouble(z));
-    }
-
-    public <T> T fromBytes(String key, Function<byte[], T> reader) {
-        byte[] bytes = getBytes(key);
-        return reader.apply(bytes);
     }
 
     public <T> void put(String key, T value, Function<T, byte[]> writer) {
@@ -72,6 +72,7 @@ public abstract class Node implements OptionalValue {
             return def;
         }
         if (!type.isInstance(o)) {
+            System.out.println(o.getClass());
             return def;
         }
         return type.cast(o);

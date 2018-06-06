@@ -1,13 +1,14 @@
 package me.dags.replay;
 
+import com.flowpowered.math.vector.Vector3i;
 import com.google.inject.Inject;
-import java.io.File;
 import me.dags.commandbus.CommandBus;
 import me.dags.commandbus.fmt.Fmt;
 import me.dags.commandbus.fmt.Format;
 import me.dags.replay.data.NodeFactory;
 import me.dags.replay.event.RecordEvent;
 import me.dags.replay.event.ReplayEvent;
+import me.dags.replay.frame.FrameRecorder;
 import me.dags.replay.frame.selector.Selector;
 import me.dags.replay.manager.Manager;
 import me.dags.replay.replay.ReplayFile;
@@ -16,12 +17,14 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
+import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.text.channel.MessageChannel;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.format.TextStyles;
-import org.spongepowered.api.util.AABB;
 import org.spongepowered.api.world.World;
+
+import java.io.File;
 
 /**
  * @author dags <dags@dags.me>
@@ -62,7 +65,7 @@ public class ActionReplay {
 
         // register RegistryModule & Commands
         Sponge.getRegistry().registerModule(ReplayFile.class, manager.getRegistry());
-        CommandBus.create(this).register(Commands.class).submit();
+        CommandBus.create().register(new Commands()).submit();
 
         // load registry
         manager.getRegistry().update();
@@ -70,11 +73,27 @@ public class ActionReplay {
     }
 
     @Listener
+    public void onJoin(ClientConnectionEvent.Join event) {
+        if (manager.getActive().isAbsent()) {
+            return;
+        }
+
+        FrameRecorder recorder = manager.getActive().getRecorder();
+        if (recorder.isAbsent() || !recorder.isActive()) {
+            return;
+        }
+
+        String name = recorder.getName();
+        Vector3i position = recorder.getOrigin().getBlockPosition();
+        Fmt.info("Currently recording ").stress(name).info(" at ").stress(position).tell(event.getTargetEntity());
+    }
+
+    @Listener
     public void startRecording(RecordEvent.Start event) {
         World world = event.getRecorder().getOrigin().getExtent();
-        AABB bounds = event.getRecorder().getBounds();
+        Vector3i position = event.getRecorder().getOrigin().getBlockPosition();
         MessageChannel channel = Sponge.getServer().getBroadcastChannel();
-        Fmt.info("Recording started in ").stress(world.getName()).info(" at ").stress(bounds).tell(channel);
+        Fmt.info("Recording started in ").stress(world.getName()).info(" at ").stress(position).tell(channel);
     }
 
     @Listener

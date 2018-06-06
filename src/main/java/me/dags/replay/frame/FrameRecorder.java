@@ -2,10 +2,6 @@ package me.dags.replay.frame;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
 import me.dags.replay.ActionReplay;
 import me.dags.replay.data.Node;
 import me.dags.replay.event.RecordEvent;
@@ -34,6 +30,11 @@ import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.util.AABB;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * @author dags <dags@dags.me>

@@ -5,14 +5,15 @@ import com.boydti.fawe.object.schematic.Schematic;
 import com.flowpowered.math.vector.Vector3i;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import me.dags.replay.data.Node;
 import me.dags.replay.data.Serializer;
 import me.dags.replay.frame.schematic.Schem;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 /**
  * @author dags <dags@dags.me>
@@ -46,22 +47,16 @@ public class FaweSchematic implements Schem {
         schematic.paste(world, vector, false, true, null);
     }
 
-    @Override
-    public byte[] getBytes() {
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            schematic.save(out, ClipboardFormat.SCHEMATIC);
-            return out.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return new byte[0];
-        }
-    }
-
     public static final Serializer<FaweSchematic> SERIALIZER = new Serializer<FaweSchematic>() {
         @Override
-        public void serialize(FaweSchematic schem, Node builder) {
-            builder.put("data", schem.getBytes());
+        public void serialize(FaweSchematic schem, Node node) {
+            try {
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                schem.schematic.save(out, ClipboardFormat.SCHEMATIC);
+                node.put("data", out.toByteArray());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         @Override

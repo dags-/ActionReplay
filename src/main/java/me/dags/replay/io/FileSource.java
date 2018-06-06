@@ -1,14 +1,15 @@
 package me.dags.replay.io;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.RandomAccessFile;
 import me.dags.replay.ActionReplay;
 import me.dags.replay.data.Node;
 import me.dags.replay.frame.Frame;
 import me.dags.replay.frame.FrameSource;
 import me.dags.replay.frame.FrameView;
 import me.dags.replay.replay.ReplayMeta;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 
 /**
  * @author dags <dags@dags.me>

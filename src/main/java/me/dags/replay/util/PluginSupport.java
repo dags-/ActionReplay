@@ -1,11 +1,12 @@
 package me.dags.replay.util;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import me.dags.replay.data.NodeFactory;
 import me.dags.replay.data.SpongeNode;
 import me.dags.replay.frame.selector.Selector;
 import me.dags.replay.frame.selector.SpongeSelector;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * @author dags <dags@dags.me>

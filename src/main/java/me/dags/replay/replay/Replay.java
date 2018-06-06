@@ -1,6 +1,5 @@
 package me.dags.replay.replay;
 
-import java.io.IOException;
 import me.dags.replay.event.ReplayEvent;
 import me.dags.replay.frame.FrameSource;
 import me.dags.replay.frame.FrameView;
@@ -10,6 +9,8 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
+
+import java.io.IOException;
 
 /**
  * @author dags <dags@dags.me>

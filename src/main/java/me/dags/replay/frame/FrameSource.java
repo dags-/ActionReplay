@@ -1,8 +1,9 @@
 package me.dags.replay.frame;
 
+import me.dags.replay.replay.ReplayMeta;
+
 import java.io.Closeable;
 import java.io.IOException;
-import me.dags.replay.replay.ReplayMeta;
 
 /**
  * @author dags <dags@dags.me>

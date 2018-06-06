@@ -1,8 +1,5 @@
 package me.dags.replay.manager;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Optional;
 import me.dags.commandbus.fmt.Fmt;
 import me.dags.config.Config;
 import me.dags.replay.frame.FrameRecorder;
@@ -14,6 +11,10 @@ import me.dags.replay.replay.ReplayMeta;
 import me.dags.replay.util.OptionalActivity;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.text.channel.MessageReceiver;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Optional;
 
 /**
  * @author dags <dags@dags.me>
@@ -29,7 +30,7 @@ public class Manager {
         File replayDir = new File(configDir, "replays");
         this.plugin = plugin;
         this.registry = new Registry(replayDir);
-        this.config = Config.must(configDir.getAbsolutePath(), "config.conf");
+        this.config = Config.must(configDir.toPath(), "config.conf");
         if (!replayDir.exists() && !replayDir.mkdirs()) {
             new IOException("Unable to create replay directory").printStackTrace();
         }
@@ -59,7 +60,7 @@ public class Manager {
             try {
                 ReplayMeta meta = instance.getMeta();
                 FrameSink sink = instance.getReplayFile().getSink();
-                sink.skipHeader();
+                sink.goToEnd();
 
                 FrameRecorder recorder = new FrameRecorder(meta, sink);
                 instance.setRecorder(recorder);
@@ -93,6 +94,7 @@ public class Manager {
         if (canStartActivity(receiver, instance.getRecorder(), instance.getRecorder())) {
             Fmt.info("Starting recorder...").tell(receiver);
             instance.getRecorder().start(plugin);
+            updateConfig();
         }
     }
 
@@ -110,6 +112,7 @@ public class Manager {
         }
         if (instance.getRecorder().isActive()) {
             stopRecorder(receiver);
+            updateConfig();
         }
         if (instance.getReplay().isActive()) {
             stopReplay(receiver);
@@ -210,9 +213,18 @@ public class Manager {
         return true;
     }
 
-    private void saveConfig() {
+    private void updateConfig() {
         if (instance.isAbsent()) {
             return;
+        }
+
+        if (instance.getRecorder().isPresent() && instance.getRecorder().isActive()) {
+            config.node("last").set("name", instance.getReplayFile().getId());
+            config.node("last").set("recording", true);
+            config.save();
+        } else {
+            config.clear();
+            config.save();
         }
     }
 }
