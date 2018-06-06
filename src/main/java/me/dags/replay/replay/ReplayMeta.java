@@ -79,7 +79,6 @@ public class ReplayMeta implements OptionalValue {
             Vector3i origin = node.getVec3i("x", "y", "z");
             Vector3i min = node.getVec3i("x0", "y0", "z0");
             Vector3i max = node.getVec3i("x1", "y1", "z1");
-            System.out.println(min + ":" + max);
             AABB bounds = Selector.getBounds(min, max);
             Optional<World> extent = Sponge.getServer().getWorld(world);
             return extent.map(w -> new ReplayMeta(new Location<>(w, origin), bounds)).orElse(ReplayMeta.NONE);

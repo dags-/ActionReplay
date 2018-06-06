@@ -72,7 +72,6 @@ public abstract class Node implements OptionalValue {
             return def;
         }
         if (!type.isInstance(o)) {
-            System.out.println(o.getClass());
             return def;
         }
         return type.cast(o);
