@@ -1,11 +1,14 @@
 package me.dags.replay;
 
 import com.flowpowered.math.vector.Vector3i;
+import java.io.File;
+import java.io.IOException;
 import me.dags.commandbus.annotation.Command;
 import me.dags.commandbus.annotation.Description;
 import me.dags.commandbus.annotation.Permission;
 import me.dags.commandbus.annotation.Src;
 import me.dags.commandbus.fmt.Fmt;
+import me.dags.replay.data.Node;
 import me.dags.replay.frame.FrameSink;
 import me.dags.replay.frame.selector.Selector;
 import me.dags.replay.replay.ReplayFile;
@@ -15,9 +18,6 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.util.AABB;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * @author dags <dags@dags.me>
@@ -61,7 +61,8 @@ public class Commands {
             ReplayFile replay = ActionReplay.getManager().getRegistry().newReplayFile(name);
             ReplayMeta meta = new ReplayMeta(origin, relative);
             try (FrameSink sink = replay.getSink()) {
-                sink.writeHeader(meta);
+                Node node = ReplayMeta.SERIALIZER.serialize(meta);
+                sink.writeHeader(node);
             }
             ActionReplay.getManager().attachReplayFile(player, replay);
         } catch (IOException e) {

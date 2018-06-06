@@ -1,20 +1,21 @@
 package me.dags.replay.event;
 
 import me.dags.replay.frame.FrameRecorder;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.impl.AbstractEvent;
 
 /**
  * @author dags <dags@dags.me>
  */
-public class RecordEvent extends AbstractEvent {
+public abstract class RecordEvent extends AbstractEvent {
 
     private final FrameRecorder recorder;
     private final Cause cause;
 
-    public RecordEvent(FrameRecorder recorder, Cause cause) {
+    private RecordEvent(FrameRecorder recorder) {
         this.recorder = recorder;
-        this.cause = cause;
+        this.cause = Sponge.getCauseStackManager().getCurrentCause();
     }
 
     @Override
@@ -28,15 +29,15 @@ public class RecordEvent extends AbstractEvent {
 
     public static class Start extends RecordEvent {
 
-        public Start(FrameRecorder recorder, Cause cause) {
-            super(recorder, cause);
+        public Start(FrameRecorder recorder) {
+            super(recorder);
         }
     }
 
     public static class Stop extends RecordEvent {
 
-        public Stop(FrameRecorder recorder, Cause cause) {
-            super(recorder, cause);
+        public Stop(FrameRecorder recorder) {
+            super(recorder);
         }
     }
 }

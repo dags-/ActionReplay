@@ -1,7 +1,7 @@
 package me.dags.replay.frame.schematic;
 
-import me.dags.replay.serialize.InterfaceSerializer;
-import me.dags.replay.serialize.Typed;
+import me.dags.replay.data.Serializer;
+import me.dags.replay.data.TypedSerializer;
 import me.dags.replay.util.OptionalValue;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -9,13 +9,13 @@ import org.spongepowered.api.world.World;
 /**
  * @author dags <dags@dags.me>
  */
-public interface Schem extends Typed, OptionalValue {
+public interface Schem extends Serializer.Type, OptionalValue {
 
     void apply(Location<World> location);
 
     byte[] getBytes();
 
-    InterfaceSerializer<Schem> SERIALIZER = new InterfaceSerializer<Schem>()
+    TypedSerializer<Schem> SERIALIZER = new TypedSerializer<Schem>()
             .register("sponge", SpongeSchematic.SERIALIZER);
 
     Schem NONE = new Schem() {

@@ -1,17 +1,14 @@
 package me.dags.replay.io;
 
-import com.sk89q.jnbt.CompoundTag;
-import com.sk89q.jnbt.NBTInputStream;
-import com.sk89q.jnbt.Tag;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import me.dags.replay.ActionReplay;
+import me.dags.replay.data.Node;
 import me.dags.replay.frame.Frame;
 import me.dags.replay.frame.FrameSource;
 import me.dags.replay.frame.FrameView;
 import me.dags.replay.replay.ReplayMeta;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.util.zip.GZIPInputStream;
 
 /**
  * @author dags <dags@dags.me>
@@ -27,11 +24,11 @@ public class FileSource implements FrameSource {
     @Override
     public ReplayMeta header() throws IOException {
         file.seek(0);
-        Tag tag = nextTag();
-        if (tag == null || !(tag instanceof CompoundTag)) {
+        Node node = nextNode();
+        if (node.isAbsent()) {
             return ReplayMeta.NONE;
         }
-        return ReplayMeta.fromData((CompoundTag) tag);
+        return ReplayMeta.SERIALIZER.deserialize(node);
     }
 
     @Override
@@ -39,13 +36,11 @@ public class FileSource implements FrameSource {
         if (file.getFilePointer() >= file.length()) {
             return Frame.NONE;
         }
-
-        Tag tag = nextTag();
-        if (tag instanceof CompoundTag) {
-            return Frame.SERIALIZER.deserialize((CompoundTag) tag);
+        Node node = nextNode();
+        if (node.isAbsent()) {
+            return Frame.NONE;
         }
-
-        return Frame.NONE;
+        return Frame.SERIALIZER.deserialize(node);
     }
 
     @Override
@@ -53,12 +48,10 @@ public class FileSource implements FrameSource {
         file.close();
     }
 
-    private Tag nextTag() throws IOException {
+    private Node nextNode() throws IOException {
         int length = file.readInt();
         byte[] data = new byte[length];
         file.read(data);
-        try (NBTInputStream nbt = new NBTInputStream(new GZIPInputStream(new ByteArrayInputStream(data)))) {
-            return nbt.readNamedTag().getTag();
-        }
+        return ActionReplay.getNodeFactory().read(new ByteArrayInputStream(data));
     }
 }

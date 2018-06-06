@@ -1,20 +1,18 @@
-package me.dags.replay.fawe;
+package me.dags.replay.worldedit.fawe;
 
 import com.boydti.fawe.FaweAPI;
 import com.boydti.fawe.object.schematic.Schematic;
 import com.flowpowered.math.vector.Vector3i;
-import com.sk89q.jnbt.CompoundTag;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
-import me.dags.replay.frame.schematic.Schem;
-import me.dags.replay.serialize.Serializer;
-import me.dags.replay.serialize.TagBuilder;
-import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.World;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import me.dags.replay.data.Node;
+import me.dags.replay.data.Serializer;
+import me.dags.replay.frame.schematic.Schem;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 /**
  * @author dags <dags@dags.me>
@@ -62,14 +60,14 @@ public class FaweSchematic implements Schem {
 
     public static final Serializer<FaweSchematic> SERIALIZER = new Serializer<FaweSchematic>() {
         @Override
-        public void serialize(FaweSchematic schem, TagBuilder builder) {
+        public void serialize(FaweSchematic schem, Node builder) {
             builder.put("data", schem.getBytes());
         }
 
         @Override
-        public FaweSchematic deserialize(CompoundTag tag) {
+        public FaweSchematic deserialize(Node node) {
             try {
-                ByteArrayInputStream in = new ByteArrayInputStream(tag.getByteArray("data"));
+                ByteArrayInputStream in = new ByteArrayInputStream(node.getBytes("data"));
                 Schematic schematic = ClipboardFormat.SCHEMATIC.load(in);
                 return new FaweSchematic(schematic);
             } catch (IOException e) {

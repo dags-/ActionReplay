@@ -23,7 +23,7 @@ repositories {
 dependencies {
     compile "org.spongepowered:spongeapi:${spongeAPI}-${spongeChannel}"
     compile fileTree(dir: "libs", include: "*.jar")
-    shade "com.github.dags-:CommandBus:2.0.3"
+    shade "com.github.dags-:CommandBus:2.0.5"
     shade ("com.github.dags-:Config:1.0.2") { transitive = false }
 }
 

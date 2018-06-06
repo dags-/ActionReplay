@@ -1,6 +1,7 @@
 package me.dags.replay.replay;
 
-import me.dags.commandbus.fmt.Fmt;
+import java.io.IOException;
+import me.dags.replay.event.ReplayEvent;
 import me.dags.replay.frame.FrameSource;
 import me.dags.replay.frame.FrameView;
 import me.dags.replay.util.CancellableTask;
@@ -10,14 +11,14 @@ import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import java.io.IOException;
-
 /**
  * @author dags <dags@dags.me>
  */
 public class Replay extends CancellableTask implements OptionalActivity {
 
     private final ReplayContext context;
+    private final ReplayMeta meta;
+    private final ReplayFile file;
     private final Location<World> origin;
     private final FrameSource source;
 
@@ -25,8 +26,10 @@ public class Replay extends CancellableTask implements OptionalActivity {
     private long interval = 1L;
     private boolean playing = false;
 
-    public Replay(ReplayMeta meta, FrameSource source) {
+    public Replay(ReplayFile file, ReplayMeta meta, FrameSource source) {
         this.source = source;
+        this.meta = meta;
+        this.file = file;
         this.origin = meta.getOrigin();
         this.context = new ReplayContext();
     }
@@ -35,15 +38,13 @@ public class Replay extends CancellableTask implements OptionalActivity {
         Task.builder().execute(this).delayTicks(1).intervalTicks(1).submit(plugin);
         interval = intervalTicks;
         playing = true;
-        Fmt.info("Replay started at ")
-                .stress("%s : %s", origin.getExtent().getName(), origin.getBlockPosition())
-                .tell(Sponge.getServer().getBroadcastChannel());;
+        Sponge.getEventManager().post(new ReplayEvent.Start(meta, file));
     }
 
     public void stop() {
         cancel();
         playing = false;
-        Fmt.subdued("Replay stopped").tell(Sponge.getServer().getBroadcastChannel());
+        Sponge.getEventManager().post(new ReplayEvent.Stop(meta, file));
     }
 
     @Override
@@ -101,7 +102,7 @@ public class Replay extends CancellableTask implements OptionalActivity {
         return false;
     }
 
-    public static final Replay NONE = new Replay(ReplayMeta.NONE, null) {
+    public static final Replay NONE = new Replay(null, ReplayMeta.NONE, null) {
         @Override
         public boolean isPresent() {
             return false;

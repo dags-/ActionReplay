@@ -1,13 +1,11 @@
 package me.dags.replay.io;
 
-import com.sk89q.jnbt.CompoundTag;
-import me.dags.replay.frame.FrameSink;
-import me.dags.replay.serialize.DataView;
-import me.dags.replay.util.CancellableTask;
-import org.spongepowered.api.scheduler.Task;
-
 import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import me.dags.replay.data.Node;
+import me.dags.replay.frame.FrameSink;
+import me.dags.replay.util.CancellableTask;
+import org.spongepowered.api.scheduler.Task;
 
 /**
  * @author dags <dags@dags.me>
@@ -15,7 +13,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class BufferedSink extends CancellableTask implements FrameSink {
 
     private final FrameSink sink;
-    private final ConcurrentLinkedQueue<DataView> buffer = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Node> buffer = new ConcurrentLinkedQueue<>();
 
     public BufferedSink(FrameSink sink) {
         this.sink = sink;
@@ -38,20 +36,20 @@ public class BufferedSink extends CancellableTask implements FrameSink {
     }
 
     @Override
-    public void write(DataView frame) {
+    public void write(Node node) {
         if (isCancelled()) {
             return;
         }
         // serialize frame to nbt and then queue for writing
-        buffer.add(new BufferedFrame(frame.getData()));
+        buffer.add(node);
     }
 
     @Override
-    public void writeHeader(DataView header) throws IOException {
+    public void writeHeader(Node node) throws IOException {
         if (isCancelled()) {
             return;
         }
-        sink.writeHeader(header);
+        sink.writeHeader(node);
     }
 
     @Override
@@ -76,25 +74,11 @@ public class BufferedSink extends CancellableTask implements FrameSink {
     }
 
     private void drain() {
-        DataView frame = buffer.poll();
+        Node frame = buffer.poll();
         try {
             sink.write(frame);
         } catch (IOException e) {
             e.printStackTrace();
-        }
-    }
-
-    private static class BufferedFrame implements DataView {
-
-        private final CompoundTag data;
-
-        private BufferedFrame(CompoundTag data) {
-            this.data = data;
-        }
-
-        @Override
-        public CompoundTag getData() {
-            return data;
         }
     }
 }

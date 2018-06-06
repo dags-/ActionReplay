@@ -1,11 +1,9 @@
 package me.dags.replay.frame.block;
 
 import com.flowpowered.math.vector.Vector3i;
-import com.sk89q.jnbt.CompoundTag;
+import me.dags.replay.data.Node;
+import me.dags.replay.data.Serializer;
 import me.dags.replay.frame.schematic.Schem;
-import me.dags.replay.serialize.Serializer;
-import me.dags.replay.serialize.Serializers;
-import me.dags.replay.serialize.TagBuilder;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -17,7 +15,7 @@ public class MassBlockChange implements BlockChange {
     private final Vector3i offset;
     private final Schem schematic;
 
-    public MassBlockChange(Vector3i offset, Schem schematic) {
+    public MassBlockChange(Schem schematic, Vector3i offset) {
         this.offset = offset;
         this.schematic = schematic;
     }
@@ -37,19 +35,16 @@ public class MassBlockChange implements BlockChange {
 
     public static final Serializer<MassBlockChange> SERIALIZER = new Serializer<MassBlockChange>() {
         @Override
-        public void serialize(MassBlockChange change, TagBuilder builder) {
-            TagBuilder schem = new TagBuilder();
-            Schem.SERIALIZER.serialize(change.schematic, schem);
-            builder.put("x", "y", "z", change.offset);
-            builder.put("schem", schem.build());
+        public void serialize(MassBlockChange change, Node node) {
+            node.put("x", "y", "z", change.offset);
+            Schem.SERIALIZER.serialize(change.schematic, node);
         }
 
         @Override
-        public MassBlockChange deserialize(CompoundTag tag) {
-            Vector3i offset = Serializers.vector3i(tag, "x", "y", "z");
-            CompoundTag schem = (CompoundTag) tag.getValue().get("schem");
-            Schem schematic = Schem.SERIALIZER.deserialize(schem);
-            return new MassBlockChange(offset, schematic);
+        public MassBlockChange deserialize(Node node) {
+            Vector3i offset = node.getVec3i("x", "y", "z");
+            Schem schematic = Schem.SERIALIZER.deserialize(node);
+            return new MassBlockChange(schematic, offset);
         }
     };
 }

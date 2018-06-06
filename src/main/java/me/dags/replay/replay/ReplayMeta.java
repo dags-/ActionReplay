@@ -1,23 +1,20 @@
 package me.dags.replay.replay;
 
 import com.flowpowered.math.vector.Vector3i;
-import com.sk89q.jnbt.CompoundTag;
+import java.util.Optional;
+import me.dags.replay.data.Node;
+import me.dags.replay.data.Serializer;
 import me.dags.replay.frame.selector.Selector;
-import me.dags.replay.serialize.DataView;
-import me.dags.replay.serialize.Serializers;
-import me.dags.replay.serialize.TagBuilder;
 import me.dags.replay.util.OptionalValue;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.util.AABB;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import java.util.Optional;
-
 /**
  * @author dags <dags@dags.me>
  */
-public class ReplayMeta implements OptionalValue, DataView {
+public class ReplayMeta implements OptionalValue {
 
     public static final ReplayMeta NONE = new ReplayMeta(null, Selector.NULL_BOX) {
         @Override
@@ -66,22 +63,23 @@ public class ReplayMeta implements OptionalValue, DataView {
                 + "}";
     }
 
-    @Override
-    public CompoundTag getData() {
-        TagBuilder root = new TagBuilder();
-        root.put("world", origin.getExtent().getName());
-        root.put("x", "y", "z", origin.getBlockPosition());
-        root.put("x0", "y0", "z0", bounds.getMin().toInt());
-        root.put("x1", "y1", "z1", bounds.getMax().toInt());
-        return root.build();
-    }
+    public static Serializer<ReplayMeta> SERIALIZER = new Serializer<ReplayMeta>() {
+        @Override
+        public void serialize(ReplayMeta meta, Node node) {
+            node.put("world", meta.origin.getExtent().getName());
+            node.put("x", "y", "z", meta.origin.getBlockPosition());
+            node.put("x0", "y0", "z0", meta.bounds.getMin().toInt());
+            node.put("x1", "y1", "z1", meta.bounds.getMax().toInt());
+        }
 
-    public static ReplayMeta fromData(CompoundTag root) {
-        String world = root.getString("world");
-        Vector3i origin = Serializers.vector3i(root, "x", "y", "z");
-        Vector3i min = Serializers.vector3i(root, "x0", "y0", "z0");
-        Vector3i max = Serializers.vector3i(root, "x1", "y1", "z1");
-        Optional<World> extent = Sponge.getServer().getWorld(world);
-        return extent.map(w -> new ReplayMeta(new Location<>(w, origin), new AABB(min, max))).orElse(NONE);
-    }
+        @Override
+        public ReplayMeta deserialize(Node node) {
+            String world = node.getString("world");
+            Vector3i origin = node.getVec3i("x", "y", "z");
+            Vector3i min = node.getVec3i("x0", "y0", "z0");
+            Vector3i max = node.getVec3i("x1", "y1", "z1");
+            Optional<World> extent = Sponge.getServer().getWorld(world);
+            return extent.map(w -> new ReplayMeta(new Location<>(w, origin), new AABB(min, max))).orElse(ReplayMeta.NONE);
+        }
+    };
 }

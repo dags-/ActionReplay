@@ -1,6 +1,4 @@
-package me.dags.replay.serialize;
-
-import com.sk89q.jnbt.CompoundTag;
+package me.dags.replay.data;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,31 +6,31 @@ import java.util.Map;
 /**
  * @author dags <dags@dags.me>
  */
-public class InterfaceSerializer<T extends Typed> implements Serializer<T> {
+public class TypedSerializer<T extends Serializer.Type> implements Serializer<T> {
 
     private final Map<String, Serializer<? extends T>> serializers = new HashMap<>();
 
     @Override
     @SuppressWarnings("unchecked")
-    public void serialize(T t, TagBuilder builder) {
+    public void serialize(T t, Node node) {
         Serializer serializer = serializers.get(t.getType());
         if (serializer != null) {
-            serializer.serialize(t, builder);
-            builder.put("_type", t.getType());
+            serializer.serialize(t, node);
+            node.put("_type", t.getType());
         }
     }
 
     @Override
-    public T deserialize(CompoundTag tag) {
-        String type = tag.getString("_type");
+    public T deserialize(Node node) {
+        String type = node.getString("_type");
         Serializer<? extends T> serializer = serializers.get(type);
         if (serializer != null) {
-            return serializer.deserialize(tag);
+            return serializer.deserialize(node);
         }
         return null;
     }
 
-    public InterfaceSerializer<T> register(String type, Serializer<? extends T> serializer) {
+    public TypedSerializer<T> register(String type, Serializer<? extends T> serializer) {
         serializers.put(type, serializer);
         return this;
     }

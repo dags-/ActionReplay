@@ -2,9 +2,12 @@ package me.dags.replay.frame;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-import com.sk89q.worldedit.WorldEdit;
-import me.dags.commandbus.fmt.Fmt;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 import me.dags.replay.ActionReplay;
+import me.dags.replay.data.Node;
 import me.dags.replay.event.RecordEvent;
 import me.dags.replay.frame.avatar.AvatarSnapshot;
 import me.dags.replay.frame.block.BlockChange;
@@ -31,11 +34,6 @@ import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.util.AABB;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
-
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
 
 /**
  * @author dags <dags@dags.me>
@@ -79,8 +77,9 @@ public class FrameRecorder extends CancellableTask implements OptionalActivity {
     @Override
     public void run() {
         if (!changes.isEmpty()) {
-            Frame frame = new Frame(changes, recordAvatars());
-            sink.write(frame);
+            Frame frame = new Frame(changes, getAvatars());
+            Node node = Frame.SERIALIZER.serialize(frame);
+            sink.write(node);
             changes = new LinkedList<>();
         }
     }
@@ -96,18 +95,17 @@ public class FrameRecorder extends CancellableTask implements OptionalActivity {
         captureAll();
         // mark as recording
         recording = true;
+        // post start event
+        Sponge.getEventManager().post(new RecordEvent.Start(this));
+    }
 
-        RecordEvent event = new RecordEvent.Start(this, Sponge.getCauseStackManager().getCurrentCause());
-        Sponge.getEventManager().post(event);
-
-        Fmt.info("Recording started at ").stress(bounds.getMin()).info(" : ")
-                .stress(bounds.getMax()).tell(Sponge.getServer().getBroadcastChannel());
+    public void stop() {
+        cancel();
     }
 
     @Override
     public void close() {
         // unregister listeners
-        WorldEdit.getInstance().getEventBus().unregister(this);
         Sponge.getEventManager().unregisterListeners(this);
         // the final frame of the build
         captureAll();
@@ -115,11 +113,8 @@ public class FrameRecorder extends CancellableTask implements OptionalActivity {
         sink.stop();
         // unmark as recording
         recording = false;
-
-        RecordEvent event = new RecordEvent.Stop(this, Sponge.getCauseStackManager().getCurrentCause());
-        Sponge.getEventManager().post(event);
-
-        Fmt.subdued("Recording stopped").tell(Sponge.getServer().getBroadcastChannel());
+        // post stop event
+        Sponge.getEventManager().post(new RecordEvent.Stop(this));
     }
 
     public AABB getBounds() {
@@ -128,10 +123,6 @@ public class FrameRecorder extends CancellableTask implements OptionalActivity {
 
     public Location<World> getOrigin() {
         return origin;
-    }
-
-    public void stop() {
-        cancel();
     }
 
     @Listener(order = Order.POST)
@@ -161,15 +152,18 @@ public class FrameRecorder extends CancellableTask implements OptionalActivity {
             // record the change
             Vector3i offset = location.getBlockPosition().sub(origin.getBlockPosition());
             BlockState state = transaction.getFinal().getState();
-            record(new SingleBlockChange(state, offset));
+            changes.add(new SingleBlockChange(state, offset));
         }
     }
 
-    public void record(BlockChange change) {
-        changes.add(change);
+    public void onSchematic(Schem schem, Vector3i offset) {
+        MassBlockChange change = new MassBlockChange(schem, offset);
+        Frame frame = new Frame(change, getAvatars());
+        Node node = Frame.SERIALIZER.serialize(frame);
+        sink.write(node);
     }
 
-    private List<AvatarSnapshot> recordAvatars() {
+    private List<AvatarSnapshot> getAvatars() {
         List<AvatarSnapshot> avatars = new LinkedList<>();
         for (Entity entity : origin.getExtent().getIntersectingEntities(bounds, Player.class::isInstance)) {
             Player player = (Player) entity;
@@ -190,8 +184,10 @@ public class FrameRecorder extends CancellableTask implements OptionalActivity {
         if (schem.isAbsent()) {
             return;
         }
-        MassBlockChange change = new MassBlockChange(origin.getBlockPosition(), schem);
-        sink.write(new Frame(change, Collections.emptyList()));
+        MassBlockChange change = new MassBlockChange(schem, origin.getBlockPosition());
+        Frame frame = new Frame(change, Collections.emptyList());
+        Node node = Frame.SERIALIZER.serialize(frame);
+        sink.write(node);
     }
 
     public static final FrameRecorder NONE = new FrameRecorder() {

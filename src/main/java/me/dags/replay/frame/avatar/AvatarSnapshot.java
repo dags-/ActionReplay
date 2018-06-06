@@ -1,10 +1,9 @@
 package me.dags.replay.frame.avatar;
 
 import com.flowpowered.math.vector.Vector3d;
-import com.sk89q.jnbt.CompoundTag;
-import me.dags.replay.serialize.Serializer;
-import me.dags.replay.serialize.Serializers;
-import me.dags.replay.serialize.TagBuilder;
+import java.util.UUID;
+import me.dags.replay.data.Node;
+import me.dags.replay.data.Serializer;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.Entity;
@@ -14,8 +13,6 @@ import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
-
-import java.util.UUID;
 
 /**
  * @author dags <dags@dags.me>
@@ -73,25 +70,24 @@ public class AvatarSnapshot {
 
     public static final Serializer<AvatarSnapshot> SERIALIZER = new Serializer<AvatarSnapshot>() {
         @Override
-        public void serialize(AvatarSnapshot avatar, TagBuilder builder) {
-            builder.put("id", avatar.uuid.toString());
-            builder.put("name", avatar.name);
-            builder.put("flying", avatar.flying);
-            Serializers.itemStack(builder, "held", avatar.held);
-            Serializers.vector3d(builder, avatar.offset, "x", "y", "z");
-            Serializers.vector3d(builder, avatar.rotation, "rx", "ry", "rz");
+        public void serialize(AvatarSnapshot avatar, Node node) {
+            node.put("id", avatar.uuid.toString());
+            node.put("name", avatar.name);
+            node.put("flying", avatar.flying);
+            node.put("held", avatar.held, h -> null);
+            node.put("x", "y", "z", avatar.offset);
+            node.put("rx", "ry", "rz", avatar.rotation);
         }
 
         @Override
-        public AvatarSnapshot deserialize(CompoundTag tag) {
-            String id = tag.getString("id");
-            int flying = tag.getByte("flying");
-            UUID uuid = UUID.fromString(id);
-            String name = tag.getString("name");
-            ItemStack held = Serializers.itemStack(tag, "held");
-            Vector3d offset = Serializers.vector3d(tag, "x", "y", "z");
-            Vector3d rotation = Serializers.vector3d(tag, "rx", "ry", "rz");
-            return new AvatarSnapshot(uuid, name, offset, rotation, held, flying == 1);
+        public AvatarSnapshot deserialize(Node node) {
+            String id = node.getString("id");
+            String name = node.getString("name");
+            boolean flying = node.getBool("flying");
+            ItemStack held = node.fromBytes("held", b -> null);
+            Vector3d offset = node.getVec3d("x", "y", "z");
+            Vector3d rotation = node.getVec3d("rx", "ry", "rz");
+            return new AvatarSnapshot(UUID.fromString(id), name, offset, rotation, held, flying);
         }
     };
 }

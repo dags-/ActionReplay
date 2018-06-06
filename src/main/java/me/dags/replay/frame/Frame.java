@@ -1,26 +1,21 @@
 package me.dags.replay.frame;
 
-import com.sk89q.jnbt.CompoundTag;
+import java.util.Collections;
+import java.util.List;
+import me.dags.replay.data.Node;
+import me.dags.replay.data.Serializer;
 import me.dags.replay.frame.avatar.Avatar;
 import me.dags.replay.frame.avatar.AvatarSnapshot;
 import me.dags.replay.frame.block.BlockChange;
 import me.dags.replay.replay.ReplayContext;
-import me.dags.replay.serialize.DataView;
-import me.dags.replay.serialize.Serializer;
-import me.dags.replay.serialize.Serializers;
-import me.dags.replay.serialize.TagBuilder;
 import me.dags.replay.util.OptionalValue;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 /**
  * @author dags <dags@dags.me>
  */
-public class Frame implements OptionalValue, DataView, FrameView {
+public class Frame implements OptionalValue, FrameView {
 
     private final List<BlockChange> changes;
     private final List<AvatarSnapshot> avatars;
@@ -32,13 +27,6 @@ public class Frame implements OptionalValue, DataView, FrameView {
     public Frame(List<BlockChange> changes, List<AvatarSnapshot> avatars) {
         this.changes = changes;
         this.avatars = avatars;
-    }
-
-    @Override
-    public CompoundTag getData() {
-        TagBuilder builder = new TagBuilder();
-        SERIALIZER.serialize(this, builder);
-        return builder.build();
     }
 
     @Override
@@ -71,17 +59,15 @@ public class Frame implements OptionalValue, DataView, FrameView {
 
     public static final Serializer<Frame> SERIALIZER = new Serializer<Frame>() {
         @Override
-        public void serialize(Frame frame, TagBuilder builder) {
-            Serializers.list(builder, "changes", frame.changes, BlockChange.SERIALIZER);
-            Serializers.list(builder, "avatars", frame.avatars, AvatarSnapshot.SERIALIZER);
+        public void serialize(Frame frame, Node node) {
+            node.put("changes", frame.changes, BlockChange.SERIALIZER);
+            node.put("avatars", frame.avatars, AvatarSnapshot.SERIALIZER);
         }
 
         @Override
-        public Frame deserialize(CompoundTag tag) {
-            List<BlockChange> changes = new ArrayList<>();
-            List<AvatarSnapshot> avatars = new ArrayList<>();
-            Serializers.list(tag.getList("changes", CompoundTag.class), changes, BlockChange.SERIALIZER);
-            Serializers.list(tag.getList("avatars", CompoundTag.class), avatars, AvatarSnapshot.SERIALIZER);
+        public Frame deserialize(Node node) {
+            List<BlockChange> changes = node.getList("changes", BlockChange.SERIALIZER);
+            List<AvatarSnapshot> avatars = node.getList("avatars", AvatarSnapshot.SERIALIZER);
             return new Frame(changes, avatars);
         }
     };

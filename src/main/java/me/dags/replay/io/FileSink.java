@@ -1,24 +1,23 @@
 package me.dags.replay.io;
 
-import com.sk89q.jnbt.NBTOutputStream;
-import me.dags.replay.frame.FrameSink;
-import me.dags.replay.serialize.DataView;
-
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.zip.GZIPOutputStream;
+import me.dags.replay.data.Node;
+import me.dags.replay.frame.FrameSink;
 
 /**
  * @author dags <dags@dags.me>
  */
 public class FileSink implements FrameSink {
 
-    private final ByteArrayOutputBuffer buffer;
+    private final Buffer buffer;
     private final RandomAccessFile file;
 
     public FileSink(RandomAccessFile file) {
         this.file = file;
-        this.buffer = new ByteArrayOutputBuffer(1024);
+        this.buffer = new Buffer(1024);
     }
 
     @Override
@@ -28,25 +27,32 @@ public class FileSink implements FrameSink {
     }
 
     @Override
-    public void writeHeader(DataView header) throws IOException {
+    public void writeHeader(Node node) throws IOException {
         file.seek(0);
         file.setLength(0);
-        write(header);
+        write(node);
     }
 
-    @Override
-    public void write(DataView data) throws IOException {
+    public void write(Node node) throws IOException {
         buffer.reset();
-
-        try (NBTOutputStream nbt = new NBTOutputStream(new GZIPOutputStream(buffer))) {
-            nbt.writeNamedTag("", data.getData());
-        }
-
+        node.write(buffer);
         buffer.writeTo(file);
     }
 
     @Override
     public void close() throws IOException {
         file.close();
+    }
+
+    private static class Buffer extends ByteArrayOutputStream {
+
+        private Buffer(int size) {
+            super(size);
+        }
+
+        private void writeTo(DataOutput output) throws IOException {
+            output.writeInt(count);
+            output.write(buf, 0, count);
+        }
     }
 }
