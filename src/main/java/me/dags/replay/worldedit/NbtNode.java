@@ -82,6 +82,11 @@ public class NbtNode extends Node {
     }
 
     @Override
+    public void put(String key, int[] value) {
+        backing.put(key, new IntArrayTag(value));
+    }
+
+    @Override
     public void put(String key, int value) {
         backing.put(key, new IntTag(value));
     }

@@ -14,7 +14,8 @@ import me.dags.replay.util.OptionalValue;
  */
 public abstract class Node implements OptionalValue {
 
-    private static final byte[] empty = new byte[0];
+    private static final byte[] emptyBytes = new byte[0];
+    private static final int[] emptyInts = new int[0];
 
     public int getInt(String key) {
         return get(key, 0, Integer.class);
@@ -33,7 +34,11 @@ public abstract class Node implements OptionalValue {
     }
 
     public byte[] getBytes(String key) {
-        return get(key, empty, byte[].class);
+        return get(key, emptyBytes, byte[].class);
+    }
+
+    public int[] getInts(String key) {
+        return get(key, emptyInts, int[].class);
     }
 
     public boolean getBool(String key) {
@@ -86,6 +91,8 @@ public abstract class Node implements OptionalValue {
 
     public abstract void put(String key, byte[] value);
 
+    public abstract void put(String key, int[] value);
+
     public abstract void put(String key, int value);
 
     public abstract void put(String key, double value);
@@ -127,6 +134,11 @@ public abstract class Node implements OptionalValue {
 
         @Override
         public void put(String key, byte[] value) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void put(String key, int[] value) {
             throw new UnsupportedOperationException();
         }
 

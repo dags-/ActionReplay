@@ -79,6 +79,11 @@ public class SpongeNode extends Node {
     }
 
     @Override
+    public void put(String key, int[] value) {
+        backing.set(key(key), value);
+    }
+
+    @Override
     public void put(String key, int value) {
         backing.set(key(key), value);
     }

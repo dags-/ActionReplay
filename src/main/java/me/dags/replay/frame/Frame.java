@@ -15,7 +15,7 @@ import org.spongepowered.api.world.World;
 /**
  * @author dags <dags@dags.me>
  */
-public class Frame implements OptionalValue, FrameView {
+public class Frame implements OptionalValue {
 
     private final List<BlockChange> changes;
     private final List<AvatarSnapshot> avatars;
@@ -34,7 +34,6 @@ public class Frame implements OptionalValue, FrameView {
         return true;
     }
 
-    @Override
     public void apply(Location<World> origin, ReplayContext context) {
         context.push();
 

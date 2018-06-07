@@ -77,7 +77,7 @@ public class FrameRecorder extends CancellableTask implements OptionalActivity {
     @Override
     public void run() {
         if (!changes.isEmpty()) {
-            Frame frame = new Frame(changes, getAvatars());
+            Frame frame = new Frame(changes, captureAvatars());
             sink.write(frame);
             changes = new LinkedList<>();
             ActionReplay.getSelector().tick(this);
@@ -129,41 +129,65 @@ public class FrameRecorder extends CancellableTask implements OptionalActivity {
     @Listener(order = Order.POST)
     @Exclude({ChangeBlockEvent.Pre.class, ChangeBlockEvent.Post.class})
     public void onBlockChange(ChangeBlockEvent event) {
-        for (Transaction<BlockSnapshot> transaction : event.getTransactions()) {
+        List<Transaction<BlockSnapshot>> transactions = event.getTransactions();
+        // min/max points containing the transactions
+        int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, minZ = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE, maxZ = Integer.MIN_VALUE;
+        // determine whether to record changes as a volume or individual block changes
+        final boolean small = transactions.size() <= 5;
+
+        for (Transaction<BlockSnapshot> transaction : transactions) {
             // ignore filtered transactions
             if (!transaction.isValid()) {
                 continue;
             }
-
+            // shouldn't happen
             Location<World> location = transaction.getFinal().getLocation().orElse(null);
             if (location == null) {
                 continue;
             }
-
             // ignore transactions in different worlds
             if (location.getExtent() != origin.getExtent()) {
                 continue;
             }
-
             // ignore transactions outside of the bounds
-            if (!bounds.contains(location.getBlockPosition())) {
+            Vector3i pos = location.getBlockPosition();
+            if (!bounds.contains(pos)) {
                 continue;
             }
+            if (small) {
+                // record a single placement
+                Vector3i offset = location.getBlockPosition().sub(origin.getBlockPosition());
+                BlockState state = transaction.getFinal().getState();
+                changes.add(new SingleBlockChange(state, offset));
+            } else {
+                // calc the min/max positions containing the changes
+                minX = Math.min(minX, pos.getX());
+                minY = Math.min(minY, pos.getY());
+                minZ = Math.min(minZ, pos.getZ());
+                maxX = Math.max(maxX, pos.getX());
+                maxY = Math.max(maxY, pos.getY());
+                maxZ = Math.max(maxZ, pos.getZ());
+            }
+        }
 
-            // record the change
-            Vector3i offset = location.getBlockPosition().sub(origin.getBlockPosition());
-            BlockState state = transaction.getFinal().getState();
-            changes.add(new SingleBlockChange(state, offset));
+        if (!small && minX != Integer.MAX_VALUE) {
+            // record a volume change
+            Vector3i min = new Vector3i(minX, minY, minZ);
+            Vector3i max = new Vector3i(maxX, maxY, maxZ);
+            Schem schem = ActionReplay.getSelector().createSchematic(origin, min, max);
+            MassBlockChange change = new MassBlockChange(schem, origin.getBlockPosition());
+            changes.add(change);
         }
     }
 
     public void onSchematic(Schem schem, Vector3i offset) {
         MassBlockChange change = new MassBlockChange(schem, offset);
-        Frame frame = new Frame(change, getAvatars());
+        Frame frame = new Frame(change, captureAvatars());
         sink.write(frame);
     }
 
-    private List<AvatarSnapshot> getAvatars() {
+    private List<AvatarSnapshot> captureAvatars() {
         List<AvatarSnapshot> avatars = new LinkedList<>();
         for (Entity entity : origin.getExtent().getIntersectingEntities(bounds, Player.class::isInstance)) {
             Player player = (Player) entity;
