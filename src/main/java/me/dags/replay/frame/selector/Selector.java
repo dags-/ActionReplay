@@ -1,8 +1,6 @@
 package me.dags.replay.frame.selector;
 
 import com.flowpowered.math.vector.Vector3i;
-import java.lang.reflect.Constructor;
-import java.util.Map;
 import me.dags.replay.frame.FrameRecorder;
 import me.dags.replay.frame.schematic.Schem;
 import org.spongepowered.api.entity.living.player.Player;
@@ -32,23 +30,6 @@ public interface Selector {
 
     default Schem createSchematic(Location<World> origin, AABB bounds) {
         return createSchematic(origin, bounds.getMin().toInt(), bounds.getMax().toInt());
-    }
-
-    static Selector init(Map<String, String> options) {
-        for (Map.Entry<String, String> e : options.entrySet()) {
-            try {
-                Class.forName(e.getKey());
-                Class<?> api = Class.forName(e.getValue());
-                if (Selector.class.isAssignableFrom(api)) {
-                    Class<? extends Selector> type = api.asSubclass(Selector.class);
-                    Constructor<? extends Selector> constructor = type.getConstructor();
-                    return constructor.newInstance();
-                }
-            } catch (Throwable t) {
-                t.printStackTrace();
-            }
-        }
-        return new SpongeSelector();
     }
 
     static AABB getBounds(Vector3i pos1, Vector3i pos2) {

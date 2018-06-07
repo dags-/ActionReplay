@@ -1,5 +1,6 @@
 package me.dags.replay;
 
+import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import java.io.File;
 import java.io.IOException;
@@ -164,9 +165,9 @@ public class Commands {
             return;
         }
 
-        Vector3i min = selection.getMin().toInt().mul(1, 0, 1);
-        Vector3i max = selection.getMax().toInt().mul(1, 0, 1).add(0, 255, 0);
-        ActionReplay.getSelector().pos1(player, min);
-        ActionReplay.getSelector().pos2(player, max);
+        Vector3d min = selection.getMin();
+        Vector3d max = selection.getMax();
+        ActionReplay.getSelector().pos1(player, new Vector3i(min.getX(), 0, min.getZ()));
+        ActionReplay.getSelector().pos2(player, new Vector3i(max.getX(), 255, max.getZ()));
     }
 }
