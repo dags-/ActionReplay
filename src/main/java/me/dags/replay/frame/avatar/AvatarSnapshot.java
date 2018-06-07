@@ -1,6 +1,10 @@
 package me.dags.replay.frame.avatar;
 
 import com.flowpowered.math.vector.Vector3d;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.UUID;
 import me.dags.replay.data.Node;
 import me.dags.replay.data.Serializer;
 import org.spongepowered.api.data.DataContainer;
@@ -14,11 +18,6 @@ import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.UUID;
 
 /**
  * @author dags <dags@dags.me>

@@ -2,13 +2,12 @@ package me.dags.replay.data;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-import me.dags.replay.util.OptionalValue;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.function.Function;
+import me.dags.replay.util.OptionalValue;
 
 /**
  * @author dags <dags@dags.me>

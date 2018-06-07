@@ -1,12 +1,11 @@
 package me.dags.replay.io;
 
+import java.io.IOException;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import me.dags.replay.data.Node;
 import me.dags.replay.frame.FrameSink;
 import me.dags.replay.util.CancellableTask;
 import org.spongepowered.api.scheduler.Task;
-
-import java.io.IOException;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * @author dags <dags@dags.me>

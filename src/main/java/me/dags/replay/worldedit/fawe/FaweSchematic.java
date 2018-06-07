@@ -5,15 +5,14 @@ import com.boydti.fawe.object.schematic.Schematic;
 import com.flowpowered.math.vector.Vector3i;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import me.dags.replay.data.Node;
 import me.dags.replay.data.Serializer;
 import me.dags.replay.frame.schematic.Schem;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 
 /**
  * @author dags <dags@dags.me>

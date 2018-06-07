@@ -1,14 +1,13 @@
 package me.dags.replay.replay;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.RandomAccessFile;
 import me.dags.replay.frame.FrameSink;
 import me.dags.replay.frame.FrameSource;
 import me.dags.replay.io.FileSink;
 import me.dags.replay.io.FileSource;
 import org.spongepowered.api.CatalogType;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.RandomAccessFile;
 
 /**
  * @author dags <dags@dags.me>

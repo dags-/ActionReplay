@@ -1,5 +1,8 @@
 package me.dags.replay.manager;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Optional;
 import me.dags.commandbus.fmt.Fmt;
 import me.dags.config.Config;
 import me.dags.replay.frame.FrameRecorder;
@@ -11,10 +14,6 @@ import me.dags.replay.replay.ReplayMeta;
 import me.dags.replay.util.OptionalActivity;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.text.channel.MessageReceiver;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Optional;
 
 /**
  * @author dags <dags@dags.me>

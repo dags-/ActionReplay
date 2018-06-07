@@ -1,14 +1,14 @@
 package me.dags.replay.frame.selector;
 
 import com.flowpowered.math.vector.Vector3i;
+import java.lang.reflect.Constructor;
+import java.util.Map;
+import me.dags.replay.frame.FrameRecorder;
 import me.dags.replay.frame.schematic.Schem;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.util.AABB;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
-
-import java.lang.reflect.Constructor;
-import java.util.Map;
 
 /**
  * @author dags <dags@dags.me>
@@ -24,9 +24,15 @@ public interface Selector {
 
     void pos2(Player player, Vector3i pos);
 
+    void tick(FrameRecorder recorder);
+
     AABB getSelection(Player player);
 
-    Schem createSchematic(Location<World> origin, AABB bounds);
+    Schem createSchematic(Location<World> origin, Vector3i min, Vector3i max);
+
+    default Schem createSchematic(Location<World> origin, AABB bounds) {
+        return createSchematic(origin, bounds.getMin().toInt(), bounds.getMax().toInt());
+    }
 
     static Selector init(Map<String, String> options) {
         for (Map.Entry<String, String> e : options.entrySet()) {

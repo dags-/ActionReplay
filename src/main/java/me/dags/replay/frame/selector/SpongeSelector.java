@@ -1,7 +1,11 @@
 package me.dags.replay.frame.selector;
 
 import com.flowpowered.math.vector.Vector3i;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import me.dags.commandbus.fmt.Fmt;
+import me.dags.replay.frame.FrameRecorder;
 import me.dags.replay.frame.schematic.Schem;
 import me.dags.replay.frame.schematic.SpongeSchematic;
 import org.spongepowered.api.Sponge;
@@ -14,10 +18,6 @@ import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.extent.ArchetypeVolume;
 import org.spongepowered.api.world.schematic.BlockPaletteTypes;
 import org.spongepowered.api.world.schematic.Schematic;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 
 /**
  * @author dags <dags@dags.me>
@@ -46,9 +46,7 @@ public class SpongeSelector implements Selector {
     }
 
     @Override
-    public Schem createSchematic(Location<World> origin, AABB bounds) {
-        Vector3i min = bounds.getMin().toInt();
-        Vector3i max = bounds.getMax().toInt();
+    public Schem createSchematic(Location<World> origin, Vector3i min, Vector3i max) {
         ArchetypeVolume volume = origin.getExtent().createArchetypeVolume(min, max, origin.getBlockPosition());
         Schematic schematic = Schematic.builder().paletteType(BlockPaletteTypes.LOCAL).volume(volume).build();
         return new SpongeSchematic(schematic);
@@ -66,6 +64,11 @@ public class SpongeSelector implements Selector {
         PlayerSelection selection = selections.computeIfAbsent(player.getUniqueId(), PlayerSelection::new);
         selection.pos2 = pos;
         Fmt.info("Set pos2 ").stress(pos).tell(player);
+    }
+
+    @Override
+    public void tick(FrameRecorder recorder) {
+
     }
 
     private static class PlayerSelection {

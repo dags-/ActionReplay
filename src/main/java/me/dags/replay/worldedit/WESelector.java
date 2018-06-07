@@ -1,12 +1,18 @@
 package me.dags.replay.worldedit;
 
 import com.flowpowered.math.vector.Vector3i;
+import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.IncompleteRegionException;
 import com.sk89q.worldedit.LocalSession;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.event.extent.EditSessionEvent;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.regions.RegionSelector;
+import com.sk89q.worldedit.util.eventbus.Subscribe;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.function.Supplier;
 import me.dags.replay.event.RecordEvent;
 import me.dags.replay.frame.FrameRecorder;
 import me.dags.replay.frame.schematic.Schem;
@@ -26,11 +32,8 @@ import org.spongepowered.api.world.schematic.Schematic;
  */
 public class WESelector implements Selector {
 
+    private final LinkedList<WEChange> changes = new LinkedList<>();
     protected FrameRecorder recorder = null;
-
-    public WESelector() {
-//        Schem.SERIALIZER.register("we", FaweSchematic.SERIALIZER);
-    }
 
     @Listener
     public void onStartRecording(RecordEvent.Start event) {
@@ -56,7 +59,7 @@ public class WESelector implements Selector {
             return;
         }
 
-        LocalSession session = getSession(player);
+        LocalSession session = getSession(wePlayer);
         if (session == null) {
             return;
         }
@@ -75,7 +78,7 @@ public class WESelector implements Selector {
             return;
         }
 
-        LocalSession session = getSession(player);
+        LocalSession session = getSession(wePlayer);
         if (session == null) {
             return;
         }
@@ -88,19 +91,42 @@ public class WESelector implements Selector {
     }
 
     @Override
+    public void tick(FrameRecorder recorder) {
+        Location<World> origin = recorder.getOrigin();
+        Iterator<WEChange> iterator = changes.iterator();
+        while (iterator.hasNext()) {
+            WEChange change = iterator.next();
+            if (change.hasExpired()) {
+                iterator.remove();
+                continue;
+            }
+
+            if (change.isComplete()) {
+                iterator.remove();
+                if (change.isValid()) {
+                    Vector3i min = change.getBlockMin();
+                    Vector3i max = change.getBlockMax();
+                    Schem schem = createSchematic(origin, min, max);
+                    recorder.onSchematic(schem, origin.getBlockPosition());
+                }
+            }
+        }
+    }
+
+    @Override
     public final AABB getSelection(Player player) {
-        com.sk89q.worldedit.world.World world = getWorld(player.getWorld());
-        if (world == null) {
+        com.sk89q.worldedit.entity.Player wePlayer = getPlayer(player);
+        if (wePlayer == null) {
             return Selector.NULL_BOX;
         }
 
-        LocalSession session = getSession(player);
+        LocalSession session = getSession(wePlayer);
         if (session == null) {
             return Selector.NULL_BOX;
         }
 
         try {
-            Region selection = session.getSelection(world);
+            Region selection = session.getSelection(wePlayer.getWorld());
             return getSelectionBox(selection);
         } catch (IncompleteRegionException e) {
             return Selector.INVALID_BOX;
@@ -108,16 +134,31 @@ public class WESelector implements Selector {
     }
 
     @Override
-    public Schem createSchematic(Location<World> origin, AABB bounds) {
-        Vector3i min = bounds.getMin().toInt();
-        Vector3i max = bounds.getMax().toInt();
+    public Schem createSchematic(Location<World> origin, Vector3i min, Vector3i max) {
         ArchetypeVolume volume = origin.getExtent().createArchetypeVolume(min, max, origin.getBlockPosition());
         Schematic schematic = Schematic.builder().paletteType(BlockPaletteTypes.LOCAL).volume(volume).build();
         return new SpongeSchematic(schematic);
     }
 
+    @Subscribe
+    public void onEditSession(EditSessionEvent event) {
+        com.sk89q.worldedit.world.World world = event.getWorld();
+        if (world == null) {
+            return;
+        }
+
+        if (!world.getName().equals(recorder.getOrigin().getExtent().getName())) {
+            return;
+        }
+
+        Supplier<Boolean> completion = getCompletionListener(event.getEditSession());
+        WEChange extent = new WEChange(event.getExtent(), recorder.getBounds(), completion);
+        event.setExtent(extent);
+        changes.add(extent);
+    }
+
     protected com.sk89q.worldedit.entity.Player getPlayer(Player player) {
-        return new WEPlayer(player.getName(), player.getUniqueId());
+        return WEPlayerMatcher.match(player).orElse(null);
     }
 
     protected com.sk89q.worldedit.world.World getWorld(World world) {
@@ -129,8 +170,12 @@ public class WESelector implements Selector {
         return null;
     }
 
-    protected LocalSession getSession(Player player) {
-        return WorldEdit.getInstance().getSessionManager().findByName(player.getName());
+    protected Supplier<Boolean> getCompletionListener(EditSession session) {
+        return WEChange.FALSE;
+    }
+
+    protected LocalSession getSession(com.sk89q.worldedit.entity.Player player) {
+        return WorldEdit.getInstance().getSessionManager().getIfPresent(player);
     }
 
     protected static Vector3i vec3i(Vector vector) {

@@ -1,6 +1,7 @@
 package me.dags.replay.replay;
 
 import com.flowpowered.math.vector.Vector3i;
+import java.util.Optional;
 import me.dags.replay.data.Node;
 import me.dags.replay.data.Serializer;
 import me.dags.replay.frame.selector.Selector;
@@ -9,8 +10,6 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.util.AABB;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
-
-import java.util.Optional;
 
 /**
  * @author dags <dags@dags.me>

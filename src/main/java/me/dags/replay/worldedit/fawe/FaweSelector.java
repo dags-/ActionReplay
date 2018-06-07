@@ -2,11 +2,14 @@ package me.dags.replay.worldedit.fawe;
 
 import com.boydti.fawe.FaweAPI;
 import com.boydti.fawe.object.schematic.Schematic;
+import com.flowpowered.math.vector.Vector3i;
+import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.LocalSession;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.event.extent.PasteEvent;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.util.eventbus.Subscribe;
+import java.util.function.Supplier;
 import me.dags.replay.frame.schematic.Schem;
 import me.dags.replay.worldedit.WESelector;
 import org.spongepowered.api.entity.living.player.Player;
@@ -24,9 +27,9 @@ public class FaweSelector extends WESelector {
     }
 
     @Override
-    public Schem createSchematic(Location<World> origin, AABB bounds) {
-        Vector min = vec(bounds.getMin().toInt());
-        Vector max = vec(bounds.getMax().toInt());
+    public Schem createSchematic(Location<World> origin, Vector3i blockMin, Vector3i blockMax) {
+        Vector min = vec(blockMin);
+        Vector max = vec(blockMax);
         Vector pos = vec(origin.getBlockPosition());
         com.sk89q.worldedit.world.World world = getWorld(origin.getExtent());
         CuboidRegion region = new CuboidRegion(world, min, max);
@@ -48,8 +51,15 @@ public class FaweSelector extends WESelector {
     }
 
     @Override
-    protected LocalSession getSession(Player player) {
+    protected LocalSession getSession(com.sk89q.worldedit.entity.Player player) {
         return FaweAPI.wrapPlayer(player).getSession();
+    }
+
+    @Override
+    protected Supplier<Boolean> getCompletionListener(EditSession session) {
+        FaweCallback callback = new FaweCallback();
+        session.getQueue().setProgressTracker(callback);
+        return callback;
     }
 
     @Subscribe
@@ -69,4 +79,6 @@ public class FaweSelector extends WESelector {
             recorder.onSchematic(new FaweSchematic(schematic), vec3i(event.getPosition()));
         }
     }
+
+
 }

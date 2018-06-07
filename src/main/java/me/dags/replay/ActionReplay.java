@@ -2,6 +2,7 @@ package me.dags.replay;
 
 import com.flowpowered.math.vector.Vector3i;
 import com.google.inject.Inject;
+import java.io.File;
 import me.dags.commandbus.CommandBus;
 import me.dags.commandbus.fmt.Fmt;
 import me.dags.commandbus.fmt.Format;
@@ -23,8 +24,6 @@ import org.spongepowered.api.text.channel.MessageChannel;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.format.TextStyles;
 import org.spongepowered.api.world.World;
-
-import java.io.File;
 
 /**
  * @author dags <dags@dags.me>

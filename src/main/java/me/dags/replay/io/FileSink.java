@@ -1,12 +1,11 @@
 package me.dags.replay.io;
 
-import me.dags.replay.data.Node;
-import me.dags.replay.frame.FrameSink;
-
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import me.dags.replay.data.Node;
+import me.dags.replay.frame.FrameSink;
 
 /**
  * @author dags <dags@dags.me>
