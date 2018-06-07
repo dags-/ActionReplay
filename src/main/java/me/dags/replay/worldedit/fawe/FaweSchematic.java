@@ -11,6 +11,7 @@ import java.io.IOException;
 import me.dags.replay.data.Node;
 import me.dags.replay.data.Serializer;
 import me.dags.replay.frame.schematic.Schem;
+import me.dags.replay.util.Buffers;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -27,7 +28,7 @@ public class FaweSchematic implements Schem {
 
     @Override
     public boolean isPresent() {
-        return schematic != null;
+        return this != NONE;
     }
 
     @Override
@@ -46,11 +47,13 @@ public class FaweSchematic implements Schem {
         schematic.paste(world, vector, false, true, null);
     }
 
+    private static final FaweSchematic NONE = new FaweSchematic(null);
+
     public static final Serializer<FaweSchematic> SERIALIZER = new Serializer<FaweSchematic>() {
         @Override
         public void serialize(FaweSchematic schem, Node node) {
             try {
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                ByteArrayOutputStream out = Buffers.getCachedBuffer();
                 schem.schematic.save(out, ClipboardFormat.SCHEMATIC);
                 node.put("data", out.toByteArray());
             } catch (IOException e) {
@@ -66,7 +69,7 @@ public class FaweSchematic implements Schem {
                 return new FaweSchematic(schematic);
             } catch (IOException e) {
                 e.printStackTrace();
-                return null;
+                return FaweSchematic.NONE;
             }
         }
     };

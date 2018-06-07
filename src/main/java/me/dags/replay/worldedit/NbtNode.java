@@ -13,18 +13,12 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import me.dags.replay.data.Node;
 import me.dags.replay.data.Serializer;
+import me.dags.replay.util.OptionalValue;
 
 /**
  * @author dags <dags@dags.me>
  */
 public class NbtNode extends Node {
-
-    private static final NbtNode EMPTY = new NbtNode(Collections.emptyMap()) {
-        @Override
-        public boolean isPresent() {
-            return false;
-        }
-    };
 
     private Map<String, Tag> backing;
 
@@ -47,21 +41,21 @@ public class NbtNode extends Node {
     }
 
     @Override
-    public NbtNode newNode() {
+    public Node newNode() {
         return new NbtNode(new LinkedHashMap<>());
     }
 
     @Override
-    public NbtNode getChild(String key) {
+    public Node getChild(String key) {
         Tag tag = backing.get(key);
         if (tag == null || !(tag instanceof CompoundTag)) {
-            return EMPTY;
+            return Node.EMPTY;
         }
         return new NbtNode(((CompoundTag) tag).getValue());
     }
 
     @Override
-    public <T> List<T> getList(String key, Serializer<T> serializer) {
+    public <T extends OptionalValue> List<T> getList(String key, Serializer<T> serializer) {
         Tag tag = backing.get(key);
         if (tag == null || !(tag instanceof ListTag)) {
             return Collections.emptyList();
@@ -73,7 +67,7 @@ public class NbtNode extends Node {
             if (el instanceof CompoundTag) {
                 NbtNode node = new NbtNode(((CompoundTag) el).getValue());
                 T t = serializer.deserialize(node);
-                if (t != null) {
+                if (t.isPresent()) {
                     list.add(t);
                 }
             }
@@ -115,10 +109,10 @@ public class NbtNode extends Node {
     }
 
     @Override
-    public <T> void put(String key, List<T> list, Serializer<T> serializer) {
+    public <T extends OptionalValue> void put(String key, List<T> list, Serializer<T> serializer) {
         List<CompoundTag> tagList = new LinkedList<>();
         for (T t : list) {
-            NbtNode node = newNode();
+            NbtNode node = new NbtNode();
             serializer.serialize(t, node);
             tagList.add(node.build());
         }
@@ -136,7 +130,7 @@ public class NbtNode extends Node {
     }
 
     @Override
-    public NbtNode read(InputStream in) throws IOException {
+    public Node read(InputStream in) throws IOException {
         try (NBTInputStream nbt = new NBTInputStream(new GZIPInputStream(in))) {
             NamedTag tag = nbt.readNamedTag();
             if (tag.getTag() instanceof CompoundTag) {
@@ -145,7 +139,7 @@ public class NbtNode extends Node {
                 return this;
             }
         }
-        return EMPTY;
+        return Node.EMPTY;
     }
 
     @Override

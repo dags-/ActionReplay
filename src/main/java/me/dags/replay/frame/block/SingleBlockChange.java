@@ -64,6 +64,9 @@ public class SingleBlockChange implements BlockChange {
     }
 
     public static final Serializer<SingleBlockChange> SERIALIZER = new Serializer<SingleBlockChange>() {
+
+        private final BlockState NONE = BlockTypes.AIR.getDefaultState();
+
         @Override
         public void serialize(SingleBlockChange change, Node node) {
             node.put("x", "y", "z", change.offset);
@@ -74,7 +77,7 @@ public class SingleBlockChange implements BlockChange {
         public SingleBlockChange deserialize(Node node) {
             Vector3i offset = node.getVec3i("x", "y", "z");
             String stateId = node.getString("state");
-            BlockState state = Sponge.getRegistry().getType(BlockState.class, stateId).orElse(BlockTypes.AIR.getDefaultState());
+            BlockState state = Sponge.getRegistry().getType(BlockState.class, stateId).orElse(NONE);
             return new SingleBlockChange(state, offset);
         }
     };

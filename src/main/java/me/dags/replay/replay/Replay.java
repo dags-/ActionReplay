@@ -1,9 +1,12 @@
 package me.dags.replay.replay;
 
-import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+import me.dags.replay.data.Node;
+import me.dags.replay.data.SerializationException;
 import me.dags.replay.event.ReplayEvent;
-import me.dags.replay.frame.FrameSource;
+import me.dags.replay.frame.BufferedFrameSource;
 import me.dags.replay.frame.FrameView;
+import me.dags.replay.io.Source;
 import me.dags.replay.util.CancellableTask;
 import me.dags.replay.util.OptionalActivity;
 import org.spongepowered.api.Sponge;
@@ -20,14 +23,14 @@ public class Replay extends CancellableTask implements OptionalActivity {
     private final ReplayMeta meta;
     private final ReplayFile file;
     private final Location<World> origin;
-    private final FrameSource source;
+    private final BufferedFrameSource source;
 
     private long tick = 0L;
     private long interval = 1L;
     private boolean playing = false;
 
-    public Replay(ReplayFile file, ReplayMeta meta, FrameSource source) {
-        this.source = source;
+    public Replay(ReplayFile file, ReplayMeta meta, Source<Node, Node> source) {
+        this.source = new BufferedFrameSource(source, 5, 100, TimeUnit.MILLISECONDS);
         this.meta = meta;
         this.file = file;
         this.origin = meta.getOrigin();
@@ -36,6 +39,7 @@ public class Replay extends CancellableTask implements OptionalActivity {
 
     public void start(Object plugin, int intervalTicks) {
         Task.builder().execute(this).delayTicks(1).intervalTicks(1).submit(plugin);
+        source.start(plugin);
         interval = intervalTicks;
         playing = true;
         Sponge.getEventManager().post(new ReplayEvent.Start(meta, file));
@@ -43,6 +47,7 @@ public class Replay extends CancellableTask implements OptionalActivity {
 
     public void stop() {
         cancel();
+        source.stop();
         playing = false;
         Sponge.getEventManager().post(new ReplayEvent.Stop(meta, file));
     }
@@ -79,19 +84,16 @@ public class Replay extends CancellableTask implements OptionalActivity {
             }
 
             frame.apply(origin, context);
-        } catch (Throwable t) {
-            t.printStackTrace();
+        } catch (SerializationException e) {
+            e.printStackTrace();
+            stop();
         }
     }
 
     @Override
     public void close() {
         context.dispose();
-        try {
-            source.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        source.close();
     }
 
     private boolean isFrameTick() {

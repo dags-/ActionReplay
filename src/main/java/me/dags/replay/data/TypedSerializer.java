@@ -9,6 +9,11 @@ import java.util.Map;
 public class TypedSerializer<T extends Serializer.Type> implements Serializer<T> {
 
     private final Map<String, Serializer<? extends T>> serializers = new HashMap<>();
+    private final T empty;
+
+    public TypedSerializer(T empty) {
+        this.empty = empty;
+    }
 
     @Override
     @SuppressWarnings("unchecked")
@@ -27,7 +32,7 @@ public class TypedSerializer<T extends Serializer.Type> implements Serializer<T>
         if (serializer != null) {
             return serializer.deserialize(node);
         }
-        return null;
+        return empty;
     }
 
     public TypedSerializer<T> register(String type, Serializer<? extends T> serializer) {

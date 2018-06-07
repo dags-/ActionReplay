@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+import me.dags.replay.util.OptionalValue;
 import org.spongepowered.api.data.DataContainer;
 import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.data.DataView;
@@ -23,12 +24,6 @@ public class SpongeNode extends Node {
 
     private static final Function<String, DataQuery> QUERY = DataQuery::of;
     private static final Map<String, DataQuery> QUERY_CACHE = new HashMap<>();
-    private static final SpongeNode EMPTY = new SpongeNode(DataContainer.createNew()) {
-        @Override
-        public boolean isPresent() {
-            return false;
-        }
-    };
 
     private DataContainer backing;
 
@@ -59,13 +54,13 @@ public class SpongeNode extends Node {
     public Node getChild(String key) {
         DataView view = backing.getView(key(key)).orElse(null);
         if (view == null) {
-            return EMPTY;
+            return Node.EMPTY;
         }
         return new SpongeNode(view.getContainer());
     }
 
     @Override
-    public <T> List<T> getList(String key, Serializer<T> serializer) {
+    public <T extends OptionalValue> List<T> getList(String key, Serializer<T> serializer) {
         List<T> list = new LinkedList<>();
         List<DataView> containers = backing.getViewList(key(key)).orElse(Collections.emptyList());
         for (DataView view : containers) {
@@ -112,7 +107,7 @@ public class SpongeNode extends Node {
     }
 
     @Override
-    public <T> void put(String key, List<T> list, Serializer<T> serializer) {
+    public <T extends OptionalValue> void put(String key, List<T> list, Serializer<T> serializer) {
         List<DataContainer> containers = new LinkedList<>();
         for (T t : list) {
             SpongeNode node = newNode();

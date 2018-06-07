@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.util.UUID;
 import me.dags.replay.data.Node;
 import me.dags.replay.data.Serializer;
+import me.dags.replay.util.Buffers;
+import me.dags.replay.util.OptionalValue;
 import org.spongepowered.api.data.DataContainer;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.persistence.DataFormats;
@@ -22,7 +24,9 @@ import org.spongepowered.api.world.World;
 /**
  * @author dags <dags@dags.me>
  */
-public class AvatarSnapshot {
+public class AvatarSnapshot implements OptionalValue {
+
+    private static final AvatarSnapshot NONE = new AvatarSnapshot();
 
     private final UUID uuid;
     private final String name;
@@ -31,6 +35,10 @@ public class AvatarSnapshot {
     private final ItemStack held;
     private final boolean flying;
 
+    private AvatarSnapshot() {
+        this(null, null, null, null, null, false);
+    }
+
     public AvatarSnapshot(UUID uuid, String name, Vector3d offset, Vector3d rotation, ItemStack held, boolean flying) {
         this.uuid = uuid;
         this.name = name;
@@ -38,6 +46,11 @@ public class AvatarSnapshot {
         this.rotation = rotation;
         this.held = held;
         this.flying = flying;
+    }
+
+    @Override
+    public boolean isPresent() {
+        return this != NONE;
     }
 
     public UUID getUUID() {
@@ -97,7 +110,7 @@ public class AvatarSnapshot {
         }
 
         private byte[] serializeStack(ItemStack stack) {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ByteArrayOutputStream out = Buffers.getCachedBuffer();
             try {
                 DataFormats.NBT.writeTo(out, stack.toContainer());
             } catch (IOException e) {

@@ -2,18 +2,22 @@ package me.dags.replay.frame.schematic;
 
 import me.dags.replay.data.Serializer;
 import me.dags.replay.data.TypedSerializer;
-import me.dags.replay.util.OptionalValue;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 /**
  * @author dags <dags@dags.me>
  */
-public interface Schem extends Serializer.Type, OptionalValue {
+public interface Schem extends Serializer.Type {
 
     void apply(Location<World> location);
 
-    TypedSerializer<Schem> SERIALIZER = new TypedSerializer<Schem>()
+    @Override
+    default boolean isPresent() {
+        return this != NONE;
+    }
+
+    TypedSerializer<Schem> SERIALIZER = new TypedSerializer<>(Schem.NONE)
             .register("sponge", SpongeSchematic.SERIALIZER);
 
     Schem NONE = new Schem() {

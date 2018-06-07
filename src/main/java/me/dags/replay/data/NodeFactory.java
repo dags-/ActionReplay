@@ -8,9 +8,9 @@ import java.io.InputStream;
  */
 public interface NodeFactory {
 
-    Node newNode();
+    Node create();
 
     default Node read(InputStream in) throws IOException {
-        return newNode().read(in);
+        return create().read(in);
     }
 }

@@ -18,7 +18,12 @@ public abstract class CancellableTask implements Consumer<Task>, Closeable {
             close();
             return;
         }
-        run();
+        try {
+            run();
+        } catch (Throwable t) {
+            t.printStackTrace();
+            cancel();
+        }
     }
 
     protected final boolean isCancelled() {

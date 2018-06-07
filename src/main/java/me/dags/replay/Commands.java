@@ -9,8 +9,8 @@ import me.dags.commandbus.annotation.Permission;
 import me.dags.commandbus.annotation.Src;
 import me.dags.commandbus.fmt.Fmt;
 import me.dags.replay.data.Node;
-import me.dags.replay.frame.FrameSink;
 import me.dags.replay.frame.selector.Selector;
+import me.dags.replay.io.Sink;
 import me.dags.replay.replay.ReplayFile;
 import me.dags.replay.replay.ReplayMeta;
 import org.spongepowered.api.command.CommandSource;
@@ -60,7 +60,7 @@ public class Commands {
         try {
             ReplayFile replay = ActionReplay.getManager().getRegistry().newReplayFile(name);
             ReplayMeta meta = new ReplayMeta(origin, relative);
-            try (FrameSink sink = replay.getSink()) {
+            try (Sink<Node, Node> sink = replay.getSink()) {
                 Node node = ReplayMeta.SERIALIZER.serialize(meta);
                 sink.writeHeader(node);
             }
@@ -79,7 +79,7 @@ public class Commands {
 
     @Command("ar load here <replay>")
     @Permission(Commands.LOAD)
-    @Description("Load the given replay")
+    @Description("Load the given replay at your position")
     public void loadHere(@Src Player source, ReplayFile file) {
         ActionReplay.getManager().attachReplayFile(source, file);
         ReplayMeta meta = ActionReplay.getManager().getActive().getMeta();
@@ -88,6 +88,20 @@ public class Commands {
         ReplayMeta here = new ReplayMeta(origin, bounds);
         ActionReplay.getManager().getActive().setMeta(here);
         ActionReplay.getManager().attachReplay(source);
+    }
+
+    @Command("ar frame first")
+    @Permission(Commands.LOAD)
+    @Description("Load the first frame of the current replay")
+    public void loadFirstFrame(@Src CommandSource source) {
+        ActionReplay.getManager().loadFirstFrame(source);
+    }
+
+    @Command("ar frame last")
+    @Permission(Commands.LOAD)
+    @Description("Load the last frame of the current replay")
+    public void loadLastFrame(@Src CommandSource source) {
+        ActionReplay.getManager().loadLastFrame(source);
     }
 
     @Command("ar record")

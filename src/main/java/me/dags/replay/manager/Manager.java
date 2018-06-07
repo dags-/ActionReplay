@@ -5,10 +5,13 @@ import java.io.IOException;
 import java.util.Optional;
 import me.dags.commandbus.fmt.Fmt;
 import me.dags.config.Config;
+import me.dags.replay.data.Node;
+import me.dags.replay.frame.Frame;
 import me.dags.replay.frame.FrameRecorder;
-import me.dags.replay.frame.FrameSink;
-import me.dags.replay.frame.FrameSource;
+import me.dags.replay.io.Sink;
+import me.dags.replay.io.Source;
 import me.dags.replay.replay.Replay;
+import me.dags.replay.replay.ReplayContext;
 import me.dags.replay.replay.ReplayFile;
 import me.dags.replay.replay.ReplayMeta;
 import me.dags.replay.util.OptionalActivity;
@@ -46,8 +49,9 @@ public class Manager {
     public void attachReplayFile(MessageReceiver receiver, ReplayFile replay) {
         instance.dispose();
         instance = new Instance(replay);
-        try (FrameSource source = replay.getSource()) {
-            instance.setMeta(source.header());
+        try (Source<Node, Node> source = replay.getSource()) {
+            ReplayMeta meta = ReplayMeta.SERIALIZER.deserialize(source.header());
+            instance.setMeta(meta);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -58,7 +62,7 @@ public class Manager {
         if (canAttachActivity(receiver, "recorder")) {
             try {
                 ReplayMeta meta = instance.getMeta();
-                FrameSink sink = instance.getReplayFile().getSink();
+                Sink<Node, Node> sink = instance.getReplayFile().getSink();
                 sink.goToEnd();
 
                 FrameRecorder recorder = new FrameRecorder(meta, sink);
@@ -76,7 +80,7 @@ public class Manager {
             try {
                 ReplayFile file = instance.getReplayFile();
                 ReplayMeta meta = instance.getMeta();
-                FrameSource source = instance.getReplayFile().getSource();
+                Source<Node, Node> source = instance.getReplayFile().getSource();
                 source.header();
 
                 Replay replay = new Replay(file, meta, source);
@@ -140,10 +144,53 @@ public class Manager {
         if (replay.isPresent()) {
             attachReplayFile(Sponge.getServer().getConsole(), replay.get());
             if (recording) {
+                Fmt.subdued("Loading recorder...").log();
                 attachRecorder(Sponge.getServer().getConsole());
                 startRecorder(Sponge.getServer().getConsole());
             }
         }
+    }
+
+    public void loadFirstFrame(MessageReceiver receiver) {
+        if (canLoadFrame(receiver)) {
+            ReplayFile replay = instance.getReplayFile();
+            ReplayMeta meta = instance.getMeta();
+            try (Source<Node, Node> source = replay.getSource()) {
+                applyFrame(receiver, replay, meta, source.first(), "first");
+            } catch (IOException e) {
+                e.printStackTrace();
+                Fmt.warn("An error occurred whilst reading frame data").tell(receiver);
+            }
+        }
+    }
+
+    public void loadLastFrame(MessageReceiver receiver) {
+        if (canLoadFrame(receiver)) {
+            ReplayFile replay = instance.getReplayFile();
+            ReplayMeta meta = instance.getMeta();
+            try (Source<Node, Node> source = instance.getReplayFile().getSource()) {
+                applyFrame(receiver, replay, meta, source.last(), "last");
+            } catch (IOException e) {
+                e.printStackTrace();
+                Fmt.warn("An error occurred whilst reading frame data").tell(receiver);
+            }
+        }
+    }
+
+    private void applyFrame(MessageReceiver receiver, ReplayFile replay, ReplayMeta meta, Node node, String frameName) {
+        if (node.isAbsent()) {
+            Fmt.error("No frame data available").tell(receiver);
+            return;
+        }
+        Frame frame = Frame.SERIALIZER.deserialize(node);
+        if (frame.isAbsent()) {
+            Fmt.error("Unable to read %s frame of %s", frameName, replay.getName()).tell(receiver);
+            return;
+        }
+        ReplayContext context = new ReplayContext();
+        frame.apply(meta.getOrigin(), context);
+        context.dispose();
+        Fmt.info("Loaded %s frame of ", frameName).stress(replay.getName()).tell(receiver);
     }
 
     private void stopRecorder(MessageReceiver receiver) {
@@ -212,16 +259,38 @@ public class Manager {
         return true;
     }
 
+    private boolean canLoadFrame(MessageReceiver receiver) {
+        if (instance.isAbsent()) {
+            Fmt.error("No replay currently set up").tell(receiver);
+            return false;
+        }
+        if (instance.getMeta().isAbsent()) {
+            Fmt.error("No replay metadata associated with the replay").tell(receiver);
+            return false;
+        }
+        if (instance.getRecorder().isPresent() && instance.getRecorder().isActive()) {
+            Fmt.error("Cannot load frame whilst recorder is active").tell(receiver);
+            return false;
+        }
+        if (instance.getReplay().isPresent() && instance.getReplay().isActive()) {
+            Fmt.error("Cannot load frame whilst replay is active").tell(receiver);
+            return false;
+        }
+        return true;
+    }
+
     private void updateConfig() {
         if (instance.isAbsent()) {
             return;
         }
 
         if (instance.getRecorder().isPresent() && instance.getRecorder().isActive()) {
+            Fmt.subdued("Saving recorder to file").log();
             config.node("last").set("name", instance.getReplayFile().getId());
             config.node("last").set("recording", true);
             config.save();
         } else {
+            Fmt.subdued("Clearing recorder").log();
             config.clear();
             config.save();
         }

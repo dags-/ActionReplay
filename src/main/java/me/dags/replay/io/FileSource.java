@@ -5,15 +5,11 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import me.dags.replay.ActionReplay;
 import me.dags.replay.data.Node;
-import me.dags.replay.frame.Frame;
-import me.dags.replay.frame.FrameSource;
-import me.dags.replay.frame.FrameView;
-import me.dags.replay.replay.ReplayMeta;
 
 /**
  * @author dags <dags@dags.me>
  */
-public class FileSource implements FrameSource {
+public class FileSource implements Source<Node, Node> {
 
     private final RandomAccessFile file;
 
@@ -22,25 +18,46 @@ public class FileSource implements FrameSource {
     }
 
     @Override
-    public ReplayMeta header() throws IOException {
+    public Node header() throws IOException {
         file.seek(0);
-        Node node = nextNode();
-        if (node.isAbsent()) {
-            return ReplayMeta.NONE;
-        }
-        return ReplayMeta.SERIALIZER.deserialize(node);
+        return nextNode();
     }
 
     @Override
-    public FrameView next() throws IOException {
-        if (file.getFilePointer() >= file.length()) {
-            return Frame.NONE;
+    public Node next() throws IOException {
+        return nextNode();
+    }
+
+    @Override
+    public Node first() throws IOException {
+        file.seek(0);
+        // header length
+        int length = file.readInt();
+        long pos = file.getFilePointer();
+
+        // has at least 4 bytes after header
+        if (pos + length + 4 < file.length()) {
+            // seek to next length bytes
+            file.seek(pos + length);
+            // read node
+            return nextNode();
         }
-        Node node = nextNode();
-        if (node.isAbsent()) {
-            return Frame.NONE;
+
+        return Node.EMPTY;
+    }
+
+    @Override
+    public Node last() throws IOException {
+        while (true) {
+            int length = file.readInt();
+            long pos = file.getFilePointer();
+            if (pos + length + 4 >= file.length()) {
+                byte[] data = new byte[length];
+                file.read(data);
+                return ActionReplay.getNodeFactory().read(new ByteArrayInputStream(data));
+            }
+            file.seek(pos + length);
         }
-        return Frame.SERIALIZER.deserialize(node);
     }
 
     @Override
@@ -49,6 +66,9 @@ public class FileSource implements FrameSource {
     }
 
     private Node nextNode() throws IOException {
+        if (file.getFilePointer() >= file.length()) {
+            return Node.EMPTY;
+        }
         int length = file.readInt();
         byte[] data = new byte[length];
         file.read(data);

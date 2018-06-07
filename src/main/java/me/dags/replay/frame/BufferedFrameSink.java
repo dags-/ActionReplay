@@ -1,21 +1,23 @@
-package me.dags.replay.io;
+package me.dags.replay.frame;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import me.dags.replay.data.Node;
-import me.dags.replay.frame.FrameSink;
+import me.dags.replay.data.SerializationException;
+import me.dags.replay.io.Sink;
+import me.dags.replay.replay.ReplayMeta;
 import me.dags.replay.util.CancellableTask;
 import org.spongepowered.api.scheduler.Task;
 
 /**
  * @author dags <dags@dags.me>
  */
-public class BufferedSink extends CancellableTask implements FrameSink {
+public class BufferedFrameSink extends CancellableTask implements Sink<Frame, ReplayMeta> {
 
-    private final FrameSink sink;
+    private final Sink<Node, Node> sink;
     private final ConcurrentLinkedQueue<Node> buffer = new ConcurrentLinkedQueue<>();
 
-    public BufferedSink(FrameSink sink) {
+    public BufferedFrameSink(Sink<Node, Node> sink) {
         this.sink = sink;
     }
 
@@ -36,19 +38,20 @@ public class BufferedSink extends CancellableTask implements FrameSink {
     }
 
     @Override
-    public void write(Node node) {
+    public void write(Frame view) throws SerializationException {
         if (isCancelled()) {
             return;
         }
-        // serialize frame to nbt and then queue for writing
+        Node node = Frame.SERIALIZER.serializeChecked(view);
         buffer.add(node);
     }
 
     @Override
-    public void writeHeader(Node node) throws IOException {
+    public void writeHeader(ReplayMeta meta) throws IOException {
         if (isCancelled()) {
             return;
         }
+        Node node = ReplayMeta.SERIALIZER.serialize(meta);
         sink.writeHeader(node);
     }
 
@@ -74,8 +77,8 @@ public class BufferedSink extends CancellableTask implements FrameSink {
     }
 
     private void drain() {
-        Node frame = buffer.poll();
         try {
+            Node frame = buffer.poll();
             sink.write(frame);
         } catch (IOException e) {
             e.printStackTrace();

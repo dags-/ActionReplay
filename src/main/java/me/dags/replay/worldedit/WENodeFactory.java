@@ -9,7 +9,7 @@ import me.dags.replay.data.NodeFactory;
 public class WENodeFactory implements NodeFactory {
 
     @Override
-    public Node newNode() {
+    public Node create() {
         return new NbtNode();
     }
 }

@@ -14,7 +14,7 @@ import me.dags.replay.frame.block.BlockChange;
 import me.dags.replay.frame.block.MassBlockChange;
 import me.dags.replay.frame.block.SingleBlockChange;
 import me.dags.replay.frame.schematic.Schem;
-import me.dags.replay.io.BufferedSink;
+import me.dags.replay.io.Sink;
 import me.dags.replay.replay.ReplayMeta;
 import me.dags.replay.util.CancellableTask;
 import me.dags.replay.util.OptionalActivity;
@@ -42,7 +42,7 @@ public class FrameRecorder extends CancellableTask implements OptionalActivity {
 
     private final AABB bounds;
     private final Location<World> origin;
-    private final BufferedSink sink;
+    private final BufferedFrameSink sink;
 
     private boolean recording = false;
     private List<BlockChange> changes = new LinkedList<>();
@@ -53,10 +53,10 @@ public class FrameRecorder extends CancellableTask implements OptionalActivity {
         this.sink = null;
     }
 
-    public FrameRecorder(ReplayMeta meta, FrameSink sink) {
+    public FrameRecorder(ReplayMeta meta, Sink<Node, Node> sink) {
         this.origin = meta.getOrigin();
         this.bounds = meta.getActualBounds();
-        this.sink = new BufferedSink(sink);
+        this.sink = new BufferedFrameSink(sink);
     }
 
     @Override
@@ -78,10 +78,9 @@ public class FrameRecorder extends CancellableTask implements OptionalActivity {
     public void run() {
         if (!changes.isEmpty()) {
             Frame frame = new Frame(changes, getAvatars());
-            Node node = Frame.SERIALIZER.serialize(frame);
-            sink.write(node);
+            sink.write(frame);
             changes = new LinkedList<>();
-            ActionReplay.getSelector().tick();
+            ActionReplay.getSelector().tick(this);
         }
     }
 
@@ -160,8 +159,7 @@ public class FrameRecorder extends CancellableTask implements OptionalActivity {
     public void onSchematic(Schem schem, Vector3i offset) {
         MassBlockChange change = new MassBlockChange(schem, offset);
         Frame frame = new Frame(change, getAvatars());
-        Node node = Frame.SERIALIZER.serialize(frame);
-        sink.write(node);
+        sink.write(frame);
     }
 
     private List<AvatarSnapshot> getAvatars() {
@@ -187,8 +185,7 @@ public class FrameRecorder extends CancellableTask implements OptionalActivity {
         }
         MassBlockChange change = new MassBlockChange(schem, origin.getBlockPosition());
         Frame frame = new Frame(change, Collections.emptyList());
-        Node node = Frame.SERIALIZER.serialize(frame);
-        sink.write(node);
+        sink.write(frame);
     }
 
     public static final FrameRecorder NONE = new FrameRecorder() {

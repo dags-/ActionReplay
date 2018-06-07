@@ -82,7 +82,7 @@ public abstract class Node implements OptionalValue {
 
     public abstract Node getChild(String key);
 
-    public abstract <T> List<T> getList(String key, Serializer<T> serializer);
+    public abstract <T extends OptionalValue> List<T> getList(String key, Serializer<T> serializer);
 
     public abstract void put(String key, byte[] value);
 
@@ -96,11 +96,88 @@ public abstract class Node implements OptionalValue {
 
     public abstract void put(String key, Node child);
 
-    public abstract <T> void put(String key, List<T> list, Serializer<T> serializer);
+    public abstract <T extends OptionalValue> void put(String key, List<T> list, Serializer<T> serializer);
 
     public abstract void write(OutputStream out) throws IOException;
 
     public abstract Node read(InputStream in) throws IOException;
 
     protected abstract Object get(String key, Object def);
+
+    public static final Node EMPTY = new Node() {
+        @Override
+        public Object build() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Node newNode() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Node getChild(String key) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public <T extends OptionalValue> List<T> getList(String key, Serializer<T> serializer) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void put(String key, byte[] value) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void put(String key, int value) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void put(String key, double value) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void put(String key, boolean value) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void put(String key, String value) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void put(String key, Node child) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public <T extends OptionalValue> void put(String key, List<T> list, Serializer<T> serializer) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void write(OutputStream out) throws IOException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Node read(InputStream in) throws IOException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        protected Object get(String key, Object def) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean isPresent() {
+            return false;
+        }
+    };
 }
