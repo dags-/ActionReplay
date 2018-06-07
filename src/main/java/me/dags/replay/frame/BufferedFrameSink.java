@@ -30,29 +30,42 @@ public class BufferedFrameSink extends CancellableTask implements Sink<Frame, Re
     }
 
     @Override
-    public void goToEnd() throws IOException {
+    public void goToEnd() {
         if (isCancelled()) {
             return;
         }
-        sink.goToEnd();
+        try {
+            sink.goToEnd();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
-    public void write(Frame view) throws SerializationException {
+    public void writeHeader(ReplayMeta meta) {
         if (isCancelled()) {
             return;
         }
-        Node node = Frame.SERIALIZER.serializeChecked(view);
-        buffer.add(node);
+        try {
+            Node node = ReplayMeta.SERIALIZER.serialize(meta);
+            sink.writeHeader(node);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
-    public void writeHeader(ReplayMeta meta) throws IOException {
+    public void write(Frame view) {
         if (isCancelled()) {
             return;
         }
-        Node node = ReplayMeta.SERIALIZER.serialize(meta);
-        sink.writeHeader(node);
+
+        try {
+            Node node = Frame.SERIALIZER.serializeChecked(view);
+            buffer.add(node);
+        } catch (SerializationException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

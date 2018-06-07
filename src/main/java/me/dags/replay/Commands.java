@@ -36,6 +36,17 @@ public class Commands {
     @Permission(Commands.CREATE)
     @Description("Create a new replay recording using your current selection")
     public void create(@Src Player player, String name) {
+        if (!ActionReplay.getManager().isValidName(name)) {
+            Fmt.error("Names may only contain alphanumeric and underscore characters").tell(player);
+            return;
+        }
+
+        File file = new File(name);
+        if (file.exists()) {
+            Fmt.error("File already exists").tell(player);
+            return;
+        }
+
         AABB bounds = ActionReplay.getSelector().getSelection(player);
         if (bounds == Selector.NULL_BOX) {
             Fmt.error("Unable to retrieve your selection").tell(player);
@@ -47,23 +58,18 @@ public class Commands {
             return;
         }
 
-        File file = new File(name);
-        if (file.exists()) {
-            Fmt.error("File already exists").tell(player);
-            return;
-        }
-
-        Location<World> origin = player.getLocation();
-        Vector3i sub = origin.getBlockPosition().mul(-1);
-        AABB relative = bounds.offset(sub);
-
         try {
+            Location<World> origin = player.getLocation();
+            Vector3i sub = origin.getBlockPosition().mul(-1);
+            AABB relative = bounds.offset(sub);
+
             ReplayFile replay = ActionReplay.getManager().getRegistry().newReplayFile(name);
             ReplayMeta meta = new ReplayMeta(origin, relative);
             try (Sink<Node, Node> sink = replay.getSink()) {
                 Node node = ReplayMeta.SERIALIZER.serialize(meta);
                 sink.writeHeader(node);
             }
+
             ActionReplay.getManager().attachReplayFile(player, replay);
         } catch (IOException e) {
             e.printStackTrace();

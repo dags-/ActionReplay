@@ -2,10 +2,9 @@ package me.dags.replay.replay;
 
 import java.util.concurrent.TimeUnit;
 import me.dags.replay.data.Node;
-import me.dags.replay.data.SerializationException;
 import me.dags.replay.event.ReplayEvent;
 import me.dags.replay.frame.BufferedFrameSource;
-import me.dags.replay.frame.FrameView;
+import me.dags.replay.frame.Frame;
 import me.dags.replay.io.Source;
 import me.dags.replay.util.CancellableTask;
 import me.dags.replay.util.OptionalActivity;
@@ -75,19 +74,14 @@ public class Replay extends CancellableTask implements OptionalActivity {
             return;
         }
 
-        try {
-            FrameView frame = source.next();
+        Frame frame = source.next();
 
-            if (!frame.isPresent()) {
-                stop();
-                return;
-            }
-
-            frame.apply(origin, context);
-        } catch (SerializationException e) {
-            e.printStackTrace();
+        if (!frame.isPresent()) {
             stop();
+            return;
         }
+
+        frame.apply(origin, context);
     }
 
     @Override

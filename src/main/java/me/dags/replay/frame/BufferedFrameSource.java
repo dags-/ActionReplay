@@ -12,7 +12,7 @@ import me.dags.replay.util.CancellableTask;
 /**
  * @author dags <dags@dags.me>
  */
-public class BufferedFrameSource extends CancellableTask implements Source<FrameView, ReplayMeta> {
+public class BufferedFrameSource extends CancellableTask implements Source<Frame, ReplayMeta> {
 
     private final int size;
     private final long timeout;
@@ -34,16 +34,21 @@ public class BufferedFrameSource extends CancellableTask implements Source<Frame
     }
 
     @Override
-    public ReplayMeta header() throws IOException {
-        Node node = source.header();
-        if (node.isAbsent()) {
+    public ReplayMeta header() {
+        try {
+            Node node = source.header();
+            if (node.isAbsent()) {
+                return ReplayMeta.NONE;
+            }
+            return ReplayMeta.SERIALIZER.deserializeChecked(node);
+        } catch (IOException e) {
+            e.printStackTrace();
             return ReplayMeta.NONE;
         }
-        return ReplayMeta.SERIALIZER.deserializeChecked(node);
     }
 
     @Override
-    public FrameView next() throws SerializationException {
+    public Frame next() {
         Node next = null;
         long start = System.currentTimeMillis();
 
@@ -64,25 +69,34 @@ public class BufferedFrameSource extends CancellableTask implements Source<Frame
             return Frame.NONE;
         }
 
-        return Frame.SERIALIZER.deserializeChecked(next);
+        try {
+            return Frame.SERIALIZER.deserializeChecked(next);
+        } catch (SerializationException e) {
+            e.printStackTrace();
+            return Frame.NONE;
+        }
     }
 
     @Override
-    public FrameView first() throws IOException {
-        Node first = source.first();
-        if (first.isAbsent()) {
+    public Frame first() {
+        try {
+            Node first = source.first();
+            return Frame.SERIALIZER.deserializeChecked(first);
+        } catch (IOException e) {
+            e.printStackTrace();
             return Frame.NONE;
         }
-        return Frame.SERIALIZER.deserializeChecked(first);
     }
 
     @Override
-    public FrameView last() throws IOException {
-        Node last = source.last();
-        if (last.isAbsent()) {
+    public Frame last() {
+        try {
+            Node last = source.last();
+            return Frame.SERIALIZER.deserializeChecked(last);
+        } catch (IOException e) {
+            e.printStackTrace();
             return Frame.NONE;
         }
-        return Frame.SERIALIZER.deserializeChecked(last);
     }
 
     @Override

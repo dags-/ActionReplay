@@ -89,6 +89,7 @@ public class FrameRecorder extends CancellableTask implements OptionalActivity {
         Sponge.getEventManager().registerListeners(plugin, this);
         // start io thread
         sink.start(plugin);
+        sink.goToEnd();
         // start recorder task
         startSyncTask(plugin, 1, 1);
         // the first frame of the build

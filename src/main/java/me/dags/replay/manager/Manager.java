@@ -3,6 +3,7 @@ package me.dags.replay.manager;
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import me.dags.commandbus.fmt.Fmt;
 import me.dags.config.Config;
 import me.dags.replay.data.Node;
@@ -26,6 +27,8 @@ public class Manager {
     private final Object plugin;
     private final Config config;
     private final Registry registry;
+    private final Pattern allowedChars = Pattern.compile("^[a-zA-Z0-9_]+");
+
     private Instance instance = Instance.NONE;
 
     public Manager(Object plugin, File configDir) {
@@ -36,6 +39,10 @@ public class Manager {
         if (!replayDir.exists() && !replayDir.mkdirs()) {
             new IOException("Unable to create replay directory").printStackTrace();
         }
+    }
+
+    public boolean isValidName(String input) {
+        return allowedChars.matcher(input).find();
     }
 
     public Registry getRegistry() {
@@ -63,8 +70,6 @@ public class Manager {
             try {
                 ReplayMeta meta = instance.getMeta();
                 Sink<Node, Node> sink = instance.getReplayFile().getSink();
-                sink.goToEnd();
-
                 FrameRecorder recorder = new FrameRecorder(meta, sink);
                 instance.setRecorder(recorder);
                 Fmt.info("Attached new recorder at ").stress(meta.getOrigin().getBlockPosition()).tell(receiver);

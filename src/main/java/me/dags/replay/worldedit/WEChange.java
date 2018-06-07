@@ -73,7 +73,7 @@ public class WEChange extends AbstractDelegateExtent {
     }
 
     /*
-     * If an operation takes longer than 5 seconds expire and do not recorder?
+     * If an operation takes longer than 5 seconds expire and do not record?
      */
     public boolean hasExpired() {
         long time = System.currentTimeMillis() - created;
