@@ -6,9 +6,9 @@ import java.io.IOException;
 /**
  * @author dags <dags@dags.me>
  */
-public interface Source<T, H> extends Closeable {
+public interface Source<T> extends Closeable {
 
-    H header() throws IOException;
+    T header() throws IOException;
 
     T next() throws IOException;
 

@@ -3,13 +3,14 @@ package me.dags.replay.io;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import me.dags.replay.ActionReplay;
-import me.dags.replay.data.Node;
+import org.jnbt.CompoundTag;
+import org.jnbt.EndTag;
+import org.jnbt.Nbt;
 
 /**
  * @author dags <dags@dags.me>
  */
-public class FileSource implements Source<Node, Node> {
+public class FileSource implements Source<CompoundTag> {
 
     private final RandomAccessFile file;
 
@@ -18,18 +19,18 @@ public class FileSource implements Source<Node, Node> {
     }
 
     @Override
-    public Node header() throws IOException {
+    public CompoundTag header() throws IOException {
         file.seek(0);
         return nextNode();
     }
 
     @Override
-    public Node next() throws IOException {
+    public CompoundTag next() throws IOException {
         return nextNode();
     }
 
     @Override
-    public Node first() throws IOException {
+    public CompoundTag first() throws IOException {
         file.seek(0);
         // header length
         int length = file.readInt();
@@ -43,18 +44,18 @@ public class FileSource implements Source<Node, Node> {
             return nextNode();
         }
 
-        return Node.EMPTY;
+        return emptyTag();
     }
 
     @Override
-    public Node last() throws IOException {
+    public CompoundTag last() throws IOException {
         while (true) {
             int length = file.readInt();
             long pos = file.getFilePointer();
             if (pos + length + 4 >= file.length()) {
                 byte[] data = new byte[length];
                 file.read(data);
-                return ActionReplay.getNodeFactory().read(new ByteArrayInputStream(data));
+                return Nbt.read(new ByteArrayInputStream(data)).getTag().asCompound();
             }
             file.seek(pos + length);
         }
@@ -65,13 +66,17 @@ public class FileSource implements Source<Node, Node> {
         file.close();
     }
 
-    private Node nextNode() throws IOException {
+    private CompoundTag nextNode() throws IOException {
         if (file.getFilePointer() >= file.length()) {
-            return Node.EMPTY;
+            return emptyTag();
         }
         int length = file.readInt();
         byte[] data = new byte[length];
         file.read(data);
-        return ActionReplay.getNodeFactory().read(new ByteArrayInputStream(data));
+        return Nbt.read(new ByteArrayInputStream(data)).getTag().asCompound();
+    }
+
+    private static CompoundTag emptyTag() {
+        return EndTag.END.asCompound();
     }
 }

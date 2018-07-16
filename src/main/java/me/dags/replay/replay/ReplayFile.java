@@ -3,11 +3,11 @@ package me.dags.replay.replay;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
-import me.dags.replay.data.Node;
 import me.dags.replay.io.FileSink;
 import me.dags.replay.io.FileSource;
 import me.dags.replay.io.Sink;
 import me.dags.replay.io.Source;
+import org.jnbt.CompoundTag;
 import org.spongepowered.api.CatalogType;
 
 /**
@@ -46,11 +46,11 @@ public class ReplayFile implements CatalogType {
         return file.delete();
     }
 
-    public Source<Node, Node> getSource() throws FileNotFoundException {
+    public Source<CompoundTag> getSource() throws FileNotFoundException {
         return new FileSource(new RandomAccessFile(file, "r"));
     }
 
-    public Sink<Node, Node> getSink() throws FileNotFoundException {
+    public Sink<CompoundTag> getSink() throws FileNotFoundException {
         return new FileSink(new RandomAccessFile(file, "rw"));
     }
 }

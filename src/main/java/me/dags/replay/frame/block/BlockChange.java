@@ -1,16 +1,13 @@
 package me.dags.replay.frame.block;
 
-import me.dags.replay.data.Serializer;
-import me.dags.replay.data.TypedSerializer;
+import me.dags.replay.frame.Change;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 /**
  * @author dags <dags@dags.me>
  */
-public interface BlockChange extends Serializer.Type {
-
-    void apply(Location<World> origin);
+public interface BlockChange extends Change {
 
     @Override
     default boolean isPresent() {
@@ -33,8 +30,4 @@ public interface BlockChange extends Serializer.Type {
             return "none";
         }
     };
-
-    TypedSerializer<BlockChange> SERIALIZER = new TypedSerializer<>(NONE)
-            .register("single", SingleBlockChange.SERIALIZER)
-            .register("mass", MassBlockChange.SERIALIZER);
 }

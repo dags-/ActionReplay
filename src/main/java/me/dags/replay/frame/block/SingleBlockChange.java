@@ -1,8 +1,9 @@
 package me.dags.replay.frame.block;
 
 import com.flowpowered.math.vector.Vector3i;
-import me.dags.replay.data.Node;
 import me.dags.replay.data.Serializer;
+import me.dags.replay.data.Serializers;
+import org.jnbt.CompoundTag;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
@@ -28,7 +29,7 @@ public class SingleBlockChange implements BlockChange {
 
     @Override
     public String getType() {
-        return "single";
+        return "block.single";
     }
 
     @Override
@@ -68,14 +69,14 @@ public class SingleBlockChange implements BlockChange {
         private final BlockState NONE = BlockTypes.AIR.getDefaultState();
 
         @Override
-        public void serialize(SingleBlockChange change, Node node) {
-            node.put("x", "y", "z", change.offset);
-            node.put("state", change.state.toString());
+        public void serialize(SingleBlockChange change, CompoundTag node) {
+            Serializers.vec3i(node, "x", "y", "z", change.offset);
+            node.put("state", change.state.getId());
         }
 
         @Override
-        public SingleBlockChange deserialize(Node node) {
-            Vector3i offset = node.getVec3i("x", "y", "z");
+        public SingleBlockChange deserialize(CompoundTag node) {
+            Vector3i offset = Serializers.vec3i(node, "x", "y", "z");
             String stateId = node.getString("state");
             BlockState state = Sponge.getRegistry().getType(BlockState.class, stateId).orElse(NONE);
             return new SingleBlockChange(state, offset);

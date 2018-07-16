@@ -9,11 +9,11 @@ import me.dags.commandbus.annotation.Description;
 import me.dags.commandbus.annotation.Permission;
 import me.dags.commandbus.annotation.Src;
 import me.dags.commandbus.fmt.Fmt;
-import me.dags.replay.data.Node;
 import me.dags.replay.frame.selector.Selector;
 import me.dags.replay.io.Sink;
 import me.dags.replay.replay.ReplayFile;
 import me.dags.replay.replay.ReplayMeta;
+import org.jnbt.CompoundTag;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.util.AABB;
@@ -66,8 +66,8 @@ public class Commands {
 
             ReplayFile replay = ActionReplay.getManager().getRegistry().newReplayFile(name);
             ReplayMeta meta = new ReplayMeta(origin, relative);
-            try (Sink<Node, Node> sink = replay.getSink()) {
-                Node node = ReplayMeta.SERIALIZER.serialize(meta);
+            try (Sink<CompoundTag> sink = replay.getSink()) {
+                CompoundTag node = ReplayMeta.SERIALIZER.serialize(meta);
                 sink.writeHeader(node);
             }
 

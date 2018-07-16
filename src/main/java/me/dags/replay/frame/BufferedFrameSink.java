@@ -2,22 +2,21 @@ package me.dags.replay.frame;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import me.dags.replay.data.Node;
-import me.dags.replay.data.SerializationException;
 import me.dags.replay.io.Sink;
 import me.dags.replay.replay.ReplayMeta;
 import me.dags.replay.util.CancellableTask;
+import org.jnbt.CompoundTag;
 import org.spongepowered.api.scheduler.Task;
 
 /**
  * @author dags <dags@dags.me>
  */
-public class BufferedFrameSink extends CancellableTask implements Sink<Frame, ReplayMeta> {
+public class BufferedFrameSink extends CancellableTask implements Sink {
 
-    private final Sink<Node, Node> sink;
-    private final ConcurrentLinkedQueue<Node> buffer = new ConcurrentLinkedQueue<>();
+    private final Sink<CompoundTag> sink;
+    private final ConcurrentLinkedQueue<CompoundTag> buffer = new ConcurrentLinkedQueue<>();
 
-    public BufferedFrameSink(Sink<Node, Node> sink) {
+    public BufferedFrameSink(Sink<CompoundTag> sink) {
         this.sink = sink;
     }
 
@@ -42,30 +41,13 @@ public class BufferedFrameSink extends CancellableTask implements Sink<Frame, Re
     }
 
     @Override
-    public void writeHeader(ReplayMeta meta) {
-        if (isCancelled()) {
-            return;
-        }
-        try {
-            Node node = ReplayMeta.SERIALIZER.serialize(meta);
-            sink.writeHeader(node);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void write(Object frame) throws IOException {
+
     }
 
     @Override
-    public void write(Frame view) {
-        if (isCancelled()) {
-            return;
-        }
+    public void writeHeader(Object header) throws IOException {
 
-        try {
-            Node node = Frame.SERIALIZER.serializeChecked(view);
-            buffer.add(node);
-        } catch (SerializationException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
@@ -89,9 +71,32 @@ public class BufferedFrameSink extends CancellableTask implements Sink<Frame, Re
         }
     }
 
+    public void writeHeader(ReplayMeta meta) {
+        if (isCancelled()) {
+            return;
+        }
+        try {
+            CompoundTag node = ReplayMeta.SERIALIZER.serialize(meta);
+            sink.writeHeader(node);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void write(Frame view) {
+        if (isCancelled()) {
+            return;
+        }
+
+        CompoundTag node = Frame.SERIALIZER.serialize(view);
+        if (node.isPresent()) {
+            buffer.add(node);
+        }
+    }
+
     private void drain() {
         try {
-            Node frame = buffer.poll();
+            CompoundTag frame = buffer.poll();
             sink.write(frame);
         } catch (IOException e) {
             e.printStackTrace();

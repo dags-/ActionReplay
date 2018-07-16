@@ -24,6 +24,7 @@ dependencies {
     compile "org.spongepowered:spongeapi:${spongeAPI}-${spongeChannel}"
     compile fileTree(dir: "libs", include: "*.jar")
     shade "com.github.dags-:CommandBus:2.0.6"
+    shade "com.github.dags-:JNBT:2.0.2"
     shade ("com.github.dags-:Config:1.0.2") { transitive = false }
 }
 
@@ -31,6 +32,7 @@ shadowJar {
     configurations = [project.configurations.shade]
     relocate "me.dags.commandbus.", "${libraries}.command."
     relocate "me.dags.config.", "${libraries}.config."
+    relocate "org.jnbt.", "${libraries}.jnbt."
     archiveName = "${baseName}-${version}-SpongeAPI-${spongeAPI}.jar"
 }
 

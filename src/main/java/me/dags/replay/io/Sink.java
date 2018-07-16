@@ -6,11 +6,11 @@ import java.io.IOException;
 /**
  * @author dags <dags@dags.me>
  */
-public interface Sink<T, H> extends Closeable {
+public interface Sink<T> extends Closeable {
 
     void goToEnd() throws IOException;
 
     void write(T frame) throws IOException;
 
-    void writeHeader(H header) throws IOException;
+    void writeHeader(T header) throws IOException;
 }

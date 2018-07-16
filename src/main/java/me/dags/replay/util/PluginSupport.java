@@ -2,8 +2,6 @@ package me.dags.replay.util;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import me.dags.replay.data.NodeFactory;
-import me.dags.replay.data.SpongeNode;
 import me.dags.replay.frame.selector.Selector;
 import me.dags.replay.frame.selector.SpongeSelector;
 
@@ -20,12 +18,6 @@ public final class PluginSupport {
         return getSupport(Selector.class, new SpongeSelector(), new LinkedHashMap<String, String>() {{
             put("com.boydti.fawe.FaweAPI", "me.dags.replay.worldedit.fawe.FaweSelector");
             put("com.sk89q.worldedit.WorldEdit", "me.dags.replay.worldedit.WESelector");
-        }});
-    }
-
-    public static NodeFactory getNodeFactory() {
-        return getSupport(NodeFactory.class, SpongeNode::new, new LinkedHashMap<String, String>() {{
-            put("com.sk89q.worldedit.WorldEdit", "me.dags.replay.worldedit.WENodeFactory");
         }});
     }
 

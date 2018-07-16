@@ -1,13 +1,13 @@
 package me.dags.replay.replay;
 
 import java.util.concurrent.TimeUnit;
-import me.dags.replay.data.Node;
 import me.dags.replay.event.ReplayEvent;
 import me.dags.replay.frame.BufferedFrameSource;
 import me.dags.replay.frame.Frame;
 import me.dags.replay.io.Source;
 import me.dags.replay.util.CancellableTask;
 import me.dags.replay.util.OptionalActivity;
+import org.jnbt.CompoundTag;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.Location;
@@ -28,7 +28,7 @@ public class Replay extends CancellableTask implements OptionalActivity {
     private long interval = 1L;
     private boolean playing = false;
 
-    public Replay(ReplayFile file, ReplayMeta meta, Source<Node, Node> source) {
+    public Replay(ReplayFile file, ReplayMeta meta, Source<CompoundTag> source) {
         this.source = new BufferedFrameSource(source, 5, 100, TimeUnit.MILLISECONDS);
         this.meta = meta;
         this.file = file;

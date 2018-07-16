@@ -3,23 +3,22 @@ package me.dags.replay.frame;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
-import me.dags.replay.data.Node;
-import me.dags.replay.data.SerializationException;
 import me.dags.replay.io.Source;
 import me.dags.replay.replay.ReplayMeta;
 import me.dags.replay.util.CancellableTask;
+import org.jnbt.CompoundTag;
 
 /**
  * @author dags <dags@dags.me>
  */
-public class BufferedFrameSource extends CancellableTask implements Source<Frame, ReplayMeta> {
+public class BufferedFrameSource extends CancellableTask implements Source<Object> {
 
     private final int size;
     private final long timeout;
-    private final Source<Node, Node> source;
-    private final ConcurrentLinkedQueue<Node> buffer = new ConcurrentLinkedQueue<>();
+    private final Source<CompoundTag> source;
+    private final ConcurrentLinkedQueue<CompoundTag> buffer = new ConcurrentLinkedQueue<>();
 
-    public BufferedFrameSource(Source<Node, Node> source, int size, long timeout, TimeUnit unit) {
+    public BufferedFrameSource(Source<CompoundTag> source, int size, long timeout, TimeUnit unit) {
         this.timeout = unit.toMillis(timeout);
         this.source = source;
         this.size = size;
@@ -36,11 +35,11 @@ public class BufferedFrameSource extends CancellableTask implements Source<Frame
     @Override
     public ReplayMeta header() {
         try {
-            Node node = source.header();
+            CompoundTag node = source.header();
             if (node.isAbsent()) {
                 return ReplayMeta.NONE;
             }
-            return ReplayMeta.SERIALIZER.deserializeChecked(node);
+            return ReplayMeta.SERIALIZER.deserialize(node);
         } catch (IOException e) {
             e.printStackTrace();
             return ReplayMeta.NONE;
@@ -49,7 +48,7 @@ public class BufferedFrameSource extends CancellableTask implements Source<Frame
 
     @Override
     public Frame next() {
-        Node next = null;
+        CompoundTag next = null;
         long start = System.currentTimeMillis();
 
         while (next == null) {
@@ -69,19 +68,15 @@ public class BufferedFrameSource extends CancellableTask implements Source<Frame
             return Frame.NONE;
         }
 
-        try {
-            return Frame.SERIALIZER.deserializeChecked(next);
-        } catch (SerializationException e) {
-            e.printStackTrace();
-            return Frame.NONE;
-        }
+        return Frame.SERIALIZER.deserialize(next);
+
     }
 
     @Override
     public Frame first() {
         try {
-            Node first = source.first();
-            return Frame.SERIALIZER.deserializeChecked(first);
+            CompoundTag first = source.first();
+            return Frame.SERIALIZER.deserialize(first);
         } catch (IOException e) {
             e.printStackTrace();
             return Frame.NONE;
@@ -91,8 +86,8 @@ public class BufferedFrameSource extends CancellableTask implements Source<Frame
     @Override
     public Frame last() {
         try {
-            Node last = source.last();
-            return Frame.SERIALIZER.deserializeChecked(last);
+            CompoundTag last = source.last();
+            return Frame.SERIALIZER.deserialize(last);
         } catch (IOException e) {
             e.printStackTrace();
             return Frame.NONE;
@@ -103,7 +98,7 @@ public class BufferedFrameSource extends CancellableTask implements Source<Frame
     public void run() {
         while (buffer.size() < size) {
             try {
-                Node node = source.next();
+                CompoundTag node = source.next();
                 buffer.add(node);
 
                 // absent node indicates end of file

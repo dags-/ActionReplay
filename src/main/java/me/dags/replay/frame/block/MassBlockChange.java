@@ -1,9 +1,10 @@
 package me.dags.replay.frame.block;
 
 import com.flowpowered.math.vector.Vector3i;
-import me.dags.replay.data.Node;
 import me.dags.replay.data.Serializer;
+import me.dags.replay.data.Serializers;
 import me.dags.replay.frame.schematic.Schem;
+import org.jnbt.CompoundTag;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -22,7 +23,7 @@ public class MassBlockChange implements BlockChange {
 
     @Override
     public String getType() {
-        return "mass";
+        return "block.mass";
     }
 
     @Override
@@ -35,17 +36,15 @@ public class MassBlockChange implements BlockChange {
 
     public static final Serializer<MassBlockChange> SERIALIZER = new Serializer<MassBlockChange>() {
         @Override
-        public void serialize(MassBlockChange change, Node node) {
-            Node child = Schem.SERIALIZER.serialize(change.schematic);
-            node.put("x", "y", "z", change.offset);
-            node.put("schem", child);
+        public void serialize(MassBlockChange change, CompoundTag node) {
+            node.put("schem", Schem.SERIALIZER.serialize(change.schematic));
+            Serializers.vec3i(node, "x", "y", "z", change.offset);
         }
 
         @Override
-        public MassBlockChange deserialize(Node node) {
-            Node child = node.getChild("schem");
-            Schem schematic = Schem.SERIALIZER.deserialize(child);
-            Vector3i offset = node.getVec3i("x", "y", "z");
+        public MassBlockChange deserialize(CompoundTag node) {
+            Schem schematic = Schem.SERIALIZER.deserialize(node.getCompound("schem"));
+            Vector3i offset = Serializers.vec3i(node, "x", "y", "z");
             return new MassBlockChange(schematic, offset);
         }
     };

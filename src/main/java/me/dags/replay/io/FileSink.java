@@ -3,13 +3,14 @@ package me.dags.replay.io;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
-import me.dags.replay.data.Node;
 import me.dags.replay.util.Buffers;
+import org.jnbt.CompoundTag;
+import org.jnbt.Nbt;
 
 /**
  * @author dags <dags@dags.me>
  */
-public class FileSink implements Sink<Node,  Node> {
+public class FileSink implements Sink<CompoundTag> {
 
     private final RandomAccessFile file;
     private final OutputStream buffer;
@@ -25,7 +26,7 @@ public class FileSink implements Sink<Node,  Node> {
     }
 
     @Override
-    public void writeHeader(Node node) throws IOException {
+    public void writeHeader(CompoundTag node) throws IOException {
         if (node.isPresent()) {
             file.seek(0);
             file.setLength(0);
@@ -33,9 +34,9 @@ public class FileSink implements Sink<Node,  Node> {
         }
     }
 
-    public void write(Node node) throws IOException {
+    public void write(CompoundTag node) throws IOException {
         if (node.isPresent()) {
-            node.write(buffer);
+            Nbt.write(node, buffer);
             buffer.flush();
         }
     }

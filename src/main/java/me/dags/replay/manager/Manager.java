@@ -6,7 +6,6 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import me.dags.commandbus.fmt.Fmt;
 import me.dags.config.Config;
-import me.dags.replay.data.Node;
 import me.dags.replay.frame.Frame;
 import me.dags.replay.frame.FrameRecorder;
 import me.dags.replay.io.Sink;
@@ -16,6 +15,7 @@ import me.dags.replay.replay.ReplayContext;
 import me.dags.replay.replay.ReplayFile;
 import me.dags.replay.replay.ReplayMeta;
 import me.dags.replay.util.OptionalActivity;
+import org.jnbt.CompoundTag;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.text.channel.MessageReceiver;
 
@@ -56,7 +56,7 @@ public class Manager {
     public void attachReplayFile(MessageReceiver receiver, ReplayFile replay) {
         instance.dispose();
         instance = new Instance(replay);
-        try (Source<Node, Node> source = replay.getSource()) {
+        try (Source<CompoundTag> source = replay.getSource()) {
             ReplayMeta meta = ReplayMeta.SERIALIZER.deserialize(source.header());
             instance.setMeta(meta);
         } catch (IOException e) {
@@ -69,7 +69,7 @@ public class Manager {
         if (canAttachActivity(receiver, "recorder")) {
             try {
                 ReplayMeta meta = instance.getMeta();
-                Sink<Node, Node> sink = instance.getReplayFile().getSink();
+                Sink<CompoundTag> sink = instance.getReplayFile().getSink();
                 FrameRecorder recorder = new FrameRecorder(meta, sink);
                 instance.setRecorder(recorder);
                 Fmt.info("Attached new recorder at ").stress(meta.getOrigin().getBlockPosition()).tell(receiver);
@@ -85,7 +85,7 @@ public class Manager {
             try {
                 ReplayFile file = instance.getReplayFile();
                 ReplayMeta meta = instance.getMeta();
-                Source<Node, Node> source = instance.getReplayFile().getSource();
+                Source<CompoundTag> source = instance.getReplayFile().getSource();
                 source.header();
 
                 Replay replay = new Replay(file, meta, source);
@@ -160,7 +160,7 @@ public class Manager {
         if (canLoadFrame(receiver)) {
             ReplayFile replay = instance.getReplayFile();
             ReplayMeta meta = instance.getMeta();
-            try (Source<Node, Node> source = replay.getSource()) {
+            try (Source<CompoundTag> source = replay.getSource()) {
                 applyFrame(receiver, replay, meta, source.first(), "first");
             } catch (IOException e) {
                 e.printStackTrace();
@@ -173,7 +173,7 @@ public class Manager {
         if (canLoadFrame(receiver)) {
             ReplayFile replay = instance.getReplayFile();
             ReplayMeta meta = instance.getMeta();
-            try (Source<Node, Node> source = instance.getReplayFile().getSource()) {
+            try (Source<CompoundTag> source = instance.getReplayFile().getSource()) {
                 applyFrame(receiver, replay, meta, source.last(), "last");
             } catch (IOException e) {
                 e.printStackTrace();
@@ -182,7 +182,7 @@ public class Manager {
         }
     }
 
-    private void applyFrame(MessageReceiver receiver, ReplayFile replay, ReplayMeta meta, Node node, String frameName) {
+    private void applyFrame(MessageReceiver receiver, ReplayFile replay, ReplayMeta meta, CompoundTag node, String frameName) {
         if (node.isAbsent()) {
             Fmt.error("No frame data available").tell(receiver);
             return;

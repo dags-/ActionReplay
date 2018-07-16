@@ -7,17 +7,18 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import me.dags.replay.ActionReplay;
-import me.dags.replay.data.Node;
 import me.dags.replay.event.RecordEvent;
 import me.dags.replay.frame.avatar.AvatarSnapshot;
-import me.dags.replay.frame.block.BlockChange;
 import me.dags.replay.frame.block.MassBlockChange;
 import me.dags.replay.frame.block.SingleBlockChange;
+import me.dags.replay.frame.entity.EntityCreate;
+import me.dags.replay.frame.entity.EntityDestroy;
 import me.dags.replay.frame.schematic.Schem;
 import me.dags.replay.io.Sink;
 import me.dags.replay.replay.ReplayMeta;
 import me.dags.replay.util.CancellableTask;
 import me.dags.replay.util.OptionalActivity;
+import org.jnbt.CompoundTag;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockState;
@@ -25,10 +26,13 @@ import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.Item;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
+import org.spongepowered.api.event.entity.DestructEntityEvent;
+import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.event.filter.type.Exclude;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.util.AABB;
@@ -45,7 +49,7 @@ public class FrameRecorder extends CancellableTask implements OptionalActivity {
     private final BufferedFrameSink sink;
 
     private boolean recording = false;
-    private List<BlockChange> changes = new LinkedList<>();
+    private List<Change> changes = new LinkedList<>();
 
     private FrameRecorder() {
         this.origin = null;
@@ -53,7 +57,7 @@ public class FrameRecorder extends CancellableTask implements OptionalActivity {
         this.sink = null;
     }
 
-    public FrameRecorder(ReplayMeta meta, Sink<Node, Node> sink) {
+    public FrameRecorder(ReplayMeta meta, Sink<CompoundTag> sink) {
         this.origin = meta.getOrigin();
         this.bounds = meta.getActualBounds();
         this.sink = new BufferedFrameSink(sink);
@@ -133,7 +137,7 @@ public class FrameRecorder extends CancellableTask implements OptionalActivity {
         // min/max points containing the transactions
         int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, minZ = Integer.MAX_VALUE;
         int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE, maxZ = Integer.MIN_VALUE;
-        // determine whether to record changes as a volume or individual block changes
+        // determine whether to record blocks as a volume or individual block blocks
         final boolean small = transactions.size() <= 5;
 
         for (Transaction<BlockSnapshot> transaction : transactions) {
@@ -161,7 +165,7 @@ public class FrameRecorder extends CancellableTask implements OptionalActivity {
                 BlockState state = transaction.getFinal().getState();
                 changes.add(new SingleBlockChange(state, offset));
             } else {
-                // calc the min/max positions containing the changes
+                // calc the min/max positions containing the blocks
                 minX = Math.min(minX, pos.getX());
                 minY = Math.min(minY, pos.getY());
                 minZ = Math.min(minZ, pos.getZ());
@@ -179,6 +183,35 @@ public class FrameRecorder extends CancellableTask implements OptionalActivity {
             MassBlockChange change = new MassBlockChange(schem, origin.getBlockPosition());
             changes.add(change);
         }
+    }
+
+    @Listener(order = Order.POST)
+    @Exclude({SpawnEntityEvent.ChunkLoad.class, SpawnEntityEvent.Spawner.class, SpawnEntityEvent.Custom.class})
+    public void onEntityCreate(SpawnEntityEvent event) {
+        for (Entity entity : event.getEntities()) {
+            if (entity instanceof Item || entity instanceof Player) {
+                continue;
+            }
+            Location<World> location = entity.getLocation();
+            if (location.getExtent() != origin.getExtent()) {
+                continue;
+            }
+            if (!bounds.contains(location.getBlockPosition())) {
+                continue;
+            }
+            Vector3d offset = location.getPosition().sub(origin.getPosition());
+            EntityCreate create = new EntityCreate(entity, offset);
+            changes.add(create);
+        }
+    }
+
+    @Listener(order = Order.POST)
+    public void onEntityDestruct(DestructEntityEvent event) {
+        Entity entity = event.getTargetEntity();
+        if (entity instanceof Item) {
+            return;
+        }
+        changes.add(new EntityDestroy(entity.getUniqueId()));
     }
 
     public void onSchematic(Schem schem, Vector3i offset) {

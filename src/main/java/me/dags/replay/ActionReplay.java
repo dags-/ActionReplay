@@ -6,10 +6,10 @@ import java.io.File;
 import me.dags.commandbus.CommandBus;
 import me.dags.commandbus.fmt.Fmt;
 import me.dags.commandbus.fmt.Format;
-import me.dags.replay.data.NodeFactory;
 import me.dags.replay.event.RecordEvent;
 import me.dags.replay.event.ReplayEvent;
 import me.dags.replay.frame.FrameRecorder;
+import me.dags.replay.frame.entity.EntityTracker;
 import me.dags.replay.frame.selector.Selector;
 import me.dags.replay.manager.Manager;
 import me.dags.replay.replay.ReplayFile;
@@ -37,7 +37,6 @@ public class ActionReplay {
 
     private Manager manager;
     private Selector selector;
-    private NodeFactory nodeFactory;
 
     @Inject
     public ActionReplay(@ConfigDir(sharedRoot = false) File configDir) {
@@ -49,6 +48,7 @@ public class ActionReplay {
     public void init(GameInitializationEvent event) {
         // init manager
         manager = new Manager(this, configDir);
+        EntityTracker.init(this);
 
         Fmt.init(Format.builder()
                 .info(TextColors.AQUA)
@@ -58,7 +58,6 @@ public class ActionReplay {
                 .warn(TextColors.DARK_RED, TextStyles.BOLD)
                 .build());
 
-        nodeFactory = PluginSupport.getNodeFactory();
         selector = PluginSupport.getSelector();
         selector.register(this);
 
@@ -123,9 +122,5 @@ public class ActionReplay {
 
     public static Selector getSelector() {
         return instance.selector;
-    }
-
-    public static NodeFactory getNodeFactory() {
-        return instance.nodeFactory;
     }
 }

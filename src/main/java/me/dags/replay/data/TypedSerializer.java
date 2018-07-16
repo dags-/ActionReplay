@@ -2,6 +2,7 @@ package me.dags.replay.data;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.jnbt.CompoundTag;
 
 /**
  * @author dags <dags@dags.me>
@@ -17,20 +18,20 @@ public class TypedSerializer<T extends Serializer.Type> implements Serializer<T>
 
     @Override
     @SuppressWarnings("unchecked")
-    public void serialize(T t, Node node) {
+    public void serialize(T t, CompoundTag root) {
         Serializer serializer = serializers.get(t.getType());
         if (serializer != null) {
-            serializer.serialize(t, node);
-            node.put("_type", t.getType());
+            serializer.serialize(t, root);
+            root.put("_type", t.getType());
         }
     }
 
     @Override
-    public T deserialize(Node node) {
-        String type = node.getString("_type");
+    public T deserialize(CompoundTag root) {
+        String type = root.getString("_type");
         Serializer<? extends T> serializer = serializers.get(type);
         if (serializer != null) {
-            return serializer.deserialize(node);
+            return serializer.deserialize(root);
         }
         return empty;
     }

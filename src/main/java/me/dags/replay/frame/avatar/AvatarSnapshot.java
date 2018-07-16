@@ -5,10 +5,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.UUID;
-import me.dags.replay.data.Node;
 import me.dags.replay.data.Serializer;
+import me.dags.replay.data.Serializers;
 import me.dags.replay.util.Buffers;
 import me.dags.replay.util.OptionalValue;
+import org.jnbt.CompoundTag;
 import org.spongepowered.api.data.DataContainer;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.persistence.DataFormats;
@@ -88,24 +89,24 @@ public class AvatarSnapshot implements OptionalValue {
 
     public static final Serializer<AvatarSnapshot> SERIALIZER = new Serializer<AvatarSnapshot>() {
         @Override
-        public void serialize(AvatarSnapshot avatar, Node node) {
+        public void serialize(AvatarSnapshot avatar, CompoundTag node) {
             node.put("id", avatar.uuid.toString());
             node.put("name", avatar.name);
             node.put("flying", avatar.flying);
             node.put("held", serializeStack(avatar.held));
-            node.put("x", "y", "z", avatar.offset);
-            node.put("rx", "ry", "rz", avatar.rotation);
+            Serializers.vec3d(node, "x", "y", "z", avatar.offset);
+            Serializers.vec3d(node, "rx", "ry", "rz", avatar.rotation);
         }
 
         @Override
-        public AvatarSnapshot deserialize(Node node) {
+        public AvatarSnapshot deserialize(CompoundTag node) {
             String id = node.getString("id");
             String name = node.getString("name");
-            boolean flying = node.getBool("flying");
+            boolean flying = node.getByteTag("flying").boolValue();
             byte[] bytes = node.getBytes("held");
             ItemStack held = deserializeStack(bytes);
-            Vector3d offset = node.getVec3d("x", "y", "z");
-            Vector3d rotation = node.getVec3d("rx", "ry", "rz");
+            Vector3d offset = Serializers.vec3d(node, "x", "y", "z");
+            Vector3d rotation = Serializers.vec3d(node, "rx", "ry", "rz");
             return new AvatarSnapshot(UUID.fromString(id), name, offset, rotation, held, flying);
         }
 

@@ -7,9 +7,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-import me.dags.replay.data.Node;
 import me.dags.replay.data.Serializer;
 import me.dags.replay.util.Buffers;
+import org.jnbt.CompoundTag;
 import org.spongepowered.api.data.DataContainer;
 import org.spongepowered.api.data.persistence.DataFormats;
 import org.spongepowered.api.data.persistence.DataTranslators;
@@ -52,7 +52,7 @@ public class SpongeSchematic implements Schem {
 
     public static final Serializer<SpongeSchematic> SERIALIZER = new Serializer<SpongeSchematic>() {
         @Override
-        public void serialize(SpongeSchematic schem, Node node) {
+        public void serialize(SpongeSchematic schem, CompoundTag node) {
             ByteArrayOutputStream data = Buffers.getCachedBuffer();
             try (OutputStream out = new GZIPOutputStream(data)) {
                 DataContainer container = DataTranslators.SCHEMATIC.translate(schem.schematic);
@@ -64,7 +64,7 @@ public class SpongeSchematic implements Schem {
         }
 
         @Override
-        public SpongeSchematic deserialize(Node node) {
+        public SpongeSchematic deserialize(CompoundTag node) {
             ByteArrayInputStream data = new ByteArrayInputStream(node.getBytes("data"));
             try (InputStream in = new GZIPInputStream(data)) {
                 DataContainer container = DataFormats.NBT.readFrom(in);
